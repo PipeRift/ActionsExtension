@@ -1,0 +1,14 @@
+{
+	"FileVersion": 3,
+	"FriendlyName": "Blueprint BehaviourTree",
+	"Version": 1,
+	"VersionName": "1.0",
+	"CreatedBy": "Piperift",
+	"CreatedByURL": "http://piperift.com/",
+	"Category": "Gameplay",
+	"Description": "A plugin that adds blueprint oriented behaviour trees to Unreal Engine 4",
+	"EnabledByDefault": true,
+	"CanContainContent": true,
+
+	"Modules": []
+}
