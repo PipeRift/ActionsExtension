@@ -1,2 +1,2 @@
-# Blueprint Behaviour Trees
-A plugin that adds blueprint oriented behaviour trees to Unreal Engine 4
+# AI Extension Plugin
+A plugin that adds blueprint oriented Artificial Intelligence features to Unreal Engine 4
