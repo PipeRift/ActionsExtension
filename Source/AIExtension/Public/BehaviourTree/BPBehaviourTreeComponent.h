@@ -3,6 +3,7 @@
 #pragma once
 
 #include "BrainComponent.h"
+#include "GameplayTaskOwnerInterface.h"
 #include "BPBehaviourTreeComponent.generated.h"
 
 /**
