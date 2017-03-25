@@ -1,3 +1,2 @@
-/Binaries/*/*.pdb
-/Binaries/*/*Debug*
+/Binaries
 /Intermediate
