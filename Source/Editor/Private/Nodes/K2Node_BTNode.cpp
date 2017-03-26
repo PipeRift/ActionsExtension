@@ -14,14 +14,6 @@
  
 #define LOCTEXT_NAMESPACE "AIExtensionEditor"
  
-//Helper which will store one of the function inputs we excpect BP callable function will have.
-struct FK2Node_BTNodeHelper
-{
-	static FString OwningPlayerPinName;
-};
- 
-FString FK2Node_BTNodeHelper::OwningPlayerPinName(TEXT("OwningPlayer"));
- 
 UK2Node_BTNode::UK2Node_BTNode(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -34,10 +26,6 @@ void UK2Node_BTNode::AllocateDefaultPins()
 	Super::AllocateDefaultPins();
  
 	const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>();
- 
-	// OwningPlayer pin
-	UEdGraphPin* OwningPlayerPin = CreatePin(EGPD_Input, K2Schema->PC_Object, TEXT(""), APlayerController::StaticClass(), false, false, FK2Node_BTNodeHelper::OwningPlayerPinName);
-	SetPinToolTip(*OwningPlayerPin, LOCTEXT("OwningPlayerPinDescription", "The player that 'owns' the this item."));
 }
  
 FLinearColor UK2Node_BTNode::GetNodeTitleColor() const
@@ -64,21 +52,12 @@ UClass* UK2Node_BTNode::GetClassPinBaseClass() const
 //Set context menu category in which our node will be present.
 FText UK2Node_BTNode::GetMenuCategory() const
 {
-	return FText::FromString("Game Inventory System");
-}
- 
-//gets out predefined pin
-UEdGraphPin* UK2Node_BTNode::GetOwningPlayerPin() const
-{
-	UEdGraphPin* Pin = FindPin(FK2Node_BTNodeHelper::OwningPlayerPinName);
-	check(Pin == NULL || Pin->Direction == EGPD_Input);
-	return Pin;
+	return FText::FromString("Behaviour Tree");
 }
  
 bool UK2Node_BTNode::IsSpawnVarPin(UEdGraphPin* Pin)
 {
-	return(Super::IsSpawnVarPin(Pin) &&
-		Pin->PinName != FK2Node_BTNodeHelper::OwningPlayerPinName);
+	return Super::IsSpawnVarPin(Pin);
 }
  
 //and this is where magic really happens. This will expand node for our custom object, with properties
@@ -93,7 +72,6 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	//with these inputs (as a Side note, these should be probabaly FName not FString)
 	static FString WorldContextObject_ParamName = FString(TEXT("WorldContextObject"));
 	static FString WidgetType_ParamName = FString(TEXT("ItemType"));
-	static FString OwningPlayer_ParamName = FString(TEXT("OwningPlayer"));
  
 	//get pointer to self;
 	UK2Node_BTNode* CreateItemDataNode = this;
@@ -103,8 +81,6 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	UEdGraphPin* SpawnNodeExec = CreateItemDataNode->GetExecPin();
 	//gets world context pin from our static function
 	UEdGraphPin* SpawnWorldContextPin = CreateItemDataNode->GetWorldContextPin();
-	//the same as above
-	UEdGraphPin* SpawnOwningPlayerPin = CreateItemDataNode->GetOwningPlayerPin();
 	//get class pin which is used to determine which class to spawn.
 	UEdGraphPin* SpawnClassPin = CreateItemDataNode->GetClassPin();
 	//then pin is the same as exec pin, just on the other side (the out arrow).
@@ -131,7 +107,6 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	UEdGraphPin* CallCreateExec = CallCreateNode->GetExecPin();
 	UEdGraphPin* CallCreateWorldContextPin = CallCreateNode->FindPinChecked(WorldContextObject_ParamName);
 	UEdGraphPin* CallCreateWidgetTypePin = CallCreateNode->FindPinChecked(WidgetType_ParamName);
-	UEdGraphPin* CallCreateOwningPlayerPin = CallCreateNode->FindPinChecked(OwningPlayer_ParamName);
 	UEdGraphPin* CallCreateResult = CallCreateNode->GetReturnValuePin();
  
 	// Move 'exec' connection from create widget node to 'UWidgetBlueprintLibrary::Create'
@@ -153,10 +128,7 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	{
 		CompilerContext.MovePinLinksToIntermediate(*SpawnWorldContextPin, *CallCreateWorldContextPin);
 	}
- 
-	// Copy the 'Owning Player' connection from the spawn node to 'UWidgetBlueprintLibrary::Create'
-	CompilerContext.MovePinLinksToIntermediate(*SpawnOwningPlayerPin, *CallCreateOwningPlayerPin);
- 
+
 	// Move result connection from spawn node to 'UWidgetBlueprintLibrary::Create'
 	CallCreateResult->PinType = SpawnNodeResult->PinType; // Copy type so it uses the right actor subclass
 	CompilerContext.MovePinLinksToIntermediate(*SpawnNodeResult, *CallCreateResult);

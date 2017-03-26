@@ -21,9 +21,6 @@ class AIEXTENSIONEDITOR_API UK2Node_BTNode : public UK2Node_ConstructObjectFromC
     virtual FText GetMenuCategory() const override;
     // End UK2Node interface.
  
-    /** Get the owning player pin */
-    UEdGraphPin* GetOwningPlayerPin() const;
- 
 protected:
     /** Gets the default node title when no class is selected */
     virtual FText GetBaseNodeTitle() const;
