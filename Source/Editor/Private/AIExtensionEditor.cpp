@@ -1,9 +1,10 @@
 // Copyright 2015-2017 Piperift. All Rights Reserved.
 
+#include "AIExtensionEditorPrivatePCH.h"
+
 #include "Kismet2/KismetEditorUtilities.h"
 
 #include "BPBehaviourTreeComponent.h"
-#include "AIExtensionEditorPrivatePCH.h"
 
 DEFINE_LOG_CATEGORY(LogAIExtensionEditor)
  

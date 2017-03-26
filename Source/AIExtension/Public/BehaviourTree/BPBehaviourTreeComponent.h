@@ -4,7 +4,10 @@
 
 #include "BrainComponent.h"
 #include "GameplayTaskOwnerInterface.h"
+
 #include "BPBehaviourTreeComponent.generated.h"
+
+class UBPBT_Node;
 
 /**
  * 
@@ -19,4 +22,7 @@ public:
 
     UFUNCTION(BlueprintImplementableEvent, Category = BehaviourTree)
     void Root();
+
+    UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject", DisplayName = "Create Node", BlueprintInternalUseOnly = "true"), Category = BehaviourTree)
+    UBPBT_Node* Node(UObject* WorldContextObject, TSubclassOf<class UBPBT_Node> ItemType, APlayerController* OwningPlayer);
 };
