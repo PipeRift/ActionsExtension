@@ -8,8 +8,4 @@ UBPBehaviourTreeComponent::UBPBehaviourTreeComponent(const FObjectInitializer& O
 {
 }
 
-void UBPBehaviourTreeComponent::Root_Implementation()
-{
-}
-
 

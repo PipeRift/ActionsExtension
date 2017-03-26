@@ -17,6 +17,6 @@ class AIEXTENSION_API UBPBehaviourTreeComponent : public UBrainComponent, public
 public:
     UBPBehaviourTreeComponent(const FObjectInitializer& ObjectInitializer);
 
-    UFUNCTION(BlueprintNativeEvent, Category = BehaviourTree)
+    UFUNCTION(BlueprintImplementableEvent, Category = BehaviourTree)
     void Root();
 };

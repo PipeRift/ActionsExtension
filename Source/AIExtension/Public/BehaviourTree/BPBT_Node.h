@@ -24,22 +24,14 @@ class AIEXTENSION_API UBPBT_Node : public UGameplayTask
 public:
     UBPBT_Node(const FObjectInitializer& ObjectInitializer);
 
-    UPROPERTY(BlueprintAssignable)
-    FTaskDelayDelegate OnFinish;
-
     virtual void Activate() override;
 
-    /** Return debug string describing task */
-    virtual FString GetDebugString() const override;
+protected:
+    /** Event when play begins for this actor. */
+    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Activate"))
+    void ReceiveActivate();
 
     /** Wait specified time. This is functionally the same as a standard Delay node. */
-    UFUNCTION(BlueprintCallable, Category = "GameplayTasks", meta = (AdvancedDisplay = "TaskOwner, Priority", DefaultToSelf = "TaskOwner", BlueprintInternalUseOnly = "TRUE"))
+    UFUNCTION(BlueprintCallable, Category = "BehaviourTree", meta = (AdvancedDisplay = "BT, Priority", DefaultToSelf = "BT", BlueprintInternalUseOnly = "TRUE"))
     static UBPBT_Node* Node(UBPBehaviourTreeComponent* BT, float Time, const uint8 Priority = 192);
-
-private:
-
-    void OnTimeFinish();
-
-    float Time;
-    float TimeStarted;
 };
