@@ -46,6 +46,7 @@ public class AIExtensionEditor : ModuleRules
                 "AssetTools",
                 "EditorStyle",
                 "PropertyEditor",
+                "BlueprintGraph",
                 "DetailCustomizations",
                 "ContentBrowser",
                 "Settings",
