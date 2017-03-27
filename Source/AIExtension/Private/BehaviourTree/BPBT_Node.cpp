@@ -13,18 +13,8 @@ UBPBT_Node::UBPBT_Node(const FObjectInitializer& ObjectInitializer)
 {
 }
 
-UBPBT_Node* UBPBT_Node::Node(UBPBehaviourTreeComponent* BT, float Time, const uint8 Priority)
-{
-    UBPBT_Node* MyTask = NewTaskUninitialized<UBPBT_Node>();
-    if (MyTask && Cast<IGameplayTaskOwnerInterface>(BT) != nullptr)
-    {
-        MyTask->InitTask(*BT, Priority);
-        //Setup variables
-    }
-    return MyTask;
-}
-
-void UBPBT_Node::Activate()
+EBTNodeResult UBPBT_Node::Activate()
 {
     UWorld* World = GetWorld();
+    return ReceiveActivate();
 }
