@@ -26,7 +26,7 @@ enum class EBPBTNodeResult : uint8
 /**
  * 
  */
-UCLASS(Blueprintable)
+UCLASS(Blueprintable, meta = (ExposedAsyncProxy))
 class AIEXTENSION_API UBPBT_Node : public UObject, public IGameplayTaskOwnerInterface
 {
     GENERATED_BODY()
