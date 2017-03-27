@@ -15,7 +15,7 @@
  * Result of a node execution
  */
 UENUM()
-enum EBTNodeResult
+enum class EBPBTNodeResult : uint8
 {
     NR_RUNNING UMETA(DisplayName = "Running"),
     NR_SUCCESS UMETA(DisplayName = "Success"),
@@ -27,17 +27,17 @@ enum EBTNodeResult
  * 
  */
 UCLASS(Blueprintable)
-class AIEXTENSION_API UBPBT_Node : public UObject
+class AIEXTENSION_API UBPBT_Node : public UObject, public IGameplayTaskOwnerInterface
 {
     GENERATED_BODY()
 
 public:
     UBPBT_Node(const FObjectInitializer& ObjectInitializer);
 
-    virtual EBTNodeResult Activate();
+    virtual EBPBTNodeResult Activate();
 
 protected:
     /** Event when play begins for this actor. */
-    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Activate"))
-    void ReceiveActivate();
+    UFUNCTION(BlueprintNativeEvent, meta = (DisplayName = "Activate"))
+    EBPBTNodeResult ReceiveActivate();
 };

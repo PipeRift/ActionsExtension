@@ -13,8 +13,12 @@ UBPBT_Node::UBPBT_Node(const FObjectInitializer& ObjectInitializer)
 {
 }
 
-EBTNodeResult UBPBT_Node::Activate()
+EBPBTNodeResult UBPBT_Node::Activate()
 {
     UWorld* World = GetWorld();
     return ReceiveActivate();
+}
+
+EBPBTNodeResult UBPBT_Node::ReceiveActivate_Implementation() {
+    return EBPBTNodeResult::NR_SUCCESS;
 }
