@@ -2,11 +2,11 @@
 
 #pragma once
 #include "K2Node.h"
-#include "K2Node_ConstructObjectFromClass.h"
+#include "K2Node_ConstructAsyncObjectFromClass.h"
 #include "K2Node_BTNode.generated.h"
  
 UCLASS(BlueprintType, Blueprintable)
-class AIEXTENSIONEDITOR_API UK2Node_BTNode : public UK2Node_ConstructObjectFromClass
+class AIEXTENSIONEDITOR_API UK2Node_BTNode : public UK2Node_ConstructAsyncObjectFromClass
 {
     GENERATED_UCLASS_BODY()
  
