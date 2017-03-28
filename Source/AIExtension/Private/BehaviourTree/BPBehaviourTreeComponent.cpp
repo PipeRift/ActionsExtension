@@ -10,8 +10,3 @@ UBPBehaviourTreeComponent::UBPBehaviourTreeComponent(const FObjectInitializer& O
     : Super(ObjectInitializer)
 {
 }
-
-UBPBT_Node* UBPBehaviourTreeComponent::Node(UObject* WorldContextObject, TSubclassOf<class UBPBT_Node> ItemType, APlayerController* OwningPlayer)
-{
-    return nullptr;
-}
