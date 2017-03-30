@@ -18,6 +18,35 @@ UTask::UTask(const FObjectInitializer& ObjectInitializer)
     Elapsed = 0;
 }
 
+void AActor::BeginPlay()
+{
+    ensureMsgf(ActorHasBegunPlay == EActorBeginPlayState::HasNotBegunPlay, TEXT("BeginPlay was called on actor %s which was in state %d"), *GetPathName(), ActorHasBegunPlay);
+    SetLifeSpan(InitialLifeSpan);
+    RegisterAllActorTickFunctions(true, false); // Components are done below.
+
+    TInlineComponentArray<UActorComponent*> Components;
+    GetComponents(Components);
+
+    ActorHasBegunPlay = EActorBeginPlayState::BeginningPlay;
+    for (UActorComponent* Component : Components)
+    {
+        // bHasBegunPlay will be true for the component if the component was renamed and moved to a new outer during initialization
+        if (Component->IsRegistered() && !Component->HasBegunPlay())
+        {
+            Component->RegisterAllComponentTickFunctions(true);
+            Component->BeginPlay();
+        }
+        else
+        {
+            // When an Actor begins play we expect only the not bAutoRegister false components to not be registered
+            //check(!Component->bAutoRegister);
+        }
+    }
+
+    ReceiveBeginPlay();
+
+    ActorHasBegunPlay = EActorBeginPlayState::HasBegunPlay;
+}
 
 void UTask::Tick(float DeltaTime) {
     if (TickRate > 0) {

@@ -32,20 +32,34 @@ class AIEXTENSION_API UTask : public UObject, public FTickableGameObject, public
 
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFinishedDelegate);
 
-public:
 
+public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Task)
     bool bWantsToTick;
+
     //Tick length in seconds. 0 is default tick rate
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Task)
     float TickRate;
 
-
+protected:
     //~ Begin FTickableGameObject Interface
+
+    /** Event when play begins for this actor. */
+    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "BeginPlay"))
+    void ReceiveBeginPlay();
+
+    /** Overridable native event for when play begins for this actor. */
+    virtual void BeginPlay();
     virtual void Tick(float DeltaTime) override;
     virtual void TaskTick(float DeltaTime);
+
+    /** Event when play begins for this actor. */
+    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Tick"))
+    void ReceiveTick(float DeltaTime);
+
     virtual bool IsTickable() const override { return bWantsToTick; }
     virtual TStatId GetStatId() const override { return Super::GetStatID(); }
+
     //~ End FTickableGameObject Interface
 
 
@@ -55,9 +69,6 @@ public:
     /** Event when play begins for this actor. */
     UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Activate"))
     void ReceiveActivate();
-    /** Event when play begins for this actor. */
-    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Tick"))
-    void ReceiveTick(float DeltaTime);
 
 protected:
     virtual void OnActivation() {}
