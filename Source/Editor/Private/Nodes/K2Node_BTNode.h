@@ -5,7 +5,7 @@
 #include "K2Node_ConstructObjectFromClass.h"
 #include "K2Node_BTNode.generated.h"
  
-UCLASS(BlueprintType, abstract)
+UCLASS(Blueprintable)
 class AIEXTENSIONEDITOR_API UK2Node_BTNode : public UK2Node_ConstructObjectFromClass
 {
     GENERATED_UCLASS_BODY()

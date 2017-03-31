@@ -7,6 +7,8 @@
 #include "UObject/ScriptInterface.h"
 #include "GameplayTask.h"
 
+#include "TickableObject.h"
+
 #include "Task.generated.h"
 
 /**
@@ -26,43 +28,21 @@ enum class ETaskState : uint8
  * 
  */
 UCLASS(Blueprintable, meta = (ExposedAsyncProxy))
-class AIEXTENSION_API UTask : public UObject, public FTickableGameObject, public IGameplayTaskOwnerInterface
+class AIEXTENSION_API UTask : public UTickableObject, public IGameplayTaskOwnerInterface
 {
     GENERATED_UCLASS_BODY()
 
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFinishedDelegate);
 
-
-public:
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Task)
-    bool bWantsToTick;
-
-    //Tick length in seconds. 0 is default tick rate
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Task)
-    float TickRate;
-
 protected:
-    //~ Begin FTickableGameObject Interface
-
-    /** Event when play begins for this actor. */
-    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "BeginPlay"))
-    void ReceiveBeginPlay();
-
+    //~ Begin UTickableObject Interface
     /** Overridable native event for when play begins for this actor. */
     virtual void BeginPlay();
-    virtual void Tick(float DeltaTime) override;
-    virtual void TaskTick(float DeltaTime);
+    virtual void OTick(float DeltaTime) override;
 
-    /** Event when play begins for this actor. */
-    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Tick"))
-    void ReceiveTick(float DeltaTime);
+    //~ End UTickableObject Interface
 
-    virtual bool IsTickable() const override { return bWantsToTick; }
-    virtual TStatId GetStatId() const override { return Super::GetStatID(); }
-
-    //~ End FTickableGameObject Interface
-
-
+public:
     UFUNCTION(BlueprintCallable, Category = Task)
     void Activate();
 
@@ -76,6 +56,7 @@ protected:
 
     UFUNCTION(BlueprintCallable, Category = Task)
     void FinishTask(bool bSuccess, bool bError = false);
+
 public:
     UPROPERTY(BlueprintAssignable, Category = Task)
     FOnFinishedDelegate OnFinished;
@@ -84,9 +65,6 @@ public:
 protected:
     UPROPERTY()
     ETaskState State;
-private:
-    float Elapsed;
-
 
 public:
     //Inlines

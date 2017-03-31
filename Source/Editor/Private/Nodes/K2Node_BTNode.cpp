@@ -143,7 +143,24 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
     UEdGraphPin* LastThenPin = FKismetCompilerUtilities::GenerateAssignmentNodes(CompilerContext, SourceGraph, CreateTaskNode, this, CreateTask_Result, GetClassToSpawn());
 
 
-    CompilerContext.MovePinLinksToIntermediate(*ThenPin, *LastThenPin);
+    //////////////////////////////////////////////////////////////////////////
+    // create 'UTaskFunctionLibrary::ActivateTask' call node
+    UK2Node_CallFunction* ActivateTaskNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
+    //Attach function
+    ActivateTaskNode->FunctionReference.SetExternalMember(Activate_FunctionName, UTaskFunctionLibrary::StaticClass());
+    ActivateTaskNode->AllocateDefaultPins();
+
+    //allocate nodes for created widget.
+    UEdGraphPin* ActivateTask_Exec = ActivateTaskNode->GetExecPin();
+    UEdGraphPin* ActivateTask_Task = ActivateTaskNode->FindPinChecked("Task");
+    UEdGraphPin* ActivateTask_Then = ActivateTaskNode->GetThenPin();
+
+    bError &= Schema->TryCreateConnection(LastThenPin, ActivateTask_Exec);
+
+    ActivateTask_Task->PinType = CreateTask_Result->PinType;
+    bError &= Schema->TryCreateConnection(CreateTask_Result, ActivateTask_Task);
+
+    CompilerContext.MovePinLinksToIntermediate(*ThenPin, *ActivateTask_Then);
 
 
     if (bError) {

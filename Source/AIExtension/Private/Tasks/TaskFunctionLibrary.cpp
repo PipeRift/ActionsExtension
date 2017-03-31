@@ -11,7 +11,7 @@ UTask* UTaskFunctionLibrary::CreateTask(UObject* WorldContextObject, TSubclassOf
     return NewObject<UTask>(WorldContextObject, TaskType);
 }
 
-void UTaskFunctionLibrary::ActivateTask(UObject* Owner, UTask* Task)
+void UTaskFunctionLibrary::ActivateTask(UTask* Task)
 {
     if (Task) {
         Task->Activate();

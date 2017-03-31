@@ -7,44 +7,61 @@ UTickableObject::UTickableObject(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
     bWantsToTick = true;
+    bTickInEditor = false;
     TickRate = 0;
 
-    Elapsed = 0;
+    DeltaElapsed = 0;
 }
 
 void UTickableObject::BeginPlay()
 {
-    ensureMsgf(ActorHasBegunPlay == EObjectBeginPlayState::HasNotBegunPlay, TEXT("BeginPlay was called on tickable object %s which was in state %d"), *GetPathName(), ObjectHasBegunPlay);
-    SetLifeSpan(InitialLifeSpan);
-    RegisterAllActorTickFunctions(true, false); // Components are done below.
+    ensureMsgf(ObjectHasBegunPlay == EObjectBeginPlayState::HasNotBegunPlay, TEXT("BeginPlay was called on tickable object %s which was in state %d"), *GetPathName(), ObjectHasBegunPlay);
 
-    ActorHasBegunPlay = EActorBeginPlayState::BeginningPlay;
+    ObjectHasBegunPlay = EObjectBeginPlayState::BeginningPlay;
 
+    DeltaElapsed = 0;
     ReceiveBeginPlay();
 
-    ActorHasBegunPlay = EActorBeginPlayState::HasBegunPlay;
+    ObjectHasBegunPlay = EObjectBeginPlayState::HasBegunPlay;
 }
 
-void UTickeableObject::Tick(float DeltaTime) {
+void UTickableObject::Tick(float DeltaTime) {
     if (TickRate > 0) {
-        Elapsed += DeltaTime;
-        if (Elapsed < TickRate) return;
+        DeltaElapsed += DeltaTime;
+        if (DeltaElapsed < TickRate)
+            return;
 
-        Elapsed -= TickRate;
+        DeltaElapsed -= TickRate;
     }
+
+    if (!HasObjectBegunPlay() && !bTickInEditor)
+        return;
 
     // Limited Tick
 
     //TODO: Elapsed value may be wrong. Check it.
-    TickeableObjectTick(Elapsed);
-    ReceiveTick(Elapsed);
+    OTick(DeltaElapsed);
+    ReceiveTick(DeltaElapsed);
 }
 
-void UTickeableObject::Tick(float DeltaTime) {
-
+void UTickableObject::OTick(float DeltaTime) {
 }
 
-void UTickeableObject::DispatchBeginPlay() {
 
+
+void UTickableObject::DispatchBeginPlay() {
+    if (!HasObjectBegunPlay() && !IsPendingKill()) {
+        BeginPlay();
+    }
 }
 
+void UTickableObject::PostInitProperties() {
+    Super::PostInitProperties();
+
+    if (GEngine) {
+        UWorld* World = GEngine->GetWorld();
+        if (World && World->WorldType != EWorldType::Editor) {
+            DispatchBeginPlay();
+        }
+    }
+}
