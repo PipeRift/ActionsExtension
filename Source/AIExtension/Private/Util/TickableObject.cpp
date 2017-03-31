@@ -26,6 +26,11 @@ void UTickableObject::BeginPlay()
 }
 
 void UTickableObject::Tick(float DeltaTime) {
+
+    if (!HasObjectBegunPlay()) {
+        DispatchBeginPlay();
+    }
+    
     if (TickRate > 0) {
         DeltaElapsed += DeltaTime;
         if (DeltaElapsed < TickRate)
@@ -34,8 +39,6 @@ void UTickableObject::Tick(float DeltaTime) {
         DeltaElapsed -= TickRate;
     }
 
-    if (!HasObjectBegunPlay() && !bTickInEditor)
-        return;
 
     // Limited Tick
 
@@ -57,11 +60,4 @@ void UTickableObject::DispatchBeginPlay() {
 
 void UTickableObject::PostInitProperties() {
     Super::PostInitProperties();
-
-    if (GEngine) {
-        UWorld* World = GEngine->GetWorld();
-        if (World && World->WorldType != EWorldType::Editor) {
-            DispatchBeginPlay();
-        }
-    }
 }

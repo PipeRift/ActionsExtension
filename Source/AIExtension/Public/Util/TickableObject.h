@@ -59,10 +59,15 @@ protected:
     //~ Begin FTickableGameObject Interface
     virtual void Tick(float DeltaTime) override;
 
-    virtual bool IsTickable() const override           { return bWantsToTick; } //If it is not checked every frame, dont call the method
+    virtual bool IsTickable() const override {
+        //Don't tick in editor if we dont want to.
+        const bool bIsEditorAndStarted = (GWorld->HasBegunPlay() && !GIsEditor);
+        return bWantsToTick && bIsEditorAndStarted;
+    }
     virtual bool IsTickableWhenPaused() const override { return false; }
-    virtual bool IsTickableInEditor() const override   { return bTickInEditor; }
-    virtual TStatId GetStatId() const override         { return Super::GetStatID(); }
+    virtual TStatId GetStatId() const override {
+        RETURN_QUICK_DECLARE_CYCLE_STAT(UTickableObject, STATGROUP_Tickables);
+    }
     //~ End FTickableGameObject Interface
 
 
