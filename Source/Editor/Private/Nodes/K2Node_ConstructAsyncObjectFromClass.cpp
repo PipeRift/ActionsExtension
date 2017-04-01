@@ -132,10 +132,19 @@ void UK2Node_ConstructAsyncObjectFromClass::CreatePinsForClass(UClass* InClass, 
                 if (UMulticastDelegateProperty* Delegate = Cast<UMulticastDelegateProperty>(*PropertyIt))
                 {
                     UEdGraphPin* Pin = CreatePin(EGPD_Output, K2Schema->PC_Exec, TEXT(""), NULL, false, false, *Property->GetName());
-                    /*if (!DelegateSignatureFunction)
+                    
+                    UFunction* DelegateSignatureFunction = Delegate->SignatureFunction;
+
+                    for (TFieldIterator<UProperty> PropIt(DelegateSignatureFunction); PropIt && (PropIt->PropertyFlags & CPF_Parm); ++PropIt)
                     {
-                        DelegateSignatureFunction = Property->SignatureFunction;
-                    }*/
+                        UProperty* Param = *PropIt;
+                        const bool bIsFunctionInput = !Param->HasAnyPropertyFlags(CPF_OutParm) || Param->HasAnyPropertyFlags(CPF_ReferenceParm);
+                        if (bIsFunctionInput)
+                        {
+                            UEdGraphPin* ParameterPin = CreatePin(EGPD_Output, TEXT(""), TEXT(""), NULL, false, false, Param->GetName());
+                            K2Schema->ConvertPropertyToPinType(Param, /*out*/ ParameterPin->PinType);
+                        }
+                    }
 
                     if (OutClassPins && Pin)
                     {

@@ -26,6 +26,8 @@ void UK2Node_BTNode::AllocateDefaultPins()
     Super::AllocateDefaultPins();
  
     const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>();
+
+
 }
  
 FLinearColor UK2Node_BTNode::GetNodeTitleColor() const
@@ -101,7 +103,7 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
         return;
     }
 
-    bool bError = false;
+    bool bIsErrorFree = true;
  
     //////////////////////////////////////////////////////////////////////////
     // create 'UTaskFunctionLibrary::CreateTask' call node
@@ -133,7 +135,7 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
     // Move Result pin to 'UTaskFunctionLibrary::CreateTask'
     CreateTask_Result->PinType = ResultPin->PinType; // Copy type so it uses the right actor subclass
     CompilerContext.MovePinLinksToIntermediate(*ResultPin, *CreateTask_Result);
-
+    
 
 
     //////////////////////////////////////////////////////////////////////////
@@ -141,6 +143,40 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
  
     // Set all properties of the object
     UEdGraphPin* LastThenPin = FKismetCompilerUtilities::GenerateAssignmentNodes(CompilerContext, SourceGraph, CreateTaskNode, this, CreateTask_Result, GetClassToSpawn());
+
+
+
+    //////////////////////////////////////////////////////////////////////////
+    // GATHER OUTPUT PARAMETERS AND PAIR THEM WITH LOCAL VARIABLES
+    TArray<FHelper::FOutputPinAndLocalVariable> VariableOutputs;
+    /* Variable Assignation bug. Looks like variable<->delegate relation is broken
+    for (auto CurrentPin : Pins)
+    {
+        if ((ResultPin != CurrentPin) && FHelper::ValidDataPin(CurrentPin, EGPD_Output, Schema))
+        {
+            const FEdGraphPinType& PinType = CurrentPin->PinType;
+            UK2Node_TemporaryVariable* TempVarOutput = CompilerContext.SpawnInternalVariable(this, 
+                PinType.PinCategory, PinType.PinSubCategory, PinType.PinSubCategoryObject.Get(), PinType.bIsArray, PinType.bIsSet, PinType.bIsMap, PinType.PinValueType);
+
+            bIsErrorFree &= TempVarOutput->GetVariablePin() && CompilerContext.MovePinLinksToIntermediate(*CurrentPin, *TempVarOutput->GetVariablePin()).CanSafeConnect();
+            VariableOutputs.Add(FHelper::FOutputPinAndLocalVariable(CurrentPin, TempVarOutput));
+        }
+    }*/
+
+    // FOR EACH DELEGATE DEFINE EVENT, CONNECT IT TO DELEGATE AND IMPLEMENT A CHAIN OF ASSIGMENTS
+    for (TFieldIterator<UMulticastDelegateProperty> PropertyIt(GetClassToSpawn(), EFieldIteratorFlags::ExcludeSuper); PropertyIt && bIsErrorFree; ++PropertyIt)
+    {
+        bIsErrorFree &= FHelper::HandleDelegateImplementation(*PropertyIt, VariableOutputs, CreateTask_Result, LastThenPin, this, SourceGraph, CompilerContext);
+    }
+
+
+    if (!bIsErrorFree) {
+        CompilerContext.MessageLog.Error(*LOCTEXT("CreateTaskNodeMissingClass_Error", "There was a compile error while binding delegates.").ToString(), this);
+        // we break exec links so this is the only error we get, don't want the CreateTask node being considered and giving 'unexpected node' type warnings
+        BreakAllNodeLinks();
+        return;
+    }
+
 
 
     //////////////////////////////////////////////////////////////////////////
@@ -155,16 +191,16 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
     UEdGraphPin* ActivateTask_Task = ActivateTaskNode->FindPinChecked("Task");
     UEdGraphPin* ActivateTask_Then = ActivateTaskNode->GetThenPin();
 
-    bError &= Schema->TryCreateConnection(LastThenPin, ActivateTask_Exec);
+    bIsErrorFree &= Schema->TryCreateConnection(LastThenPin, ActivateTask_Exec);
 
     ActivateTask_Task->PinType = CreateTask_Result->PinType;
-    bError &= Schema->TryCreateConnection(CreateTask_Result, ActivateTask_Task);
+    bIsErrorFree &= Schema->TryCreateConnection(CreateTask_Result, ActivateTask_Task);
 
     CompilerContext.MovePinLinksToIntermediate(*ThenPin, *ActivateTask_Then);
 
 
-    if (bError) {
-        CompilerContext.MessageLog.Error(*LOCTEXT("CreateTaskNodeMissingClass_Error", "There was a compile error.").ToString(), this);
+    if (!bIsErrorFree) {
+        CompilerContext.MessageLog.Error(*LOCTEXT("CreateTaskNodeMissingClass_Error", "There was a compile error while activating the task.").ToString(), this);
         // we break exec links so this is the only error we get, don't want the CreateTask node being considered and giving 'unexpected node' type warnings
         BreakAllNodeLinks();
         return;

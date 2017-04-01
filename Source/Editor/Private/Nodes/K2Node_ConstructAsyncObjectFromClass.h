@@ -6,6 +6,10 @@
 #include "UObject/ObjectMacros.h"
 #include "EdGraph/EdGraphNodeUtils.h"
 #include "K2Node.h"
+#include "K2Node_AddDelegate.h"
+#include "K2Node_CreateDelegate.h"
+#include "K2Node_Self.h"
+#include "K2Node_TemporaryVariable.h"
 #include "K2Node_ConstructAsyncObjectFromClass.generated.h"
 
 class FBlueprintActionDatabaseRegistrar;
