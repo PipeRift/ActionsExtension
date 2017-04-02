@@ -2,8 +2,8 @@
  
 #include "AIExtensionEditorPrivatePCH.h"
  
-#include "BPBehaviourTreeComponent.h"
-#include "BPBT_Node.h"
+#include "TaskFunctionLibrary.h"
+#include "Task.h"
  
 #include "KismetCompiler.h"
 #include "BlueprintNodeSpawner.h"
@@ -14,164 +14,210 @@
  
 #define LOCTEXT_NAMESPACE "AIExtensionEditor"
  
-//Helper which will store one of the function inputs we excpect BP callable function will have.
-struct FK2Node_BTNodeHelper
-{
-	static FString OwningPlayerPinName;
-};
- 
-FString FK2Node_BTNodeHelper::OwningPlayerPinName(TEXT("OwningPlayer"));
- 
 UK2Node_BTNode::UK2Node_BTNode(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+    : Super(ObjectInitializer)
 {
-	NodeTooltip = LOCTEXT("NodeTooltip", "Adds a Behaviour Tree node.");
+    NodeTooltip = LOCTEXT("NodeTooltip", "Creates a new task object");
 }
  
 //Adds default pins to node. These Pins (inputs ?) are always displayed.
 void UK2Node_BTNode::AllocateDefaultPins()
 {
-	Super::AllocateDefaultPins();
+    Super::AllocateDefaultPins();
  
-	const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>();
- 
-	// OwningPlayer pin
-	UEdGraphPin* OwningPlayerPin = CreatePin(EGPD_Input, K2Schema->PC_Object, TEXT(""), APlayerController::StaticClass(), false, false, FK2Node_BTNodeHelper::OwningPlayerPinName);
-	SetPinToolTip(*OwningPlayerPin, LOCTEXT("OwningPlayerPinDescription", "The player that 'owns' the this item."));
+    const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>();
+
+
 }
  
 FLinearColor UK2Node_BTNode::GetNodeTitleColor() const
 {
-	return Super::GetNodeTitleColor();
+    return Super::GetNodeTitleColor();
 }
  
 FText UK2Node_BTNode::GetBaseNodeTitle() const
 {
-	return LOCTEXT("BTNode_BaseTitle", "Node");
+    return LOCTEXT("BTNode_BaseTitle", "Create Task");
 }
  
 FText UK2Node_BTNode::GetNodeTitleFormat() const
 {
-	return LOCTEXT("BTNode", "{ClassName}");
+    return LOCTEXT("BTTask", "{ClassName}");
 }
  
 //which class can be used with this node to create objects. All childs of class can be used.
 UClass* UK2Node_BTNode::GetClassPinBaseClass() const
 {
-	return UBPBT_Node::StaticClass();
+    return UTask::StaticClass();
 }
  
 //Set context menu category in which our node will be present.
 FText UK2Node_BTNode::GetMenuCategory() const
 {
-	return FText::FromString("Game Inventory System");
-}
- 
-//gets out predefined pin
-UEdGraphPin* UK2Node_BTNode::GetOwningPlayerPin() const
-{
-	UEdGraphPin* Pin = FindPin(FK2Node_BTNodeHelper::OwningPlayerPinName);
-	check(Pin == NULL || Pin->Direction == EGPD_Input);
-	return Pin;
+    return FText::FromString("Behaviour Tree");
 }
  
 bool UK2Node_BTNode::IsSpawnVarPin(UEdGraphPin* Pin)
 {
-	return(Super::IsSpawnVarPin(Pin) &&
-		Pin->PinName != FK2Node_BTNodeHelper::OwningPlayerPinName);
+    return Super::IsSpawnVarPin(Pin);
 }
  
 //and this is where magic really happens. This will expand node for our custom object, with properties
 //which are set as EditAwnywhere and meta=(ExposeOnSpawn), or equivalent in blueprint.
 void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
-	Super::ExpandNode(CompilerContext, SourceGraph);
+    Super::ExpandNode(CompilerContext, SourceGraph);
+
+    const UEdGraphSchema_K2* Schema = CompilerContext.GetSchema();
+    check(SourceGraph && Schema);
+
+    //Get static function
+    static FName Create_FunctionName = GET_FUNCTION_NAME_CHECKED(UTaskFunctionLibrary, CreateTask);
+    static FName Activate_FunctionName = GET_FUNCTION_NAME_CHECKED(UTaskFunctionLibrary, ActivateTask);
+
+    //Set function parameter names
+    static FString ParamName_WorldContextObject = FString(TEXT("WorldContextObject"));
+    static FString ParamName_WidgetType = FString(TEXT("TaskType"));
+
  
-	//look for static function in BlueprintFunctionLibrary
-	//In this class and of this name
-	static FName Create_FunctionName = GET_FUNCTION_NAME_CHECKED(UBPBehaviourTreeComponent, Node);
-	//with these inputs (as a Side note, these should be probabaly FName not FString)
-	static FString WorldContextObject_ParamName = FString(TEXT("WorldContextObject"));
-	static FString WidgetType_ParamName = FString(TEXT("ItemType"));
-	static FString OwningPlayer_ParamName = FString(TEXT("OwningPlayer"));
+    /* Retrieve Pins */
+    //Exec
+    UEdGraphPin* ExecPin         = this->GetExecPin();         // Exec pins are those big arrows, connected with thick white lines.   
+    UEdGraphPin* ThenPin         = this->GetThenPin();         // Then pin is the same as exec pin, just on the other side (the out arrow).
+    //Inputs
+    UEdGraphPin* WorldContextPin = this->GetWorldContextPin(); // Gets world context pin from our static function
+    UEdGraphPin* ClassPin        = this->GetClassPin();        // Get class pin which is used to determine which class to spawn.
+    //Outputs
+    UEdGraphPin* ResultPin       = this->GetResultPin();       // Result pin, which will output our spawned object.
+
+
+
+    UClass* SpawnClass = ClassPin ? Cast<UClass>(ClassPin->DefaultObject) : NULL;
+
+    //Don't proceed if ClassPin is not defined or valid
+    if (ClassPin->LinkedTo.Num() == 0 && NULL == SpawnClass)
+    {
+        CompilerContext.MessageLog.Error(*LOCTEXT("CreateTaskNodeMissingClass_Error", "Spawn node @@ must have a class specified.").ToString(), this);
+        // we break exec links so this is the only error we get, don't want the CreateItemData node being considered and giving 'unexpected node' type warnings
+        BreakAllNodeLinks();
+        return;
+    }
+
+    bool bIsErrorFree = true;
  
-	//get pointer to self;
-	UK2Node_BTNode* CreateItemDataNode = this;
+    //////////////////////////////////////////////////////////////////////////
+    // create 'UTaskFunctionLibrary::CreateTask' call node
+    UK2Node_CallFunction* CreateTaskNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
+    //Attach function
+    CreateTaskNode->FunctionReference.SetExternalMember(Create_FunctionName, UTaskFunctionLibrary::StaticClass());
+    CreateTaskNode->AllocateDefaultPins();
  
-	//get pointers to default pins.
-	//Exec pins are those big arrows, connected with thick white lines.
-	UEdGraphPin* SpawnNodeExec = CreateItemDataNode->GetExecPin();
-	//gets world context pin from our static function
-	UEdGraphPin* SpawnWorldContextPin = CreateItemDataNode->GetWorldContextPin();
-	//the same as above
-	UEdGraphPin* SpawnOwningPlayerPin = CreateItemDataNode->GetOwningPlayerPin();
-	//get class pin which is used to determine which class to spawn.
-	UEdGraphPin* SpawnClassPin = CreateItemDataNode->GetClassPin();
-	//then pin is the same as exec pin, just on the other side (the out arrow).
-	UEdGraphPin* SpawnNodeThen = CreateItemDataNode->GetThenPin();
-	//result pin, which will output our spawned object.
-	UEdGraphPin* SpawnNodeResult = CreateItemDataNode->GetResultPin();
+    //allocate nodes for created widget.
+    UEdGraphPin* CreateTask_Exec = CreateTaskNode->GetExecPin();
+    UEdGraphPin* CreateTask_WorldContext = CreateTaskNode->FindPinChecked(ParamName_WorldContextObject);
+    UEdGraphPin* CreateTask_WidgetType = CreateTaskNode->FindPinChecked(ParamName_WidgetType);
+    UEdGraphPin* CreateTask_Result = CreateTaskNode->GetReturnValuePin();
  
-	UClass* SpawnClass = (SpawnClassPin != NULL) ? Cast<UClass>(SpawnClassPin->DefaultObject) : NULL;
-	if ((0 == SpawnClassPin->LinkedTo.Num()) && (NULL == SpawnClass))
-	{
-		CompilerContext.MessageLog.Error(*LOCTEXT("CreateItemDAtaNodeMissingClass_Error", "Spawn node @@ must have a class specified.").ToString(), CreateItemDataNode);
-		// we break exec links so this is the only error we get, don't want the CreateItemData node being considered and giving 'unexpected node' type warnings
-		CreateItemDataNode->BreakAllNodeLinks();
-		return;
-	}
+    // Move 'exec' pin to 'UTaskFunctionLibrary::CreateTask'
+    CompilerContext.MovePinLinksToIntermediate(*ExecPin, *CreateTask_Exec);
  
-	//////////////////////////////////////////////////////////////////////////
-	// create 'UWidgetBlueprintLibrary::Create' call node
-	UK2Node_CallFunction* CallCreateNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(CreateItemDataNode, SourceGraph);
-	CallCreateNode->FunctionReference.SetExternalMember(Create_FunctionName, UK2Node_BTNode::StaticClass());
-	CallCreateNode->AllocateDefaultPins();
+    //Move pin if connected else, copy the value
+    if (ClassPin->LinkedTo.Num() > 0) {
+        CompilerContext.MovePinLinksToIntermediate(*ClassPin, *CreateTask_WidgetType);
+    } else {
+        CreateTask_WidgetType->DefaultObject = SpawnClass;
+    }
  
-	//allocate nodes for created widget.
-	UEdGraphPin* CallCreateExec = CallCreateNode->GetExecPin();
-	UEdGraphPin* CallCreateWorldContextPin = CallCreateNode->FindPinChecked(WorldContextObject_ParamName);
-	UEdGraphPin* CallCreateWidgetTypePin = CallCreateNode->FindPinChecked(WidgetType_ParamName);
-	UEdGraphPin* CallCreateOwningPlayerPin = CallCreateNode->FindPinChecked(OwningPlayer_ParamName);
-	UEdGraphPin* CallCreateResult = CallCreateNode->GetReturnValuePin();
+    // Copy WorldContext pin to 'UTaskFunctionLibrary::CreateTask' if necessary
+    if (WorldContextPin)
+        CompilerContext.MovePinLinksToIntermediate(*WorldContextPin, *CreateTask_WorldContext);
+
+    // Move Result pin to 'UTaskFunctionLibrary::CreateTask'
+    CreateTask_Result->PinType = ResultPin->PinType; // Copy type so it uses the right actor subclass
+    CompilerContext.MovePinLinksToIntermediate(*ResultPin, *CreateTask_Result);
+    
+
+
+    //////////////////////////////////////////////////////////////////////////
+    // create 'set var' nodes
  
-	// Move 'exec' connection from create widget node to 'UWidgetBlueprintLibrary::Create'
-	CompilerContext.MovePinLinksToIntermediate(*SpawnNodeExec, *CallCreateExec);
- 
-	if (SpawnClassPin->LinkedTo.Num() > 0)
-	{
-		// Copy the 'blueprint' connection from the spawn node to 'UWidgetBlueprintLibrary::Create'
-		CompilerContext.MovePinLinksToIntermediate(*SpawnClassPin, *CallCreateWidgetTypePin);
-	}
-	else
-	{
-		// Copy blueprint literal onto 'UWidgetBlueprintLibrary::Create' call 
-		CallCreateWidgetTypePin->DefaultObject = SpawnClass;
-	}
- 
-	// Copy the world context connection from the spawn node to 'UWidgetBlueprintLibrary::Create' if necessary
-	if (SpawnWorldContextPin)
-	{
-		CompilerContext.MovePinLinksToIntermediate(*SpawnWorldContextPin, *CallCreateWorldContextPin);
-	}
- 
-	// Copy the 'Owning Player' connection from the spawn node to 'UWidgetBlueprintLibrary::Create'
-	CompilerContext.MovePinLinksToIntermediate(*SpawnOwningPlayerPin, *CallCreateOwningPlayerPin);
- 
-	// Move result connection from spawn node to 'UWidgetBlueprintLibrary::Create'
-	CallCreateResult->PinType = SpawnNodeResult->PinType; // Copy type so it uses the right actor subclass
-	CompilerContext.MovePinLinksToIntermediate(*SpawnNodeResult, *CallCreateResult);
- 
-	//////////////////////////////////////////////////////////////////////////
-	// create 'set var' nodes
- 
-	// Get 'result' pin from 'begin spawn', this is the actual actor we want to set properties on
-	UEdGraphPin* LastThen = FKismetCompilerUtilities::GenerateAssignmentNodes(CompilerContext, SourceGraph, CallCreateNode, CreateItemDataNode, CallCreateResult, GetClassToSpawn());
- 
-	// Move 'then' connection from create widget node to the last 'then'
-	CompilerContext.MovePinLinksToIntermediate(*SpawnNodeThen, *LastThen);
- 
-	// Break any links to the expanded node
-	CreateItemDataNode->BreakAllNodeLinks();
+    // Set all properties of the object
+    UEdGraphPin* LastThenPin = FKismetCompilerUtilities::GenerateAssignmentNodes(CompilerContext, SourceGraph, CreateTaskNode, this, CreateTask_Result, GetClassToSpawn());
+
+
+
+    //////////////////////////////////////////////////////////////////////////
+    // GATHER OUTPUT PARAMETERS AND PAIR THEM WITH LOCAL VARIABLES
+    TArray<FHelper::FOutputPinAndLocalVariable> VariableOutputs;
+    /* Variable Assignation bug. Looks like variable<->delegate relation is broken*/
+    /*for (auto CurrentPin : Pins)
+    {
+        if ((ResultPin != CurrentPin) && FHelper::ValidDataPin(CurrentPin, EGPD_Output, Schema))
+        {
+            const FEdGraphPinType& PinType = CurrentPin->PinType;
+            UK2Node_TemporaryVariable* TempVarOutput = CompilerContext.SpawnInternalVariable(this, 
+                PinType.PinCategory, PinType.PinSubCategory, PinType.PinSubCategoryObject.Get(), PinType.bIsArray, PinType.bIsSet, PinType.bIsMap, PinType.PinValueType);
+
+            bIsErrorFree &= TempVarOutput->GetVariablePin() && CompilerContext.MovePinLinksToIntermediate(*CurrentPin, *TempVarOutput->GetVariablePin()).CanSafeConnect();
+            VariableOutputs.Add(FHelper::FOutputPinAndLocalVariable(CurrentPin, TempVarOutput));
+        }
+    }*/
+
+
+    // FOR EACH DELEGATE DEFINE EVENT, CONNECT IT TO DELEGATE AND IMPLEMENT A CHAIN OF ASSIGMENTS
+    for (TFieldIterator<UMulticastDelegateProperty> PropertyIt(GetClassToSpawn(), EFieldIteratorFlags::ExcludeSuper); PropertyIt && bIsErrorFree; ++PropertyIt)
+    {
+        UMulticastDelegateProperty* Property = *PropertyIt;
+
+        const UFunction* DelegateSignatureFunction = Property->SignatureFunction;
+        if (DelegateSignatureFunction->NumParms < 1) {
+            bIsErrorFree &= FHelper::HandleDelegateImplementation(Property, VariableOutputs, CreateTask_Result, LastThenPin, this, SourceGraph, CompilerContext);
+        }
+        else
+        {
+            bIsErrorFree &= FHelper::HandleDelegateBindImplementation(Property, CreateTask_Result, LastThenPin, this, SourceGraph, CompilerContext);
+        }
+    }
+
+
+    if (!bIsErrorFree) {
+        CompilerContext.MessageLog.Error(*LOCTEXT("CreateTaskNodeMissingClass_Error", "There was a compile error while binding delegates.").ToString(), this);
+        // we break exec links so this is the only error we get, don't want the CreateTask node being considered and giving 'unexpected node' type warnings
+        BreakAllNodeLinks();
+        return;
+    }
+
+
+
+    //////////////////////////////////////////////////////////////////////////
+    // create 'UTaskFunctionLibrary::ActivateTask' call node
+    UK2Node_CallFunction* ActivateTaskNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
+    //Attach function
+    ActivateTaskNode->FunctionReference.SetExternalMember(Activate_FunctionName, UTaskFunctionLibrary::StaticClass());
+    ActivateTaskNode->AllocateDefaultPins();
+
+    //allocate nodes for created widget.
+    UEdGraphPin* ActivateTask_Exec = ActivateTaskNode->GetExecPin();
+    UEdGraphPin* ActivateTask_Task = ActivateTaskNode->FindPinChecked("Task");
+    UEdGraphPin* ActivateTask_Then = ActivateTaskNode->GetThenPin();
+
+    bIsErrorFree &= Schema->TryCreateConnection(LastThenPin, ActivateTask_Exec);
+
+    ActivateTask_Task->PinType = CreateTask_Result->PinType;
+    bIsErrorFree &= Schema->TryCreateConnection(CreateTask_Result, ActivateTask_Task);
+
+    CompilerContext.MovePinLinksToIntermediate(*ThenPin, *ActivateTask_Then);
+
+
+    if (!bIsErrorFree) {
+        CompilerContext.MessageLog.Error(*LOCTEXT("CreateTaskNodeMissingClass_Error", "There was a compile error while activating the task.").ToString(), this);
+        // we break exec links so this is the only error we get, don't want the CreateTask node being considered and giving 'unexpected node' type warnings
+        BreakAllNodeLinks();
+        return;
+    }
+
+    // Break any links to the expanded node
+    BreakAllNodeLinks();
 }
  
 #undef LOCTEXT_NAMESPACE
