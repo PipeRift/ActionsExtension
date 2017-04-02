@@ -4,11 +4,11 @@
 
 #include "K2Node_ConstructAsyncObjectFromClass.h"
 #include "UObject/UnrealType.h"
-#include "EdGraphSchema_K2.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "BlueprintNodeSpawner.h"
 #include "EditorCategoryUtils.h"
 #include "BlueprintActionDatabaseRegistrar.h"
+#include "K2Node_AssignmentStatement.h"
 
 FString UK2Node_ConstructAsyncObjectFromClass::FHelper::WorldContextPinName(TEXT("WorldContextObject"));
 FString UK2Node_ConstructAsyncObjectFromClass::FHelper::ClassPinName(TEXT("Class"));
@@ -131,19 +131,17 @@ void UK2Node_ConstructAsyncObjectFromClass::CreatePinsForClass(UClass* InClass, 
             else if (bIsDelegate) {
                 if (UMulticastDelegateProperty* Delegate = Cast<UMulticastDelegateProperty>(*PropertyIt))
                 {
-                    UEdGraphPin* Pin = CreatePin(EGPD_Output, K2Schema->PC_Exec, TEXT(""), NULL, false, false, *Property->GetName());
-                    
                     UFunction* DelegateSignatureFunction = Delegate->SignatureFunction;
-
-                    for (TFieldIterator<UProperty> PropIt(DelegateSignatureFunction); PropIt && (PropIt->PropertyFlags & CPF_Parm); ++PropIt)
-                    {
-                        UProperty* Param = *PropIt;
-                        const bool bIsFunctionInput = !Param->HasAnyPropertyFlags(CPF_OutParm) || Param->HasAnyPropertyFlags(CPF_ReferenceParm);
-                        if (bIsFunctionInput)
-                        {
-                            UEdGraphPin* ParameterPin = CreatePin(EGPD_Output, TEXT(""), TEXT(""), NULL, false, false, Param->GetName());
-                            K2Schema->ConvertPropertyToPinType(Param, /*out*/ ParameterPin->PinType);
-                        }
+                    UEdGraphPin* Pin;
+                    if (DelegateSignatureFunction->NumParms < 1) {
+                        Pin = CreatePin(EGPD_Output, K2Schema->PC_Exec, TEXT(""), NULL, false, false, Delegate->GetName());
+                    }
+                    else {
+                        Pin = CreatePin(EGPD_Input, K2Schema->PC_Delegate, TEXT(""), NULL, false, true, Delegate->GetName(), true);
+                        Pin->PinFriendlyName = FText::Format(NSLOCTEXT("K2Node", "PinFriendlyDelegatetName", "{0} Event"), FText::FromString(Delegate->GetName()));
+                        
+                        //Update PinType with the delegate's signature
+                        FMemberReference::FillSimpleMemberReference<UFunction>(DelegateSignatureFunction, Pin->PinType.PinSubCategoryMemberReference);
                     }
 
                     if (OutClassPins && Pin)
@@ -526,6 +524,38 @@ bool UK2Node_ConstructAsyncObjectFromClass::FHelper::HandleDelegateImplementatio
     }
 
     bIsErrorFree &= CompilerContext.MovePinLinksToIntermediate(*PinForCurrentDelegateProperty, *LastActivatedNodeThen).CanSafeConnect();
+    return bIsErrorFree;
+}
+
+
+bool UK2Node_ConstructAsyncObjectFromClass::FHelper::HandleDelegateBindImplementation(
+    UMulticastDelegateProperty* CurrentProperty,
+    UEdGraphPin* ObjectPin, UEdGraphPin*& InOutLastThenPin,
+    UK2Node* CurrentNode, UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext) 
+{
+    bool bIsErrorFree = true;
+    const UEdGraphSchema_K2* Schema = CompilerContext.GetSchema();
+
+    check(CurrentProperty && Schema);
+    UEdGraphPin* DelegateRefPin = CurrentNode->FindPinChecked(CurrentProperty->GetName());
+    check(DelegateRefPin);
+
+
+    UK2Node_AddDelegate* AddDelegateNode = CompilerContext.SpawnIntermediateNode<UK2Node_AddDelegate>(CurrentNode, SourceGraph);
+    AddDelegateNode->SetFromProperty(CurrentProperty, false);
+    AddDelegateNode->AllocateDefaultPins();
+
+
+    bIsErrorFree &= Schema->TryCreateConnection(AddDelegateNode->FindPinChecked(Schema->PN_Self), ObjectPin);
+    bIsErrorFree &= Schema->TryCreateConnection(InOutLastThenPin, AddDelegateNode->FindPinChecked(Schema->PN_Execute));
+    InOutLastThenPin = AddDelegateNode->FindPinChecked(Schema->PN_Then);
+
+    UEdGraphPin* AddDelegate_DelegatePin = AddDelegateNode->GetDelegatePin();
+    bIsErrorFree &= CompilerContext.MovePinLinksToIntermediate(*DelegateRefPin, *AddDelegate_DelegatePin).CanSafeConnect();
+    DelegateRefPin->PinType = AddDelegate_DelegatePin->PinType;
+
+
+
     return bIsErrorFree;
 }
 

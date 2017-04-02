@@ -5,10 +5,12 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 #include "EdGraph/EdGraphNodeUtils.h"
+#include "EdGraphSchema_K2.h"
 #include "K2Node.h"
 #include "K2Node_AddDelegate.h"
 #include "K2Node_CreateDelegate.h"
 #include "K2Node_Self.h"
+#include "K2Node_CustomEvent.h"
 #include "K2Node_TemporaryVariable.h"
 #include "K2Node_ConstructAsyncObjectFromClass.generated.h"
 
@@ -105,6 +107,10 @@ protected:
         static bool CopyEventSignature(UK2Node_CustomEvent* CENode, UFunction* Function, const UEdGraphSchema_K2* Schema);
         static bool HandleDelegateImplementation(
             UMulticastDelegateProperty* CurrentProperty, const TArray<FHelper::FOutputPinAndLocalVariable>& VariableOutputs,
+            UEdGraphPin* ProxyObjectPin, UEdGraphPin*& InOutLastThenPin,
+            UK2Node* CurrentNode, UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext);
+        static bool HandleDelegateBindImplementation(
+            UMulticastDelegateProperty* CurrentProperty,
             UEdGraphPin* ProxyObjectPin, UEdGraphPin*& InOutLastThenPin,
             UK2Node* CurrentNode, UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext);
     };

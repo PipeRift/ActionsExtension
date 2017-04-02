@@ -149,8 +149,8 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
     //////////////////////////////////////////////////////////////////////////
     // GATHER OUTPUT PARAMETERS AND PAIR THEM WITH LOCAL VARIABLES
     TArray<FHelper::FOutputPinAndLocalVariable> VariableOutputs;
-    /* Variable Assignation bug. Looks like variable<->delegate relation is broken
-    for (auto CurrentPin : Pins)
+    /* Variable Assignation bug. Looks like variable<->delegate relation is broken*/
+    /*for (auto CurrentPin : Pins)
     {
         if ((ResultPin != CurrentPin) && FHelper::ValidDataPin(CurrentPin, EGPD_Output, Schema))
         {
@@ -163,10 +163,20 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
         }
     }*/
 
+
     // FOR EACH DELEGATE DEFINE EVENT, CONNECT IT TO DELEGATE AND IMPLEMENT A CHAIN OF ASSIGMENTS
     for (TFieldIterator<UMulticastDelegateProperty> PropertyIt(GetClassToSpawn(), EFieldIteratorFlags::ExcludeSuper); PropertyIt && bIsErrorFree; ++PropertyIt)
     {
-        bIsErrorFree &= FHelper::HandleDelegateImplementation(*PropertyIt, VariableOutputs, CreateTask_Result, LastThenPin, this, SourceGraph, CompilerContext);
+        UMulticastDelegateProperty* Property = *PropertyIt;
+
+        const UFunction* DelegateSignatureFunction = Property->SignatureFunction;
+        if (DelegateSignatureFunction->NumParms < 1) {
+            bIsErrorFree &= FHelper::HandleDelegateImplementation(Property, VariableOutputs, CreateTask_Result, LastThenPin, this, SourceGraph, CompilerContext);
+        }
+        else
+        {
+            bIsErrorFree &= FHelper::HandleDelegateBindImplementation(Property, CreateTask_Result, LastThenPin, this, SourceGraph, CompilerContext);
+        }
     }
 
 
