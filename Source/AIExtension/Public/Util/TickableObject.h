@@ -58,10 +58,12 @@ protected:
     virtual void Tick(float DeltaTime) override;
 
     virtual bool IsTickable() const override {
-        //Don't tick in editor if we dont want to.
-        const bool bIsEditorAndStarted = (GWorld->HasBegunPlay() && !GIsEditor);
-        return bWantsToTick && bIsEditorAndStarted;
+        const UObject* Outer = GetOuter();
+        return bWantsToTick && !IsPendingKill() &&
+            Outer && !Outer->IsPendingKill();
     }
+
+    virtual bool IsTickableInEditor() const override { return bTickInEditor; }
     virtual bool IsTickableWhenPaused() const override { return false; }
     virtual TStatId GetStatId() const override {
         RETURN_QUICK_DECLARE_CYCLE_STAT(UTickableObject, STATGROUP_Tickables);

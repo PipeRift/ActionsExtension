@@ -12,6 +12,9 @@ UTask::UTask(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
     State = ETaskState::NOT_RUN;
+
+    bWantsToTick = false;
+    TickRate = 0.15f;
 }
 
 void UTask::BeginPlay()
@@ -24,7 +27,7 @@ void UTask::OTick(float DeltaTime) {
 
 void UTask::Activate()
 {
-    if (IsActivated())
+    if (IsActivated() || IsPendingKill())
         return;
 
     State = ETaskState::RUNNING;
@@ -37,7 +40,7 @@ void UTask::Activate()
 void UTask::ReceiveActivate_Implementation() {}
 
 void UTask::FinishTask(bool bSuccess, bool bError) {
-    if (!IsActivated())
+    if (!IsActivated() || IsPendingKill())
         return;
 
     if (bError) {
@@ -47,11 +50,7 @@ void UTask::FinishTask(bool bSuccess, bool bError) {
 
     State = bSuccess ? ETaskState::SUCCESS : ETaskState::FAILURE;
     
-    if(Succeeded()) {
-        OnSuccess.Broadcast();
-    } else {
-        OnFailure.Broadcast();
-    }
+    ReceiveFinished(bSuccess);
 
     Destroy();
 }

@@ -17,10 +17,10 @@
 UENUM()
 enum class ETaskState : uint8
 {
-    RUNNING UMETA(DisplayName = "Running"),
-    SUCCESS UMETA(DisplayName = "Success"),
-    FAILURE UMETA(DisplayName = "Failure"),
-    ERROR   UMETA(DisplayName = "Error"),
+    RUNNING  UMETA(DisplayName = "Running"),
+    SUCCESS  UMETA(DisplayName = "Success"),
+    FAILURE  UMETA(DisplayName = "Failure"),
+    ERROR    UMETA(DisplayName = "Error"),
     NOT_RUN  UMETA(DisplayName = "Not Run")
 };
 
@@ -32,13 +32,15 @@ class AIEXTENSION_API UTask : public UTickableObject, public IGameplayTaskOwnerI
 {
     GENERATED_UCLASS_BODY()
 
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFinishedDelegate);
-
 protected:
     //~ Begin UTickableObject Interface
     /** Overridable native event for when play begins for this actor. */
     virtual void BeginPlay();
     virtual void OTick(float DeltaTime) override;
+
+    virtual bool IsTickable() const override {
+        return Super::IsTickable() && IsActivated();
+    }
 
     //~ End UTickableObject Interface
 
@@ -55,14 +57,11 @@ protected:
 
 
     UFUNCTION(BlueprintCallable, Category = Task)
-    void FinishTask(bool bSuccess, bool bError = false);
+    void FinishTask(bool bSuccess, bool bError);
 
-public:
-    UPROPERTY(BlueprintAssignable, Category = Task)
-    FOnFinishedDelegate OnSuccess;
-    UPROPERTY(BlueprintAssignable, Category = Task)
-    FOnFinishedDelegate OnFailure;
-
+    /** Event when play begins for this actor. */
+    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Finished"))
+    void ReceiveFinished(bool bSucceded);
 
 protected:
     UPROPERTY()

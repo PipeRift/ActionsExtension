@@ -30,7 +30,7 @@ void UTickableObject::BeginPlay()
 
 void UTickableObject::Tick(float DeltaTime) {
 
-    if (!HasObjectBegunPlay()) {
+    if (GWorld->HasBegunPlay() && !HasObjectBegunPlay()) {
         DispatchBeginPlay();
     }
     
@@ -39,7 +39,7 @@ void UTickableObject::Tick(float DeltaTime) {
         if (DeltaElapsed < TickRate)
             return;
 
-        DeltaElapsed -= TickRate;
+        DeltaElapsed = 0;
     }
 
 
