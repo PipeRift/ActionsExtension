@@ -37,6 +37,9 @@ void UTask::Activate()
 void UTask::ReceiveActivate_Implementation() {}
 
 void UTask::FinishTask(bool bSuccess, bool bError) {
+    if (!IsActivated())
+        return;
+
     if (bError) {
         State = ETaskState::ERROR;
         return;
