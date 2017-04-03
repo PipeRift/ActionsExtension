@@ -47,17 +47,16 @@ void UK2Node_ConstructAsyncObjectFromClass::AllocateDefaultPins()
 	{
 		CreatePin(EGPD_Input, K2Schema->PC_Object, TEXT(""), UObject::StaticClass(), false, false, FHelper::WorldContextPinName);
 	}
+    else if (UseOuter())
+    {
+        CreatePin(EGPD_Input, K2Schema->PC_Object, TEXT(""), UObject::StaticClass(), false, false, FHelper::OuterPinName);
+    }
 
 	// Add blueprint pin
 	UEdGraphPin* ClassPin = CreatePin(EGPD_Input, K2Schema->PC_Class, TEXT(""), GetClassPinBaseClass(), false, false, FHelper::ClassPinName);
 	
 	// Result pin
 	UEdGraphPin* ResultPin = CreatePin(EGPD_Output, K2Schema->PC_Object, TEXT(""), GetClassPinBaseClass(), false, false, K2Schema->PN_ReturnValue);
-	
-	if (UseOuter())
-	{
-		UEdGraphPin* OuterPin = CreatePin(EGPD_Input, K2Schema->PC_Object, TEXT(""), UObject::StaticClass(), false, false, FHelper::OuterPinName);
-	}
 
 	Super::AllocateDefaultPins();
 }
@@ -311,10 +310,12 @@ UEdGraphPin* UK2Node_ConstructAsyncObjectFromClass::GetClassPin(const TArray<UEd
 	return Pin;
 }
 
-UEdGraphPin* UK2Node_ConstructAsyncObjectFromClass::GetWorldContextPin() const
+UEdGraphPin* UK2Node_ConstructAsyncObjectFromClass::GetWorldContextPin(bool bChecked) const
 {
 	UEdGraphPin* Pin = FindPin(FHelper::WorldContextPinName);
-	check(Pin == NULL || Pin->Direction == EGPD_Input);
+    if (bChecked) {
+        check(Pin == NULL || Pin->Direction == EGPD_Input);
+    }
 	return Pin;
 }
 

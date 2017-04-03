@@ -53,7 +53,7 @@ class AIEXTENSIONEDITOR_API UK2Node_ConstructAsyncObjectFromClass : public UK2No
 	/** Get the blueprint input pin */	
 	UEdGraphPin* GetClassPin(const TArray<UEdGraphPin*>* InPinsToSearch=NULL) const;
 	/** Get the world context input pin, can return NULL */
-	UEdGraphPin* GetWorldContextPin() const;
+	UEdGraphPin* GetWorldContextPin(bool bChecked = true) const;
 	/** Get the result output pin */
 	UEdGraphPin* GetResultPin() const;
 	/** Get the result input pin */
@@ -66,7 +66,7 @@ class AIEXTENSIONEDITOR_API UK2Node_ConstructAsyncObjectFromClass : public UK2No
 	virtual bool UseWorldContext() const;
 
 	/** Returns if the node uses Outer input */
-	virtual bool UseOuter() const { return false; }
+	virtual bool UseOuter() const { return true; }
 
 protected:
 	/** Gets the default node title when no class is selected */

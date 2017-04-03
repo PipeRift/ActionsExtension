@@ -31,8 +31,10 @@ void UTask::Activate()
     
     OnActivation();
     //Freezes the game
-    /*ReceiveActivate();*/
+    ReceiveActivate();
 }
+
+void UTask::ReceiveActivate_Implementation() {}
 
 void UTask::FinishTask(bool bSuccess, bool bError) {
     if (bError) {
@@ -41,4 +43,12 @@ void UTask::FinishTask(bool bSuccess, bool bError) {
     }
 
     State = bSuccess ? ETaskState::SUCCESS : ETaskState::FAILURE;
+    
+    if(Succeeded()) {
+        OnSuccess.Broadcast();
+    } else {
+        OnFailure.Broadcast();
+    }
+
+    Destroy();
 }

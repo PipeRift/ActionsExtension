@@ -15,8 +15,8 @@ class AIEXTENSION_API UTaskFunctionLibrary : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
-    UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject", DisplayName = "Create Task", BlueprintInternalUseOnly = "true"), Category = BehaviourTree)
-    static UTask* CreateTask(UObject* WorldContextObject, TSubclassOf<class UTask> TaskType);
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create Task", BlueprintInternalUseOnly = "true"), Category = BehaviourTree)
+    static UTask* CreateTask(UObject* Outer, TSubclassOf<class UTask> TaskType);
     
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "Activate", BlueprintInternalUseOnly = "true"), Category = BehaviourTree)
     static void ActivateTask(UTask* Task);

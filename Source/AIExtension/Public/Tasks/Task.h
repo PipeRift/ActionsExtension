@@ -47,7 +47,7 @@ public:
     void Activate();
 
     /** Event when play begins for this actor. */
-    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Activate"))
+    UFUNCTION(BlueprintNativeEvent, meta = (DisplayName = "Activate"))
     void ReceiveActivate();
 
 protected:
@@ -59,7 +59,9 @@ protected:
 
 public:
     UPROPERTY(BlueprintAssignable, Category = Task)
-    FOnFinishedDelegate OnFinished;
+    FOnFinishedDelegate OnSuccess;
+    UPROPERTY(BlueprintAssignable, Category = Task)
+    FOnFinishedDelegate OnFailure;
 
 
 protected:
@@ -72,5 +74,14 @@ public:
     FORCEINLINE bool IsActivated() { return State == ETaskState::RUNNING; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
+    FORCEINLINE bool Succeeded() { return State == ETaskState::SUCCESS; }
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
+    FORCEINLINE bool Failed() { return State == ETaskState::FAILURE; }
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
     FORCEINLINE ETaskState GetState() { return State; }
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
+    FORCEINLINE UObject* GetOwner() { return GetOuter(); }
 };

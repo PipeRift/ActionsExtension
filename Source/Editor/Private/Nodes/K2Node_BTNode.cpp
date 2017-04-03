@@ -54,7 +54,7 @@ UClass* UK2Node_BTNode::GetClassPinBaseClass() const
 //Set context menu category in which our node will be present.
 FText UK2Node_BTNode::GetMenuCategory() const
 {
-    return FText::FromString("Behaviour Tree");
+    return FText::FromString("AI|Tasks");
 }
  
 bool UK2Node_BTNode::IsSpawnVarPin(UEdGraphPin* Pin)
@@ -76,7 +76,6 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
     static FName Activate_FunctionName = GET_FUNCTION_NAME_CHECKED(UTaskFunctionLibrary, ActivateTask);
 
     //Set function parameter names
-    static FString ParamName_WorldContextObject = FString(TEXT("WorldContextObject"));
     static FString ParamName_WidgetType = FString(TEXT("TaskType"));
 
  
@@ -84,9 +83,12 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
     //Exec
     UEdGraphPin* ExecPin         = this->GetExecPin();         // Exec pins are those big arrows, connected with thick white lines.   
     UEdGraphPin* ThenPin         = this->GetThenPin();         // Then pin is the same as exec pin, just on the other side (the out arrow).
+    
     //Inputs
-    UEdGraphPin* WorldContextPin = this->GetWorldContextPin(); // Gets world context pin from our static function
+    UEdGraphPin* WorldContextPin = UseWorldContext() ? this->GetWorldContextPin() : this->GetOuterPin();
+    
     UEdGraphPin* ClassPin        = this->GetClassPin();        // Get class pin which is used to determine which class to spawn.
+    
     //Outputs
     UEdGraphPin* ResultPin       = this->GetResultPin();       // Result pin, which will output our spawned object.
 
@@ -114,7 +116,7 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
  
     //allocate nodes for created widget.
     UEdGraphPin* CreateTask_Exec = CreateTaskNode->GetExecPin();
-    UEdGraphPin* CreateTask_WorldContext = CreateTaskNode->FindPinChecked(ParamName_WorldContextObject);
+    UEdGraphPin* CreateTask_Outer = CreateTaskNode->FindPinChecked(FHelper::OuterPinName);
     UEdGraphPin* CreateTask_WidgetType = CreateTaskNode->FindPinChecked(ParamName_WidgetType);
     UEdGraphPin* CreateTask_Result = CreateTaskNode->GetReturnValuePin();
  
@@ -130,7 +132,7 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
  
     // Copy WorldContext pin to 'UTaskFunctionLibrary::CreateTask' if necessary
     if (WorldContextPin)
-        CompilerContext.MovePinLinksToIntermediate(*WorldContextPin, *CreateTask_WorldContext);
+        CompilerContext.MovePinLinksToIntermediate(*WorldContextPin, *CreateTask_Outer);
 
     // Move Result pin to 'UTaskFunctionLibrary::CreateTask'
     CreateTask_Result->PinType = ResultPin->PinType; // Copy type so it uses the right actor subclass

@@ -19,6 +19,9 @@ void UTickableObject::BeginPlay()
 
     ObjectHasBegunPlay = EObjectBeginPlayState::BeginningPlay;
 
+    //Don't Garbage Collect this object
+    AddToRoot();
+
     DeltaElapsed = 0;
     ReceiveBeginPlay();
 
@@ -56,6 +59,12 @@ void UTickableObject::DispatchBeginPlay() {
     if (!HasObjectBegunPlay() && !IsPendingKill()) {
         BeginPlay();
     }
+}
+
+void UTickableObject::Destroy()
+{
+    RemoveFromRoot();
+    MarkPendingKill();
 }
 
 void UTickableObject::PostInitProperties() {

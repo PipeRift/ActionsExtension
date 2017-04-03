@@ -8,7 +8,7 @@
 /**
  * 
  */
-UCLASS(BlueprintType)
+UCLASS(Abstract)
 class AIEXTENSION_API UTickableObject : public UObject, public FTickableGameObject
 {
 	GENERATED_UCLASS_BODY()
@@ -47,8 +47,6 @@ public:
     float TickRate;
 
 protected:
-
-
     //~ Begin UObject Interface
     /*virtual UWorld* GetWorld() override {
         return Outer ? Outer->GetWorld() : nullptr;
@@ -90,14 +88,21 @@ public:
     /** Initiate a begin play call on this tickable object, will handle . */
     void DispatchBeginPlay();
 
+    UFUNCTION(BlueprintCallable, Category = Object)
+    void Destroy();
+
+
     /** Returns whether an tickable object  has been initialized */
-    bool IsObjectInitialized() const { return bObjectInitialized; }
+    FORCEINLINE bool IsObjectInitialized() const { return bObjectInitialized; }
 
     /** Returns whether an tickable object is in the process of beginning play */
-    bool IsObjectBeginningPlay() const { return ObjectHasBegunPlay == EObjectBeginPlayState::BeginningPlay; }
+    FORCEINLINE bool IsObjectBeginningPlay() const { return ObjectHasBegunPlay == EObjectBeginPlayState::BeginningPlay; }
 
     /** Returns whether an tickable object  has had BeginPlay called on it (and not subsequently had EndPlay called) */
-    bool HasObjectBegunPlay() const { return ObjectHasBegunPlay == EObjectBeginPlayState::HasBegunPlay; }
+    FORCEINLINE bool HasObjectBegunPlay() const { return ObjectHasBegunPlay == EObjectBeginPlayState::HasBegunPlay; }
 
-	
+    virtual UWorld* GetWorld() const override {
+        const UObject* Outer = GetOuter();
+        return Outer ? Outer->GetWorld() : nullptr;
+    }
 };
