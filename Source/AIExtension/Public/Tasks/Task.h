@@ -70,16 +70,16 @@ protected:
 public:
     //Inlines
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE bool IsActivated() { return State == ETaskState::RUNNING; }
+    FORCEINLINE bool IsActivated() const { return State == ETaskState::RUNNING; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE bool Succeeded() { return State == ETaskState::SUCCESS; }
+    FORCEINLINE bool Succeeded() const { return State == ETaskState::SUCCESS; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE bool Failed() { return State == ETaskState::FAILURE; }
+    FORCEINLINE bool Failed() const { return State == ETaskState::FAILURE; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE ETaskState GetState() { return State; }
+    FORCEINLINE ETaskState GetState() const { return State; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
     FORCEINLINE UObject* GetOwner() { return GetOuter(); }
