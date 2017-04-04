@@ -5,9 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 #include "UObject/ScriptInterface.h"
-#include "GameplayTask.h"
-
-#include "TickableObject.h"
+#include "TaskOwnerInterface.h"
 
 #include "Task.generated.h"
 
@@ -28,59 +26,90 @@ enum class ETaskState : uint8
  * 
  */
 UCLASS(Blueprintable, meta = (ExposedAsyncProxy))
-class AIEXTENSION_API UTask : public UTickableObject, public IGameplayTaskOwnerInterface
+class AIEXTENSION_API UTask : public UObject, public FTickableGameObject, public ITaskOwnerInterface
 {
     GENERATED_UCLASS_BODY()
 
-protected:
-    //~ Begin UTickableObject Interface
-    /** Overridable native event for when play begins for this actor. */
-    virtual void BeginPlay();
-    virtual void OTick(float DeltaTime) override;
-
-    virtual bool IsTickable() const override {
-        return Super::IsTickable() && IsActivated();
-    }
-
-    //~ End UTickableObject Interface
-
 public:
+    void Initialize(ITaskOwnerInterface* InTaskOwner);
+
     UFUNCTION(BlueprintCallable, Category = Task)
     void Activate();
+
+    void AddChildren(UTask* ChildrenTask);
 
     /** Event when play begins for this actor. */
     UFUNCTION(BlueprintNativeEvent, meta = (DisplayName = "Activate"))
     void ReceiveActivate();
 
-protected:
-    virtual void OnActivation() {}
-
+    /** Event when tick is received for this tickable object . */
+    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Tick"))
+    void ReceiveTick(float DeltaTime);
 
     UFUNCTION(BlueprintCallable, Category = Task)
     void FinishTask(bool bSuccess, bool bError);
 
-    /** Event when play begins for this actor. */
+protected:
+    virtual void OnActivation() {}
+
+    /** Event when finishing this task. */
     UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Finished"))
     void ReceiveFinished(bool bSucceded);
 
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Task)
+    UTaskComponent* GetTaskOwnerComponent();
+
+public:
+    //~ Begin Ticking
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Object)
+    bool bWantsToTick;
+
+    //Tick length in seconds. 0 is default tick rate
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Object)
+    float TickRate;
+
+private:
+    float TickTimeElapsed;
+    //~ End Ticking
+
 protected:
-    UPROPERTY()
     ETaskState State;
+
+    TWeakObjectPtr<UObject> Owner;
+    TSet<TSharedPtr<UTask>> ChildrenTasks;
+
+    //~ Begin Tickable Object Interface
+    virtual void Tick(float DeltaTime) override;
+    virtual void TaskTick(float DeltaTime) {}
+
+    virtual bool IsTickable() const override {
+        return bWantsToTick && IsActivated()
+            && !IsPendingKill()
+            && Owner.IsValid() && !Owner->IsPendingKill();
+    }
+
+    virtual TStatId GetStatId() const override {
+        RETURN_QUICK_DECLARE_CYCLE_STAT(UTask, STATGROUP_Tickables);
+    }
+    //~ End Tickable Object Interface
 
 public:
     //Inlines
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE bool IsActivated() const { return State == ETaskState::RUNNING; }
+    FORCEINLINE bool IsInitialized() const { return Owner.IsValid(); }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE bool Succeeded() const { return State == ETaskState::SUCCESS; }
+    FORCEINLINE bool IsActivated() const { return IsInitialized() && State == ETaskState::RUNNING; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE bool Failed() const { return State == ETaskState::FAILURE; }
+    FORCEINLINE bool Succeeded() const { return IsInitialized() && State == ETaskState::SUCCESS; }
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
+    FORCEINLINE bool Failed() const { return IsInitialized() && State == ETaskState::FAILURE; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
     FORCEINLINE ETaskState GetState() const { return State; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE UObject* GetOwner() { return GetOuter(); }
+    FORCEINLINE UObject* GetOwner() { return Owner.IsValid() ? Owner.Get() : nullptr; }
 };

@@ -25,12 +25,6 @@ class AIEXTENSION_API UTickableObject : public UObject, public FTickableGameObje
     *  Set back to false once EndPlay has been called.
     */
     EObjectBeginPlayState ObjectHasBegunPlay : 2;
-    
-    /** 
-	 *	Indicates that PreInitializeComponents/PostInitializeComponents have been called on this Actor 
-	 *	Prevents re-initializing of actors spawned during level startup
-	 */
-	uint8 bObjectInitialized:1;
 
     float DeltaElapsed;
 	
@@ -92,10 +86,6 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = Object)
     void Destroy();
-
-
-    /** Returns whether an tickable object  has been initialized */
-    FORCEINLINE bool IsObjectInitialized() const { return bObjectInitialized; }
 
     /** Returns whether an tickable object is in the process of beginning play */
     FORCEINLINE bool IsObjectBeginningPlay() const { return ObjectHasBegunPlay == EObjectBeginPlayState::BeginningPlay; }

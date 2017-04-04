@@ -35,7 +35,7 @@ public:
     UTask_BehaviourTree(const FObjectInitializer& ObjectInitializer);
 
     virtual void OnActivation() override;
-    virtual void OTick(float DeltaTime) override;
+    virtual void TaskTick(float DeltaTime) override;
 
     UFUNCTION(BlueprintImplementableEvent, Category = BehaviourTree)
     void Root();
