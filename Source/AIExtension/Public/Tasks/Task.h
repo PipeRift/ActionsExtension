@@ -19,6 +19,7 @@ enum class ETaskState : uint8
     SUCCESS  UMETA(DisplayName = "Success"),
     FAILURE  UMETA(DisplayName = "Failure"),
     ERROR    UMETA(DisplayName = "Error"),
+    CANCELED UMETA(DisplayName = "Canceled"),
     NOT_RUN  UMETA(DisplayName = "Not Run")
 };
 
@@ -36,10 +37,11 @@ public:
     UFUNCTION(BlueprintCallable, Category = Task)
     void Activate();
 
-    void AddChildren(UTask* ChildrenTask);
+    virtual void AddChildren(UTask* NewChildren) override;
+    virtual void RemoveChildren(UTask* Children) override;
 
     /** Event when play begins for this actor. */
-    UFUNCTION(BlueprintNativeEvent, meta = (DisplayName = "Activate"))
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, meta = (DisplayName = "Activate"))
     void ReceiveActivate();
 
     /** Event when tick is received for this tickable object . */
@@ -48,8 +50,13 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = Task)
     void FinishTask(bool bSuccess, bool bError);
+    UFUNCTION(BlueprintCallable, Category = Task)
+    void Cancel();
 
 protected:
+
+    void Destroy();
+
     virtual void OnActivation() {}
 
     /** Event when finishing this task. */
@@ -111,5 +118,11 @@ public:
     FORCEINLINE ETaskState GetState() const { return State; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE UObject* GetOwner() { return Owner.IsValid() ? Owner.Get() : nullptr; }
+    UObject* GetOwner() const { return Owner.IsValid() ? Owner.Get() : nullptr; }
+
+
+    virtual UWorld* GetWorld() const override {
+        const UObject* InOwner = GetOwner();
+        return InOwner ? InOwner->GetWorld() : nullptr;
+    }
 };

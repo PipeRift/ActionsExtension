@@ -25,12 +25,33 @@ void UTaskComponent::BeginPlay()
 }
 
 
+void UTaskComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    for (auto& Children : ChildrenTasks)
+    {
+        if(Children.IsValid()) {
+            //Cancel task
+            Children->Cancel();
+        }
+    }
+}
+
 // Called every frame
 void UTaskComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+}
+
+void UTaskComponent::AddChildren(UTask* NewChildren)
+{
+    ChildrenTasks.Add(MakeShareable(NewChildren));
+}
+
+void UTaskComponent::RemoveChildren(UTask* Children)
+{
+    ChildrenTasks.Remove(MakeShareable(Children));
 }
 
 UTaskComponent* UTaskComponent::GetTaskOwnerComponent_Implementation()

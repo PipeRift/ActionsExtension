@@ -57,7 +57,7 @@ class AIEXTENSIONEDITOR_API UK2Node_ConstructAsyncObjectFromClass : public UK2No
 	/** Get the result output pin */
 	UEdGraphPin* GetResultPin() const;
 	/** Get the result input pin */
-	UEdGraphPin* GetOuterPin() const;
+	UEdGraphPin* GetOwnerPin() const;
 
 	/** Get the class that we are going to spawn, if it's defined as default value */
 	UClass* GetClassToSpawn(const TArray<UEdGraphPin*>* InPinsToSearch=NULL) const;
@@ -65,8 +65,8 @@ class AIEXTENSIONEDITOR_API UK2Node_ConstructAsyncObjectFromClass : public UK2No
 	/** Returns if the node uses World Object Context input */
 	virtual bool UseWorldContext() const;
 
-	/** Returns if the node uses Outer input */
-	virtual bool UseOuter() const { return true; }
+	/** Returns if the node uses Owner input */
+	virtual bool UseOwner() const { return true; }
 
 protected:
 	/** Gets the default node title when no class is selected */
@@ -92,7 +92,7 @@ protected:
     {
         static FString WorldContextPinName;
         static FString ClassPinName;
-        static FString OuterPinName;
+        static FString OwnerPinName;
 
         struct FOutputPinAndLocalVariable
         {

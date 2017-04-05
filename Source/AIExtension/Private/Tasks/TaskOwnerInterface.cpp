@@ -2,6 +2,7 @@
 
 #include "AIExtensionPrivatePCH.h"
 
+#include "Task.h"
 #include "TaskComponent.h"
 
 #include "TaskOwnerInterface.h"

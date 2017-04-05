@@ -25,10 +25,8 @@ void UTask::Initialize(ITaskOwnerInterface* InTaskOwner)
     Owner = Cast<UObject>(InTaskOwner);
     State = ETaskState::NOT_RUN;
 
-    if(UTask* TaskOwner = Cast<UTask>(Owner.Get())){
-        //If Owner is a Task, registry this as a children
-        TaskOwner->AddChildren(this);
-    }
+    //Registry this children task in the owner
+    InTaskOwner->AddChildren(this);
 }
 
 void UTask::Activate()
@@ -43,9 +41,14 @@ void UTask::Activate()
     ReceiveActivate();
 }
 
-void UTask::AddChildren(UTask* ChildrenTask)
+void UTask::AddChildren(UTask* NewChildren)
 {
-    ChildrenTasks.Add(MakeShareable(ChildrenTask));
+    ChildrenTasks.Add(MakeShareable(NewChildren));
+}
+
+void UTask::RemoveChildren(UTask* Children)
+{
+    ChildrenTasks.Remove(MakeShareable(Children));
 }
 
 void UTask::ReceiveActivate_Implementation() {}
@@ -54,8 +57,12 @@ void UTask::FinishTask(bool bSuccess, bool bError) {
     if (!IsActivated() || IsPendingKill())
         return;
 
+    //Unregistry from owner
+    //Owner->RemoveChildren(this);
+
     if (bError) {
         State = ETaskState::ERROR;
+        Destroy();
         return;
     }
 
@@ -63,6 +70,30 @@ void UTask::FinishTask(bool bSuccess, bool bError) {
     
     ReceiveFinished(bSuccess);
 
+    Destroy();
+}
+
+void UTask::Cancel()
+{
+    if (!IsActivated())
+        return;
+
+    State = ETaskState::CANCELED;
+
+    Destroy();
+}
+
+void UTask::Destroy()
+{
+    //Cancel children tasks
+    for (auto& Children : ChildrenTasks)
+    {
+        if (Children.IsValid()) {
+            Children->Cancel();
+        }
+    }
+
+    //RemoveFromRoot();
     //Mark for destruction
     MarkPendingKill();
 }

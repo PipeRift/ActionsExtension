@@ -8,11 +8,13 @@
 #include "BlueprintNodeSpawner.h"
 #include "EditorCategoryUtils.h"
 #include "BlueprintActionDatabaseRegistrar.h"
+
+#include "TaskOwnerInterface.h"
 #include "K2Node_AssignmentStatement.h"
 
 FString UK2Node_ConstructAsyncObjectFromClass::FHelper::WorldContextPinName(TEXT("WorldContextObject"));
 FString UK2Node_ConstructAsyncObjectFromClass::FHelper::ClassPinName(TEXT("Class"));
-FString UK2Node_ConstructAsyncObjectFromClass::FHelper::OuterPinName(TEXT("Outer"));
+FString UK2Node_ConstructAsyncObjectFromClass::FHelper::OwnerPinName(TEXT("Owner"));
 
 #define LOCTEXT_NAMESPACE "K2Node_ConstructAsyncObjectFromClass"
 
@@ -42,15 +44,8 @@ void UK2Node_ConstructAsyncObjectFromClass::AllocateDefaultPins()
 	CreatePin(EGPD_Input, K2Schema->PC_Exec, TEXT(""), NULL, false, false, K2Schema->PN_Execute);
 	CreatePin(EGPD_Output, K2Schema->PC_Exec, TEXT(""), NULL, false, false, K2Schema->PN_Then);
 
-	// If required add the world context pin
-	if (UseWorldContext())
-	{
-		CreatePin(EGPD_Input, K2Schema->PC_Object, TEXT(""), UObject::StaticClass(), false, false, FHelper::WorldContextPinName);
-	}
-    else if (UseOuter())
-    {
-        CreatePin(EGPD_Input, K2Schema->PC_Object, TEXT(""), UObject::StaticClass(), false, false, FHelper::OuterPinName);
-    }
+	// Task Owner
+	CreatePin(EGPD_Input, K2Schema->PC_Interface, TEXT(""), UTaskOwnerInterface::StaticClass(), false, false, FHelper::OwnerPinName);
 
 	// Add blueprint pin
 	UEdGraphPin* ClassPin = CreatePin(EGPD_Input, K2Schema->PC_Class, TEXT(""), GetClassPinBaseClass(), false, false, FHelper::ClassPinName);
@@ -61,9 +56,9 @@ void UK2Node_ConstructAsyncObjectFromClass::AllocateDefaultPins()
 	Super::AllocateDefaultPins();
 }
 
-UEdGraphPin* UK2Node_ConstructAsyncObjectFromClass::GetOuterPin() const
+UEdGraphPin* UK2Node_ConstructAsyncObjectFromClass::GetOwnerPin() const
 {
-	UEdGraphPin* Pin = FindPin(FHelper::OuterPinName);
+	UEdGraphPin* Pin = FindPin(FHelper::OwnerPinName);
 	ensure(nullptr == Pin || Pin->Direction == EGPD_Input);
 	return Pin;
 }
@@ -93,7 +88,6 @@ void UK2Node_ConstructAsyncObjectFromClass::CreatePinsForClass(UClass* InClass, 
 	for (TFieldIterator<UProperty> PropertyIt(InClass, EFieldIteratorFlags::IncludeSuper); PropertyIt; ++PropertyIt)
 	{
 		UProperty* Property = *PropertyIt;
-		UClass* PropertyClass = CastChecked<UClass>(Property->GetOuter());
 		const bool bIsDelegate = Property->IsA(UMulticastDelegateProperty::StaticClass());
 		const bool bIsExposedToSpawn = UEdGraphSchema_K2::IsPropertyExposedOnSpawn(Property);
 		const bool bIsSettableExternally = !Property->HasAnyPropertyFlags(CPF_DisableEditOnInstance);
@@ -196,7 +190,7 @@ bool UK2Node_ConstructAsyncObjectFromClass::IsSpawnVarPin(UEdGraphPin* Pin)
 			Pin->PinName != K2Schema->PN_ReturnValue &&
 			Pin->PinName != FHelper::ClassPinName &&
 			Pin->PinName != FHelper::WorldContextPinName &&
-			Pin->PinName != FHelper::OuterPinName);
+			Pin->PinName != FHelper::OwnerPinName);
 }
 
 void UK2Node_ConstructAsyncObjectFromClass::OnClassPinChanged()
@@ -261,10 +255,10 @@ void UK2Node_ConstructAsyncObjectFromClass::GetPinHoverText(const UEdGraphPin& P
 	{
 		SetPinToolTip(*ResultPin, LOCTEXT("ResultPinDescription", "The constructed object"));
 	}
-	UEdGraphPin* OuterPin = UseOuter() ? GetOuterPin() : nullptr;
-	if (OuterPin)
+
+    if (UEdGraphPin* OwnerPin = GetOwnerPin())
 	{
-		SetPinToolTip(*OuterPin, LOCTEXT("OuterPinDescription", "Owner of the constructed object"));
+		SetPinToolTip(*OwnerPin, LOCTEXT("OwnerPinDescription", "Owner of the constructed object"));
 	}
 
 	return Super::GetPinHoverText(Pin, HoverTextOut);

@@ -5,6 +5,7 @@
 #include "UObject/Interface.h"
 #include "TaskOwnerInterface.generated.h"
 
+class UTask;
 class UTaskComponent;
 
 // This class does not need to be modified.
@@ -23,6 +24,10 @@ class AIEXTENSION_API ITaskOwnerInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
+
+    virtual void AddChildren(UTask* NewChildren) {}
+    virtual void RemoveChildren(UTask* Children) {}
+
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Task)
     UTaskComponent* GetTaskOwnerComponent();
 
