@@ -4,17 +4,17 @@
 
 #include "Components/ActorComponent.h"
 #include "TaskOwnerInterface.h"
-#include "TaskComponent.generated.h"
+#include "TaskManagerComponent.generated.h"
 
 
 UCLASS( BlueprintType, meta=(BlueprintSpawnableComponent) )
-class AIEXTENSION_API UTaskComponent : public UActorComponent, public ITaskOwnerInterface
+class AIEXTENSION_API UTaskManagerComponent : public UActorComponent, public ITaskOwnerInterface
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	UTaskComponent();
+	UTaskManagerComponent();
 
 protected:
 	// Called when the game starts
@@ -30,7 +30,7 @@ public:
     virtual void RemoveChildren(UTask* Children) override;
 
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Task)
-    UTaskComponent* GetTaskOwnerComponent();
+    UTaskManagerComponent* GetTaskOwnerComponent();
 
 protected:
     TSet<TSharedPtr<UTask>> ChildrenTasks;

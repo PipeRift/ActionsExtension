@@ -81,25 +81,34 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
  
     /* Retrieve Pins */
     //Exec
-    UEdGraphPin* ExecPin         = this->GetExecPin();         // Exec pins are those big arrows, connected with thick white lines.   
-    UEdGraphPin* ThenPin         = this->GetThenPin();         // Then pin is the same as exec pin, just on the other side (the out arrow).
+    UEdGraphPin* ExecPin   = this->GetExecPin();         // Exec pins are those big arrows, connected with thick white lines.   
+    UEdGraphPin* ThenPin   = this->GetThenPin();         // Then pin is the same as exec pin, just on the other side (the out arrow).
     
     //Inputs
-    UEdGraphPin* OwnerPin = this->GetOwnerPin();
-    
-    UEdGraphPin* ClassPin        = this->GetClassPin();        // Get class pin which is used to determine which class to spawn.
+    UEdGraphPin* OwnerPin  = this->GetOwnerPin();
+
+    UEdGraphPin* ClassPin  = this->GetClassPin();        // Get class pin which is used to determine which class to spawn.
     
     //Outputs
-    UEdGraphPin* ResultPin       = this->GetResultPin();       // Result pin, which will output our spawned object.
+    UEdGraphPin* ResultPin = this->GetResultPin();       // Result pin, which will output our spawned object.
 
 
+    //Don't proceed if OwnerPin is not defined or valid
+    if (OwnerPin->LinkedTo.Num() == 0 && OwnerPin->DefaultObject == NULL)
+    {
+        //TODO: Check if we can connect a self node as the owner.
+
+        CompilerContext.MessageLog.Error(*LOCTEXT("CreateTaskNodeMissingClass_Error", "Create Task node @@ must have an owner specified.").ToString(), this);
+        // we break exec links so this is the only error we get, don't want the CreateItemData node being considered and giving 'unexpected node' type warnings
+        BreakAllNodeLinks();
+        return;
+    }
 
     UClass* SpawnClass = ClassPin ? Cast<UClass>(ClassPin->DefaultObject) : NULL;
-
     //Don't proceed if ClassPin is not defined or valid
     if (ClassPin->LinkedTo.Num() == 0 && NULL == SpawnClass)
     {
-        CompilerContext.MessageLog.Error(*LOCTEXT("CreateTaskNodeMissingClass_Error", "Spawn node @@ must have a class specified.").ToString(), this);
+        CompilerContext.MessageLog.Error(*LOCTEXT("CreateTaskNodeMissingClass_Error", "Create Task node @@ must have a class specified.").ToString(), this);
         // we break exec links so this is the only error we get, don't want the CreateItemData node being considered and giving 'unexpected node' type warnings
         BreakAllNodeLinks();
         return;

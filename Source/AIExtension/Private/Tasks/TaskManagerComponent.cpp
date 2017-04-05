@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "AIExtensionPrivatePCH.h"
-#include "TaskComponent.h"
+#include "TaskManagerComponent.h"
 
 
 // Sets default values for this component's properties
-UTaskComponent::UTaskComponent()
+UTaskManagerComponent::UTaskManagerComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -16,7 +16,7 @@ UTaskComponent::UTaskComponent()
 
 
 // Called when the game starts
-void UTaskComponent::BeginPlay()
+void UTaskManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -25,7 +25,7 @@ void UTaskComponent::BeginPlay()
 }
 
 
-void UTaskComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void UTaskManagerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     for (auto& Children : ChildrenTasks)
     {
@@ -34,27 +34,31 @@ void UTaskComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
             Children->Cancel();
         }
     }
+    ChildrenTasks.Empty();
 }
 
 // Called every frame
-void UTaskComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UTaskManagerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
 }
 
-void UTaskComponent::AddChildren(UTask* NewChildren)
+void UTaskManagerComponent::AddChildren(UTask* NewChildren)
 {
     ChildrenTasks.Add(MakeShareable(NewChildren));
 }
 
-void UTaskComponent::RemoveChildren(UTask* Children)
+void UTaskManagerComponent::RemoveChildren(UTask* Children)
 {
-    ChildrenTasks.Remove(MakeShareable(Children));
+    TSharedPtr<UTask> TaskPtr = MakeShareable(Children);
+    if (ChildrenTasks.Contains(TaskPtr)) {
+        ChildrenTasks.Remove(TaskPtr);
+    }
 }
 
-UTaskComponent* UTaskComponent::GetTaskOwnerComponent_Implementation()
+UTaskManagerComponent* UTaskManagerComponent::GetTaskOwnerComponent_Implementation()
 {
     return this;
 }

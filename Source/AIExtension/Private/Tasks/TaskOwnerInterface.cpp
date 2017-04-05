@@ -3,7 +3,7 @@
 #include "AIExtensionPrivatePCH.h"
 
 #include "Task.h"
-#include "TaskComponent.h"
+#include "TaskManagerComponent.h"
 
 #include "TaskOwnerInterface.h"
 

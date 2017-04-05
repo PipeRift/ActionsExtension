@@ -45,7 +45,7 @@ void UK2Node_ConstructAsyncObjectFromClass::AllocateDefaultPins()
 	CreatePin(EGPD_Output, K2Schema->PC_Exec, TEXT(""), NULL, false, false, K2Schema->PN_Then);
 
 	// Task Owner
-	CreatePin(EGPD_Input, K2Schema->PC_Interface, TEXT(""), UTaskOwnerInterface::StaticClass(), false, false, FHelper::OwnerPinName);
+    UEdGraphPin* OwnerPin = CreatePin(EGPD_Input, K2Schema->PC_Interface, TEXT(""), UTaskOwnerInterface::StaticClass(), false, false, FHelper::OwnerPinName);
 
 	// Add blueprint pin
 	UEdGraphPin* ClassPin = CreatePin(EGPD_Input, K2Schema->PC_Class, TEXT(""), GetClassPinBaseClass(), false, false, FHelper::ClassPinName);

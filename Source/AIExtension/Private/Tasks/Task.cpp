@@ -22,11 +22,11 @@ UTask::UTask(const FObjectInitializer& ObjectInitializer)
 
 void UTask::Initialize(ITaskOwnerInterface* InTaskOwner)
 {
-    Owner = Cast<UObject>(InTaskOwner);
+    Owner = InTaskOwner;
     State = ETaskState::NOT_RUN;
 
     //Registry this children task in the owner
-    InTaskOwner->AddChildren(this);
+    Owner->AddChildren(this);
 }
 
 void UTask::Activate()
@@ -53,12 +53,9 @@ void UTask::RemoveChildren(UTask* Children)
 
 void UTask::ReceiveActivate_Implementation() {}
 
-void UTask::FinishTask(bool bSuccess, bool bError) {
+void UTask::Finish(bool bSuccess, bool bError) {
     if (!IsActivated() || IsPendingKill())
         return;
-
-    //Unregistry from owner
-    //Owner->RemoveChildren(this);
 
     if (bError) {
         State = ETaskState::ERROR;
@@ -80,18 +77,21 @@ void UTask::Cancel()
 
     State = ETaskState::CANCELED;
 
+    ReceiveCanceled();
+
     Destroy();
 }
 
 void UTask::Destroy()
 {
-    //Cancel children tasks
+    //Cancel and destroy all children tasks
     for (auto& Children : ChildrenTasks)
     {
         if (Children.IsValid()) {
             Children->Cancel();
         }
     }
+    ChildrenTasks.Empty();
 
     //RemoveFromRoot();
     //Mark for destruction
@@ -117,11 +117,10 @@ void UTask::Tick(float DeltaTime)
     }
 }
 
-UTaskComponent* UTask::GetTaskOwnerComponent_Implementation()
+UTaskManagerComponent* UTask::GetTaskOwnerComponent_Implementation()
 {
-    ITaskOwnerInterface* OwnerInterface = Cast<ITaskOwnerInterface>(Owner.Get());
     //Owner will always contain this interface.
-    checkf(OwnerInterface, TEXT("Owner should always contain a ITaskOwnerInterface"));
+    checkf(Owner, TEXT("Owner should always contain a ITaskOwnerInterface"));
 
-    return OwnerInterface->GetTaskOwnerComponent();
+    return Owner->GetTaskOwnerComponent();
 }

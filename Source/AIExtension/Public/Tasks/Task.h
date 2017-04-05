@@ -40,18 +40,27 @@ public:
     virtual void AddChildren(UTask* NewChildren) override;
     virtual void RemoveChildren(UTask* Children) override;
 
-    /** Event when play begins for this actor. */
-    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, meta = (DisplayName = "Activate"))
-    void ReceiveActivate();
 
     /** Event when tick is received for this tickable object . */
     UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Tick"))
     void ReceiveTick(float DeltaTime);
 
     UFUNCTION(BlueprintCallable, Category = Task)
-    void FinishTask(bool bSuccess, bool bError);
+    void Finish(bool bSuccess, bool bError);
     UFUNCTION(BlueprintCallable, Category = Task)
     void Cancel();
+
+    /** Event when play begins for this actor. */
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, meta = (DisplayName = "Activate"))
+    void ReceiveActivate();
+
+    /** Event when finishing this task. */
+    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Finished"))
+    void ReceiveFinished(bool bSucceded);
+
+    /** Event when this task is canceled. */
+    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Canceled"))
+    void ReceiveCanceled();
 
 protected:
 
@@ -59,12 +68,8 @@ protected:
 
     virtual void OnActivation() {}
 
-    /** Event when finishing this task. */
-    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Finished"))
-    void ReceiveFinished(bool bSucceded);
-
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Task)
-    UTaskComponent* GetTaskOwnerComponent();
+    UTaskManagerComponent* GetTaskOwnerComponent();
 
 public:
     //~ Begin Ticking
@@ -82,7 +87,7 @@ private:
 protected:
     ETaskState State;
 
-    TWeakObjectPtr<UObject> Owner;
+    ITaskOwnerInterface* Owner;
     TSet<TSharedPtr<UTask>> ChildrenTasks;
 
     //~ Begin Tickable Object Interface
@@ -92,7 +97,7 @@ protected:
     virtual bool IsTickable() const override {
         return bWantsToTick && IsActivated()
             && !IsPendingKill()
-            && Owner.IsValid() && !Owner->IsPendingKill();
+            && Owner && !GetOwner()->IsPendingKill();
     }
 
     virtual TStatId GetStatId() const override {
@@ -103,7 +108,7 @@ protected:
 public:
     //Inlines
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE bool IsInitialized() const { return Owner.IsValid(); }
+    FORCEINLINE bool IsInitialized() const { return Owner != nullptr; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
     FORCEINLINE bool IsActivated() const { return IsInitialized() && State == ETaskState::RUNNING; }
@@ -115,10 +120,13 @@ public:
     FORCEINLINE bool Failed() const { return IsInitialized() && State == ETaskState::FAILURE; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
+    FORCEINLINE bool IsCanceled() const { return State == ETaskState::CANCELED; }
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
     FORCEINLINE ETaskState GetState() const { return State; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    UObject* GetOwner() const { return Owner.IsValid() ? Owner.Get() : nullptr; }
+    UObject* GetOwner() const { return Owner ? Cast<UObject>(Owner) : nullptr; }
 
 
     virtual UWorld* GetWorld() const override {

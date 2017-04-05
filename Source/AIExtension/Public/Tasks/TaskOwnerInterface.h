@@ -6,7 +6,7 @@
 #include "TaskOwnerInterface.generated.h"
 
 class UTask;
-class UTaskComponent;
+class UTaskManagerComponent;
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
@@ -29,6 +29,5 @@ public:
     virtual void RemoveChildren(UTask* Children) {}
 
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Task)
-    UTaskComponent* GetTaskOwnerComponent();
-
+    UTaskManagerComponent* GetTaskOwnerComponent();
 };
