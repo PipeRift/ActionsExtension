@@ -11,8 +11,8 @@
 UCLASS(Abstract)
 class AIEXTENSION_API UTickableObject : public UObject, public FTickableGameObject
 {
-	GENERATED_UCLASS_BODY()
-	
+    GENERATED_UCLASS_BODY()
+    
     enum class EObjectBeginPlayState : uint8
     {
         HasNotBegunPlay,
@@ -27,7 +27,7 @@ class AIEXTENSION_API UTickableObject : public UObject, public FTickableGameObje
     EObjectBeginPlayState ObjectHasBegunPlay : 2;
 
     float DeltaElapsed;
-	
+    
 public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Object)
     bool bWantsToTick;

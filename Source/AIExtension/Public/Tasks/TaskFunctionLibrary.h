@@ -12,7 +12,7 @@
 UCLASS()
 class AIEXTENSION_API UTaskFunctionLibrary : public UBlueprintFunctionLibrary
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
     UFUNCTION(BlueprintCallable, meta = (DefaultToSelf = "Owner", DisplayName = "Create Task", BlueprintInternalUseOnly = "true"), Category = BehaviourTree)
