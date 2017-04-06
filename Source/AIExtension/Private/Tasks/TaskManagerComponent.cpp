@@ -45,17 +45,19 @@ void UTaskManagerComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
     // ...
 }
 
-void UTaskManagerComponent::AddChildren(UTask* NewChildren)
+const bool UTaskManagerComponent::AddChildren(UTask* NewChildren)
 {
     ChildrenTasks.Add(MakeShareable(NewChildren));
+    return true;
 }
 
-void UTaskManagerComponent::RemoveChildren(UTask* Children)
+const bool UTaskManagerComponent::RemoveChildren(UTask* Children)
 {
     TSharedPtr<UTask> TaskPtr = MakeShareable(Children);
     if (ChildrenTasks.Contains(TaskPtr)) {
         ChildrenTasks.Remove(TaskPtr);
     }
+    return true;
 }
 
 UTaskManagerComponent* UTaskManagerComponent::GetTaskOwnerComponent_Implementation()

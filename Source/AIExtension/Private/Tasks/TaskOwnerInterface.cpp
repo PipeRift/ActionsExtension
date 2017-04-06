@@ -13,5 +13,3 @@ UTaskOwnerInterface::UTaskOwnerInterface(const class FObjectInitializer& ObjectI
 : Super(ObjectInitializer)
 {
 }
-
-// Add default functionality here for any ITaskOwner functions that are not pure virtual.

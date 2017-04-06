@@ -6,7 +6,10 @@
 #include "Engine/EngineTypes.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
+
+#include "TaskManagerComponent.h"
 #include "GameplayTaskOwnerInterface.h"
+
 
 UTask::UTask(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -20,13 +23,16 @@ UTask::UTask(const FObjectInitializer& ObjectInitializer)
     TickRate = 0.15f;
 }
 
-void UTask::Initialize(ITaskOwnerInterface* InTaskOwner)
+void UTask::Initialize(ITaskOwnerInterface* InTaskParent)
 {
-    Owner = InTaskOwner;
+    Parent = InTaskParent;
     State = ETaskState::NOT_RUN;
 
     //Registry this children task in the owner
-    Owner->AddChildren(this);
+    bool bRegistryResult = Parent->AddChildren(this);
+    if (!bRegistryResult) {
+        GetTaskOwnerComponent()->AddChildren(this);
+    }
 }
 
 void UTask::Activate()
@@ -41,14 +47,16 @@ void UTask::Activate()
     ReceiveActivate();
 }
 
-void UTask::AddChildren(UTask* NewChildren)
+const bool UTask::AddChildren(UTask* NewChildren)
 {
     ChildrenTasks.Add(MakeShareable(NewChildren));
+    return true;
 }
 
-void UTask::RemoveChildren(UTask* Children)
+const bool UTask::RemoveChildren(UTask* Children)
 {
     ChildrenTasks.Remove(MakeShareable(Children));
+    return true;
 }
 
 void UTask::ReceiveActivate_Implementation() {}
@@ -120,7 +128,17 @@ void UTask::Tick(float DeltaTime)
 UTaskManagerComponent* UTask::GetTaskOwnerComponent_Implementation()
 {
     //Owner will always contain this interface.
-    checkf(Owner, TEXT("Owner should always contain a ITaskOwnerInterface"));
+    checkf(Parent, TEXT("Owner should always contain a ITaskOwnerInterface"));
 
-    return Owner->GetTaskOwnerComponent();
+    return Parent->GetTaskOwnerComponent();
+}
+
+UTaskManagerComponent* UTask::ExposedGetTaskOwnerComponent()
+{
+    return GetTaskOwnerComponent();
+}
+
+AActor* UTask::GetTaskOwnerActor()
+{
+    return GetTaskOwnerComponent()->GetOwner();
 }

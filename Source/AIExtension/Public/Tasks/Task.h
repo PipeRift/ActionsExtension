@@ -23,6 +23,8 @@ enum class ETaskState : uint8
     NOT_RUN  UMETA(DisplayName = "Not Run")
 };
 
+class UTaskManagerComponent;
+
 /**
  * 
  */
@@ -32,13 +34,13 @@ class AIEXTENSION_API UTask : public UObject, public FTickableGameObject, public
     GENERATED_UCLASS_BODY()
 
 public:
-    void Initialize(ITaskOwnerInterface* InTaskOwner);
+    void Initialize(ITaskOwnerInterface* InTaskParent);
 
     UFUNCTION(BlueprintCallable, Category = Task)
     void Activate();
 
-    virtual void AddChildren(UTask* NewChildren) override;
-    virtual void RemoveChildren(UTask* Children) override;
+    virtual const bool AddChildren(UTask* NewChildren) override;
+    virtual const bool RemoveChildren(UTask* Children) override;
 
 
     /** Event when tick is received for this tickable object . */
@@ -62,16 +64,21 @@ public:
     UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Canceled"))
     void ReceiveCanceled();
 
-protected:
 
     void Destroy();
 
     virtual void OnActivation() {}
 
-    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Task)
+    UFUNCTION(BlueprintNativeEvent, Category = Task, meta = (BlueprintInternalUseOnly = "true"))
     UTaskManagerComponent* GetTaskOwnerComponent();
 
-public:
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task, meta = (DisplayName = "GetTaskOwnerComponent"))
+    UTaskManagerComponent* ExposedGetTaskOwnerComponent();
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
+    AActor* GetTaskOwnerActor();
+
+
     //~ Begin Ticking
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Object)
     bool bWantsToTick;
@@ -87,7 +94,7 @@ private:
 protected:
     ETaskState State;
 
-    ITaskOwnerInterface* Owner;
+    ITaskOwnerInterface* Parent;
     TSet<TSharedPtr<UTask>> ChildrenTasks;
 
     //~ Begin Tickable Object Interface
@@ -97,7 +104,7 @@ protected:
     virtual bool IsTickable() const override {
         return bWantsToTick && IsActivated()
             && !IsPendingKill()
-            && Owner && !GetOwner()->IsPendingKill();
+            && Parent && !GetParent()->IsPendingKill();
     }
 
     virtual TStatId GetStatId() const override {
@@ -108,7 +115,7 @@ protected:
 public:
     //Inlines
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE bool IsInitialized() const { return Owner != nullptr; }
+    FORCEINLINE bool IsInitialized() const { return Parent != nullptr; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
     FORCEINLINE bool IsActivated() const { return IsInitialized() && State == ETaskState::RUNNING; }
@@ -126,11 +133,11 @@ public:
     FORCEINLINE ETaskState GetState() const { return State; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    UObject* GetOwner() const { return Owner ? Cast<UObject>(Owner) : nullptr; }
+    UObject* GetParent() const { return Parent ? Cast<UObject>(Parent) : nullptr; }
 
 
     virtual UWorld* GetWorld() const override {
-        const UObject* InOwner = GetOwner();
-        return InOwner ? InOwner->GetWorld() : nullptr;
+        const UObject* InParent = GetParent();
+        return InParent ? InParent->GetWorld() : nullptr;
     }
 };

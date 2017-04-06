@@ -7,7 +7,7 @@
 #include "TaskManagerComponent.generated.h"
 
 
-UCLASS( BlueprintType, meta=(BlueprintSpawnableComponent) )
+UCLASS(Blueprintable, ClassGroup = (Tasks), meta = (BlueprintSpawnableComponent))
 class AIEXTENSION_API UTaskManagerComponent : public UActorComponent, public ITaskOwnerInterface
 {
     GENERATED_BODY()
@@ -26,10 +26,11 @@ public:
     // Called every frame
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-    virtual void AddChildren(UTask* NewChildren) override;
-    virtual void RemoveChildren(UTask* Children) override;
+    virtual const bool AddChildren(UTask* NewChildren) override;
+    virtual const bool RemoveChildren(UTask* Children) override;
 
-    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Task)
+
+    UFUNCTION(BlueprintNativeEvent, Category = Task, meta = (BlueprintInternalUseOnly = "true"))
     UTaskManagerComponent* GetTaskOwnerComponent();
 
 protected:
