@@ -13,3 +13,19 @@ UTaskOwnerInterface::UTaskOwnerInterface(const class FObjectInitializer& ObjectI
 : Super(ObjectInitializer)
 {
 }
+
+const bool ITaskOwnerInterface::AddChildren(UTask* NewChildren)
+{
+    if (UTaskManagerComponent* comp = GetTaskOwnerComponent()) {
+        return comp->AddChildren(NewChildren);
+    }
+    return false;
+}
+
+const bool ITaskOwnerInterface::RemoveChildren(UTask* Children)
+{
+    if (UTaskManagerComponent* comp = GetTaskOwnerComponent()) {
+        return comp->RemoveChildren(Children);
+    }
+    return false;
+}

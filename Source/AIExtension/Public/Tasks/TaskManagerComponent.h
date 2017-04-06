@@ -30,8 +30,7 @@ public:
     virtual const bool RemoveChildren(UTask* Children) override;
 
 
-    UFUNCTION(BlueprintNativeEvent, Category = Task, meta = (BlueprintInternalUseOnly = "true"))
-    UTaskManagerComponent* GetTaskOwnerComponent();
+    virtual UTaskManagerComponent* GetTaskOwnerComponent() override;
 
 protected:
     TSet<TSharedPtr<UTask>> ChildrenTasks;

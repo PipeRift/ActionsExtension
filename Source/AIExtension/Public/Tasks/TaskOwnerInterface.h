@@ -25,10 +25,9 @@ class AIEXTENSION_API ITaskOwnerInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-    virtual const bool AddChildren(UTask* NewChildren) { return false; }
+    virtual const bool AddChildren(UTask* NewChildren);
 
-    virtual const bool RemoveChildren(UTask* Children) { return false; }
+    virtual const bool RemoveChildren(UTask* Children);
 
-    UFUNCTION(BlueprintNativeEvent, Category = Task)
-    UTaskManagerComponent* GetTaskOwnerComponent();
+    virtual UTaskManagerComponent* GetTaskOwnerComponent() { return nullptr; }
 };

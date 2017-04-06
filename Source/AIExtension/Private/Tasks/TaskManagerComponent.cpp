@@ -60,7 +60,7 @@ const bool UTaskManagerComponent::RemoveChildren(UTask* Children)
     return true;
 }
 
-UTaskManagerComponent* UTaskManagerComponent::GetTaskOwnerComponent_Implementation()
+UTaskManagerComponent* UTaskManagerComponent::GetTaskOwnerComponent()
 {
     return this;
 }

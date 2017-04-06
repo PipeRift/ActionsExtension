@@ -69,8 +69,7 @@ public:
 
     virtual void OnActivation() {}
 
-    UFUNCTION(BlueprintNativeEvent, Category = Task, meta = (BlueprintInternalUseOnly = "true"))
-    UTaskManagerComponent* GetTaskOwnerComponent();
+    virtual UTaskManagerComponent* GetTaskOwnerComponent() override;
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task, meta = (DisplayName = "GetTaskOwnerComponent"))
     UTaskManagerComponent* ExposedGetTaskOwnerComponent();

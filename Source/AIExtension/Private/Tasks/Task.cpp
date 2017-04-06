@@ -125,7 +125,7 @@ void UTask::Tick(float DeltaTime)
     }
 }
 
-UTaskManagerComponent* UTask::GetTaskOwnerComponent_Implementation()
+UTaskManagerComponent* UTask::GetTaskOwnerComponent()
 {
     //Owner will always contain this interface.
     checkf(Parent, TEXT("Owner should always contain a ITaskOwnerInterface"));
