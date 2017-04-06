@@ -54,7 +54,7 @@ UClass* UK2Node_BTNode::GetClassPinBaseClass() const
 //Set context menu category in which our node will be present.
 FText UK2Node_BTNode::GetMenuCategory() const
 {
-    return FText::FromString("Behaviour Tree");
+    return FText::FromString("AI|Tasks");
 }
  
 bool UK2Node_BTNode::IsSpawnVarPin(UEdGraphPin* Pin)
@@ -73,31 +73,42 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 
     //Get static function
     static FName Create_FunctionName = GET_FUNCTION_NAME_CHECKED(UTaskFunctionLibrary, CreateTask);
-    static FName Activate_FunctionName = GET_FUNCTION_NAME_CHECKED(UTaskFunctionLibrary, ActivateTask);
+    static FName Activate_FunctionName = GET_FUNCTION_NAME_CHECKED(UTask, Activate);
 
     //Set function parameter names
-    static FString ParamName_WorldContextObject = FString(TEXT("WorldContextObject"));
     static FString ParamName_WidgetType = FString(TEXT("TaskType"));
 
  
     /* Retrieve Pins */
     //Exec
-    UEdGraphPin* ExecPin         = this->GetExecPin();         // Exec pins are those big arrows, connected with thick white lines.   
-    UEdGraphPin* ThenPin         = this->GetThenPin();         // Then pin is the same as exec pin, just on the other side (the out arrow).
+    UEdGraphPin* ExecPin   = this->GetExecPin();         // Exec pins are those big arrows, connected with thick white lines.   
+    UEdGraphPin* ThenPin   = this->GetThenPin();         // Then pin is the same as exec pin, just on the other side (the out arrow).
+    
     //Inputs
-    UEdGraphPin* WorldContextPin = this->GetWorldContextPin(); // Gets world context pin from our static function
-    UEdGraphPin* ClassPin        = this->GetClassPin();        // Get class pin which is used to determine which class to spawn.
+    UEdGraphPin* OwnerPin  = this->GetOwnerPin();
+
+    UEdGraphPin* ClassPin  = this->GetClassPin();        // Get class pin which is used to determine which class to spawn.
+    
     //Outputs
-    UEdGraphPin* ResultPin       = this->GetResultPin();       // Result pin, which will output our spawned object.
+    UEdGraphPin* ResultPin = this->GetResultPin();       // Result pin, which will output our spawned object.
 
 
+    //Don't proceed if OwnerPin is not defined or valid
+    if (OwnerPin->LinkedTo.Num() == 0 && OwnerPin->DefaultObject == NULL)
+    {
+        //TODO: Check if we can connect a self node as the owner.
+
+        CompilerContext.MessageLog.Error(*LOCTEXT("CreateTaskNodeMissingClass_Error", "Create Task node @@ must have an owner specified.").ToString(), this);
+        // we break exec links so this is the only error we get, don't want the CreateItemData node being considered and giving 'unexpected node' type warnings
+        BreakAllNodeLinks();
+        return;
+    }
 
     UClass* SpawnClass = ClassPin ? Cast<UClass>(ClassPin->DefaultObject) : NULL;
-
     //Don't proceed if ClassPin is not defined or valid
     if (ClassPin->LinkedTo.Num() == 0 && NULL == SpawnClass)
     {
-        CompilerContext.MessageLog.Error(*LOCTEXT("CreateTaskNodeMissingClass_Error", "Spawn node @@ must have a class specified.").ToString(), this);
+        CompilerContext.MessageLog.Error(*LOCTEXT("CreateTaskNodeMissingClass_Error", "Create Task node @@ must have a class specified.").ToString(), this);
         // we break exec links so this is the only error we get, don't want the CreateItemData node being considered and giving 'unexpected node' type warnings
         BreakAllNodeLinks();
         return;
@@ -114,7 +125,7 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
  
     //allocate nodes for created widget.
     UEdGraphPin* CreateTask_Exec = CreateTaskNode->GetExecPin();
-    UEdGraphPin* CreateTask_WorldContext = CreateTaskNode->FindPinChecked(ParamName_WorldContextObject);
+    UEdGraphPin* CreateTask_Owner = CreateTaskNode->FindPinChecked(FHelper::OwnerPinName);
     UEdGraphPin* CreateTask_WidgetType = CreateTaskNode->FindPinChecked(ParamName_WidgetType);
     UEdGraphPin* CreateTask_Result = CreateTaskNode->GetReturnValuePin();
  
@@ -128,9 +139,9 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
         CreateTask_WidgetType->DefaultObject = SpawnClass;
     }
  
-    // Copy WorldContext pin to 'UTaskFunctionLibrary::CreateTask' if necessary
-    if (WorldContextPin)
-        CompilerContext.MovePinLinksToIntermediate(*WorldContextPin, *CreateTask_WorldContext);
+    // Copy Owner pin to 'UTaskFunctionLibrary::CreateTask' if necessary
+    if (OwnerPin)
+        CompilerContext.MovePinLinksToIntermediate(*OwnerPin, *CreateTask_Owner);
 
     // Move Result pin to 'UTaskFunctionLibrary::CreateTask'
     CreateTask_Result->PinType = ResultPin->PinType; // Copy type so it uses the right actor subclass
@@ -193,18 +204,16 @@ void UK2Node_BTNode::ExpandNode(class FKismetCompilerContext& CompilerContext, U
     // create 'UTaskFunctionLibrary::ActivateTask' call node
     UK2Node_CallFunction* ActivateTaskNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
     //Attach function
-    ActivateTaskNode->FunctionReference.SetExternalMember(Activate_FunctionName, UTaskFunctionLibrary::StaticClass());
+    ActivateTaskNode->FunctionReference.SetExternalMember(Activate_FunctionName, UTask::StaticClass());
     ActivateTaskNode->AllocateDefaultPins();
 
     //allocate nodes for created widget.
     UEdGraphPin* ActivateTask_Exec = ActivateTaskNode->GetExecPin();
-    UEdGraphPin* ActivateTask_Task = ActivateTaskNode->FindPinChecked("Task");
+    UEdGraphPin* ActivateTask_Self = ActivateTaskNode->FindPinChecked(Schema->PN_Self);
     UEdGraphPin* ActivateTask_Then = ActivateTaskNode->GetThenPin();
 
     bIsErrorFree &= Schema->TryCreateConnection(LastThenPin, ActivateTask_Exec);
-
-    ActivateTask_Task->PinType = CreateTask_Result->PinType;
-    bIsErrorFree &= Schema->TryCreateConnection(CreateTask_Result, ActivateTask_Task);
+    bIsErrorFree &= Schema->TryCreateConnection(CreateTask_Result, ActivateTask_Self);
 
     CompilerContext.MovePinLinksToIntermediate(*ThenPin, *ActivateTask_Then);
 

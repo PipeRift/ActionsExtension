@@ -8,11 +8,11 @@
 /**
  * 
  */
-UCLASS(BlueprintType)
+UCLASS(Abstract)
 class AIEXTENSION_API UTickableObject : public UObject, public FTickableGameObject
 {
-	GENERATED_UCLASS_BODY()
-	
+    GENERATED_UCLASS_BODY()
+    
     enum class EObjectBeginPlayState : uint8
     {
         HasNotBegunPlay,
@@ -25,15 +25,9 @@ class AIEXTENSION_API UTickableObject : public UObject, public FTickableGameObje
     *  Set back to false once EndPlay has been called.
     */
     EObjectBeginPlayState ObjectHasBegunPlay : 2;
-    
-    /** 
-	 *	Indicates that PreInitializeComponents/PostInitializeComponents have been called on this Actor 
-	 *	Prevents re-initializing of actors spawned during level startup
-	 */
-	uint8 bObjectInitialized:1;
 
     float DeltaElapsed;
-	
+    
 public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Object)
     bool bWantsToTick;
@@ -47,8 +41,6 @@ public:
     float TickRate;
 
 protected:
-
-
     //~ Begin UObject Interface
     /*virtual UWorld* GetWorld() override {
         return Outer ? Outer->GetWorld() : nullptr;
@@ -60,10 +52,12 @@ protected:
     virtual void Tick(float DeltaTime) override;
 
     virtual bool IsTickable() const override {
-        //Don't tick in editor if we dont want to.
-        const bool bIsEditorAndStarted = (GWorld->HasBegunPlay() && !GIsEditor);
-        return bWantsToTick && bIsEditorAndStarted;
+        const UObject* Outer = GetOuter();
+        return bWantsToTick && !IsPendingKill() &&
+            Outer && !Outer->IsPendingKill();
     }
+
+    virtual bool IsTickableInEditor() const override { return bTickInEditor; }
     virtual bool IsTickableWhenPaused() const override { return false; }
     virtual TStatId GetStatId() const override {
         RETURN_QUICK_DECLARE_CYCLE_STAT(UTickableObject, STATGROUP_Tickables);
@@ -90,14 +84,17 @@ public:
     /** Initiate a begin play call on this tickable object, will handle . */
     void DispatchBeginPlay();
 
-    /** Returns whether an tickable object  has been initialized */
-    bool IsObjectInitialized() const { return bObjectInitialized; }
+    UFUNCTION(BlueprintCallable, Category = Object)
+    void Destroy();
 
     /** Returns whether an tickable object is in the process of beginning play */
-    bool IsObjectBeginningPlay() const { return ObjectHasBegunPlay == EObjectBeginPlayState::BeginningPlay; }
+    FORCEINLINE bool IsObjectBeginningPlay() const { return ObjectHasBegunPlay == EObjectBeginPlayState::BeginningPlay; }
 
     /** Returns whether an tickable object  has had BeginPlay called on it (and not subsequently had EndPlay called) */
-    bool HasObjectBegunPlay() const { return ObjectHasBegunPlay == EObjectBeginPlayState::HasBegunPlay; }
+    FORCEINLINE bool HasObjectBegunPlay() const { return ObjectHasBegunPlay == EObjectBeginPlayState::HasBegunPlay; }
 
-	
+    virtual UWorld* GetWorld() const override {
+        const UObject* Outer = GetOuter();
+        return Outer ? Outer->GetWorld() : nullptr;
+    }
 };
