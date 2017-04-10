@@ -33,5 +33,6 @@ public:
     virtual UTaskManagerComponent* GetTaskOwnerComponent() override;
 
 protected:
-    TSet<TSharedPtr<UTask>> ChildrenTasks;
+    UPROPERTY()
+    TSet<UTask*> ChildrenTasks;
 };

@@ -80,7 +80,7 @@ public:
 
     //~ Begin Ticking
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Object)
-    bool bWantsToTick;
+    uint8 bWantsToTick:1;
 
     //Tick length in seconds. 0 is default tick rate
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Object)
@@ -94,7 +94,8 @@ protected:
     ETaskState State;
 
     ITaskOwnerInterface* Parent;
-    TSet<TSharedPtr<UTask>> ChildrenTasks;
+    UPROPERTY()
+    TSet<UTask*> ChildrenTasks;
 
     //~ Begin Tickable Object Interface
     virtual void Tick(float DeltaTime) override;

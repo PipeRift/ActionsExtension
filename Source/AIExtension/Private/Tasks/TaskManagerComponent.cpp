@@ -27,14 +27,15 @@ void UTaskManagerComponent::BeginPlay()
 
 void UTaskManagerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-    for (auto& Children : ChildrenTasks)
+    Super::EndPlay(EndPlayReason);
+
+    for (auto* Children : ChildrenTasks)
     {
-        if(Children.IsValid()) {
+        if(Children) {
             //Cancel task
             Children->Cancel();
         }
     }
-    ChildrenTasks.Empty();
 }
 
 // Called every frame
@@ -47,15 +48,14 @@ void UTaskManagerComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 
 const bool UTaskManagerComponent::AddChildren(UTask* NewChildren)
 {
-    ChildrenTasks.Add(MakeShareable(NewChildren));
+    ChildrenTasks.Add(NewChildren);
     return true;
 }
 
 const bool UTaskManagerComponent::RemoveChildren(UTask* Children)
 {
-    TSharedPtr<UTask> TaskPtr = MakeShareable(Children);
-    if (ChildrenTasks.Contains(TaskPtr)) {
-        ChildrenTasks.Remove(TaskPtr);
+    if (ChildrenTasks.Contains(Children)) {
+        ChildrenTasks.Remove(Children);
     }
     return true;
 }

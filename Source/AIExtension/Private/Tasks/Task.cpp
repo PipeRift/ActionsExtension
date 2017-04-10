@@ -25,6 +25,8 @@ UTask::UTask(const FObjectInitializer& ObjectInitializer)
 
 void UTask::Initialize(ITaskOwnerInterface* InTaskParent)
 {
+    //AddToRoot();
+
     Parent = InTaskParent;
     State = ETaskState::NOT_RUN;
 
@@ -49,13 +51,13 @@ void UTask::Activate()
 
 const bool UTask::AddChildren(UTask* NewChildren)
 {
-    ChildrenTasks.Add(MakeShareable(NewChildren));
+    ChildrenTasks.Add(NewChildren);
     return true;
 }
 
 const bool UTask::RemoveChildren(UTask* Children)
 {
-    ChildrenTasks.Remove(MakeShareable(Children));
+    ChildrenTasks.Remove(Children);
     return true;
 }
 
@@ -80,12 +82,16 @@ void UTask::Finish(bool bSuccess, bool bError) {
 
 void UTask::Cancel()
 {
-    if (!IsActivated())
-        return;
-
-    State = ETaskState::CANCELED;
-
-    ReceiveCanceled();
+    if (IsActivated()){
+        State = ETaskState::CANCELED;
+        
+        const UTaskManagerComponent* TaskManager = GetTaskOwnerComponent();
+        // If we're in the process of being garbage collected it is unsafe to call out to blueprints
+        if (TaskManager && !TaskManager->HasAnyFlags(RF_BeginDestroyed) && !TaskManager->IsUnreachable())
+        {
+            ReceiveCanceled();
+        }
+    }
 
     Destroy();
 }
@@ -93,15 +99,15 @@ void UTask::Cancel()
 void UTask::Destroy()
 {
     //Cancel and destroy all children tasks
-    for (auto& Children : ChildrenTasks)
+    for (auto* Children : ChildrenTasks)
     {
-        if (Children.IsValid()) {
+        if (Children) {
             Children->Cancel();
         }
     }
-    ChildrenTasks.Empty();
 
     //RemoveFromRoot();
+
     //Mark for destruction
     MarkPendingKill();
 }
