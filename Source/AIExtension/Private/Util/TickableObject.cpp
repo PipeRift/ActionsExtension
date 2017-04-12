@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2015-2017 Piperift. All Rights Reserved.
 
 #include "AIExtensionPrivatePCH.h"
 #include "TickableObject.h"
@@ -19,6 +19,9 @@ void UTickableObject::BeginPlay()
 
     ObjectHasBegunPlay = EObjectBeginPlayState::BeginningPlay;
 
+    //Don't Garbage Collect this object
+    AddToRoot();
+
     DeltaElapsed = 0;
     ReceiveBeginPlay();
 
@@ -27,7 +30,7 @@ void UTickableObject::BeginPlay()
 
 void UTickableObject::Tick(float DeltaTime) {
 
-    if (!HasObjectBegunPlay()) {
+    if (GWorld->HasBegunPlay() && !HasObjectBegunPlay()) {
         DispatchBeginPlay();
     }
     
@@ -36,7 +39,7 @@ void UTickableObject::Tick(float DeltaTime) {
         if (DeltaElapsed < TickRate)
             return;
 
-        DeltaElapsed -= TickRate;
+        DeltaElapsed = 0;
     }
 
 
@@ -56,6 +59,12 @@ void UTickableObject::DispatchBeginPlay() {
     if (!HasObjectBegunPlay() && !IsPendingKill()) {
         BeginPlay();
     }
+}
+
+void UTickableObject::Destroy()
+{
+    RemoveFromRoot();
+    MarkPendingKill();
 }
 
 void UTickableObject::PostInitProperties() {

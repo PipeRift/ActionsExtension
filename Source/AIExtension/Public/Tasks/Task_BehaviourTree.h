@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2015-2017 Piperift. All Rights Reserved.
 
 #pragma once
 
@@ -35,7 +35,7 @@ public:
     UTask_BehaviourTree(const FObjectInitializer& ObjectInitializer);
 
     virtual void OnActivation() override;
-    virtual void OTick(float DeltaTime) override;
+    virtual void TaskTick(float DeltaTime) override;
 
     UFUNCTION(BlueprintImplementableEvent, Category = BehaviourTree)
     void Root();

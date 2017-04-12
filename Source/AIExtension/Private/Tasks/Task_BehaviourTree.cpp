@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2015-2017 Piperift. All Rights Reserved.
 
 #include "AIExtensionPrivatePCH.h"
 
@@ -16,8 +16,8 @@ UTask_BehaviourTree::UTask_BehaviourTree(const FObjectInitializer& ObjectInitial
 void UTask_BehaviourTree::OnActivation() {
 }
 
-void UTask_BehaviourTree::OTick(float DeltaTime) {
-    Super::OTick(DeltaTime);
+void UTask_BehaviourTree::TaskTick(float DeltaTime) {
+    Super::TaskTick(DeltaTime);
 
     if (!IsRunning()) {
         SetState(EBTState::RUNNING);
