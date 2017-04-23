@@ -70,6 +70,7 @@ protected:
 
     /** Returns if the node uses Owner input */
     virtual bool UseOwner() const { return true; }
+    virtual bool UsePrestatedClass() const { return PrestatedClass != nullptr; }
  
     /** Gets the default node title when no class is selected */
     virtual FText GetBaseNodeTitle() const;
@@ -98,6 +99,9 @@ protected:
 
     /** Tooltip text for this node. */
     FText NodeTooltip;
+
+public:
+    UClass* PrestatedClass;
 
 private:
     /** Constructing FText strings can be costly, so we cache the node's title */

@@ -6,6 +6,8 @@
 #include "KismetCompiler.h"
 #include "BlueprintNodeSpawner.h"
 #include "EditorCategoryUtils.h"
+#include "BlueprintNodeSpawner.h"
+#include "BlueprintFunctionNodeSpawner.h"
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "K2Node_CallFunction.h"
 #include "K2Node_AssignmentStatement.h"
@@ -28,11 +30,11 @@ namespace
     // Optional pin manager subclass.
     struct FTaskOptionalPinManager : public FOptionalPinManager
     {
-        FTaskOptionalPinManager(UClass* InClass, bool bExcludeObjectContainers, bool bExcludeObjectArrays)
+        FTaskOptionalPinManager(UClass* InClass, bool bExcludeObjectContainers)
             :FOptionalPinManager()
         {
             SrcClass = InClass;
-            bExcludeObjectArrayProperties = bExcludeObjectContainers | bExcludeObjectArrays;
+            bExcludeObjectArrayProperties = bExcludeObjectContainers;
             bExcludeObjectContainerProperties = bExcludeObjectContainers;
         }
 
@@ -122,9 +124,12 @@ void UK2Node_Task::AllocateDefaultPins()
     // Task Owner
     CreatePin(EGPD_Input, K2Schema->PC_Interface, TEXT(""), UTaskOwnerInterface::StaticClass(), false, false, FHelper::OwnerPinName);
 
-    // Add blueprint pin
-    UEdGraphPin* ClassPin = CreatePin(EGPD_Input, K2Schema->PC_Class, TEXT(""), GetClassPinBaseClass(), false, false, FHelper::ClassPinName);
-    
+    //If we are not using a predefined class
+    if (!UsePrestatedClass()) {
+        // Add blueprint pin
+        UEdGraphPin* ClassPin = CreatePin(EGPD_Input, K2Schema->PC_Class, TEXT(""), GetClassPinBaseClass(), false, false, FHelper::ClassPinName);
+    }
+
     // Result pin
     UEdGraphPin* ResultPin = CreatePin(EGPD_Output, K2Schema->PC_Object, TEXT(""), GetClassPinBaseClass(), false, false, K2Schema->PN_ReturnValue);
 
@@ -138,7 +143,7 @@ FLinearColor UK2Node_Task::GetNodeTitleColor() const
 
 FText UK2Node_Task::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
-    if (TitleType == ENodeTitleType::ListView || TitleType == ENodeTitleType::MenuTitle)
+    if (!UsePrestatedClass() && (TitleType == ENodeTitleType::ListView || TitleType == ENodeTitleType::MenuTitle))
     {
         return GetBaseNodeTitle();
     }
@@ -258,14 +263,21 @@ void UK2Node_Task::ExpandNode(class FKismetCompilerContext& CompilerContext, UEd
         return;
     }
 
-    UClass* SpawnClass = ClassPin ? Cast<UClass>(ClassPin->DefaultObject) : NULL;
-    //Don't proceed if ClassPin is not defined or valid
-    if (ClassPin->LinkedTo.Num() == 0 && NULL == SpawnClass)
+    UClass* SpawnClass;
+    if(UsePrestatedClass()) {
+        SpawnClass = PrestatedClass;
+    }
+    else
     {
-        CompilerContext.MessageLog.Error(*LOCTEXT("CreateTaskNodeMissingClass_Error", "Create Task node @@ must have a class specified.").ToString(), this);
-        // we break exec links so this is the only error we get, don't want the CreateItemData node being considered and giving 'unexpected node' type warnings
-        BreakAllNodeLinks();
-        return;
+        SpawnClass = ClassPin ? Cast<UClass>(ClassPin->DefaultObject) : NULL;
+        //Don't proceed if ClassPin is not defined or valid
+        if (ClassPin->LinkedTo.Num() == 0 && NULL == SpawnClass)
+        {
+            CompilerContext.MessageLog.Error(*LOCTEXT("CreateTaskNodeMissingClass_Error", "Create Task node @@ must have a class specified.").ToString(), this);
+            // we break exec links so this is the only error we get, don't want the CreateItemData node being considered and giving 'unexpected node' type warnings
+            BreakAllNodeLinks();
+            return;
+        }
     }
 
     bool bIsErrorFree = true;
@@ -285,6 +297,8 @@ void UK2Node_Task::ExpandNode(class FKismetCompilerContext& CompilerContext, UEd
 
     // Move 'exec' pin to 'UTaskFunctionLibrary::CreateTask'
     CompilerContext.MovePinLinksToIntermediate(*ExecPin, *CreateTask_Exec);
+
+    //TODO: Create local variable for PrestatedClass
 
     //Move pin if connected else, copy the value
     if (ClassPin->LinkedTo.Num() > 0)
@@ -395,14 +409,82 @@ void UK2Node_Task::GetNodeAttributes(TArray<TKeyValuePair<FString, FString>>& Ou
 
 void UK2Node_Task::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
 {
-    UClass* ActionKey = GetClass();
-
-    if (ActionRegistrar.IsOpenForRegistration(ActionKey))
+    struct GetMenuActions_Utils
     {
-        UBlueprintNodeSpawner* NodeSpawner = UBlueprintNodeSpawner::Create(GetClass());
-        check(NodeSpawner != nullptr);
+        static void RegisterTaskClassActions(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass)
+        {
+            UClass* TaskType = UTask::StaticClass();
 
-        ActionRegistrar.AddBlueprintAction(ActionKey, NodeSpawner);
+            int32 RegisteredCount = 0;
+            if (const UObject* RegistrarTarget = InActionRegistar.GetActionKeyFilter())
+            {
+                if (const UClass* TargetClass = Cast<UClass>(RegistrarTarget))
+                {
+                    if (!TargetClass->HasAnyClassFlags(CLASS_Abstract) && !TargetClass->IsChildOf(TaskType))
+                    {
+
+                        UBlueprintNodeSpawner* NewAction = UBlueprintNodeSpawner::Create(NodeClass);
+                        check(NewAction != nullptr);
+
+                        TWeakObjectPtr<UClass> TargetClassPtr = TargetClass;
+                        NewAction->CustomizeNodeDelegate = UBlueprintNodeSpawner::FCustomizeNodeDelegate::CreateStatic(GetMenuActions_Utils::SetNodeFunc, TargetClassPtr);
+
+                        if (NewAction)
+                        {
+                            RegisteredCount += (int32)InActionRegistar.AddBlueprintAction(TargetClass, NewAction);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // these nested loops are combing over the same classes/functions the
+                // FBlueprintActionDatabase does; ideally we save on perf and fold this in
+                // with FBlueprintActionDatabase, but we want to give separate modules
+                // the opportunity to add their own actions per class func
+                for (TObjectIterator<UClass> ClassIt; ClassIt; ++ClassIt)
+                {
+                    UClass* Class = *ClassIt;
+                    if (Class->HasAnyClassFlags(CLASS_Abstract) || !Class->IsChildOf(TaskType))
+                    {
+                        continue;
+                    }
+
+                    UBlueprintNodeSpawner* NewAction = UBlueprintNodeSpawner::Create(NodeClass);
+                    check(NewAction != nullptr);
+
+                    TWeakObjectPtr<UClass> TargetClassPtr = Class;
+                    NewAction->CustomizeNodeDelegate = UBlueprintNodeSpawner::FCustomizeNodeDelegate::CreateStatic(GetMenuActions_Utils::SetNodeFunc, TargetClassPtr);
+
+                    if (NewAction)
+                    {
+                        RegisteredCount += (int32)InActionRegistar.AddBlueprintAction(Class, NewAction);
+                    }
+                }
+            }
+            return;
+        }
+
+        static void SetNodeFunc(UEdGraphNode* NewNode, bool /*bIsTemplateNode*/, TWeakObjectPtr<UClass> ClassPtr)
+        {
+            UK2Node_Task* TaskNode = CastChecked<UK2Node_Task>(NewNode);
+            if (ClassPtr.IsValid())
+            {
+                TaskNode->PrestatedClass = ClassPtr.Get();
+            }
+        }
+    };
+
+    //Registry subclasses creation
+    UClass* NodeClass = GetClass();
+    GetMenuActions_Utils::RegisterTaskClassActions(ActionRegistrar, NodeClass);
+
+    //Registry base creation
+    if (ActionRegistrar.IsOpenForRegistration(NodeClass))
+    {
+        UBlueprintNodeSpawner* NodeSpawner = UBlueprintNodeSpawner::Create(NodeClass);
+        check(NodeSpawner != nullptr);
+        ActionRegistrar.AddBlueprintAction(NodeClass, NodeSpawner);
     }
 }
 
@@ -423,6 +505,12 @@ void UK2Node_Task::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* Out
     const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>();
 
     const UObject* const ClassDefaultObject = InClass->GetDefaultObject(false);
+
+
+    // Create the set of output pins through the optional pin manager
+    FTaskOptionalPinManager OptionalPinManager(InClass, false);
+    OptionalPinManager.RebuildPropertyList(ShowPinForProperties, InClass);
+    //OptionalPinManager.CreateVisiblePins(ShowPinForProperties, InClass, EGPD_Output, this); //BUG: Replaces delegate pins
 
     for (TFieldIterator<UProperty> PropertyIt(InClass, EFieldIteratorFlags::IncludeSuper); PropertyIt; ++PropertyIt)
     {
@@ -513,6 +601,9 @@ UEdGraphPin* UK2Node_Task::GetThenPin()const
 
 UEdGraphPin* UK2Node_Task::GetClassPin(const TArray<UEdGraphPin*>* InPinsToSearch /*= NULL*/) const
 {
+    if (UsePrestatedClass())
+        return nullptr;
+
     const TArray<UEdGraphPin*>* PinsToSearch = InPinsToSearch ? InPinsToSearch : &Pins;
 
     UEdGraphPin* Pin = NULL;
@@ -557,17 +648,25 @@ UEdGraphPin* UK2Node_Task::GetOwnerPin() const
 UClass* UK2Node_Task::GetClassToSpawn(const TArray<UEdGraphPin*>* InPinsToSearch /*=NULL*/) const
 {
     UClass* UseSpawnClass = NULL;
-    const TArray<UEdGraphPin*>* PinsToSearch = InPinsToSearch ? InPinsToSearch : &Pins;
 
-    UEdGraphPin* ClassPin = GetClassPin(PinsToSearch);
-    if (ClassPin && ClassPin->DefaultObject != NULL && ClassPin->LinkedTo.Num() == 0)
+    if (UsePrestatedClass())
     {
-        UseSpawnClass = CastChecked<UClass>(ClassPin->DefaultObject);
+        UseSpawnClass = PrestatedClass;
     }
-    else if (ClassPin && ClassPin->LinkedTo.Num())
+    else
     {
-        auto ClassSource = ClassPin->LinkedTo[0];
-        UseSpawnClass = ClassSource ? Cast<UClass>(ClassSource->PinType.PinSubCategoryObject.Get()) : nullptr;
+        const TArray<UEdGraphPin*>* PinsToSearch = InPinsToSearch ? InPinsToSearch : &Pins;
+
+        UEdGraphPin* ClassPin = GetClassPin(PinsToSearch);
+        if (ClassPin && ClassPin->DefaultObject != NULL && ClassPin->LinkedTo.Num() == 0)
+        {
+            UseSpawnClass = CastChecked<UClass>(ClassPin->DefaultObject);
+        }
+        else if (ClassPin && ClassPin->LinkedTo.Num())
+        {
+            auto ClassSource = ClassPin->LinkedTo[0];
+            UseSpawnClass = ClassSource ? Cast<UClass>(ClassSource->PinType.PinSubCategoryObject.Get()) : nullptr;
+        }
     }
 
     return UseSpawnClass;
@@ -593,7 +692,7 @@ FText UK2Node_Task::GetNodeTitleFormat() const
 //which class can be used with this node to create objects. All childs of class can be used.
 UClass* UK2Node_Task::GetClassPinBaseClass() const
 {
-    return UTask::StaticClass();
+    return UsePrestatedClass() ? PrestatedClass : UTask::StaticClass();
 }
 
 void UK2Node_Task::SetPinToolTip(UEdGraphPin& MutatablePin, const FText& PinDescription) const
