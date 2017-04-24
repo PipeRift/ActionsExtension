@@ -135,6 +135,10 @@ void UK2Node_Task::AllocateDefaultPins()
     // Result pin
     UEdGraphPin* ResultPin = CreatePin(EGPD_Output, K2Schema->PC_Object, TEXT(""), GetClassPinBaseClass(), false, false, K2Schema->PN_ReturnValue);
 
+    //Update class pins if we are using a prestated node
+    if (UsePrestatedClass())
+        OnClassPinChanged();
+
     Super::AllocateDefaultPins();
 }
 

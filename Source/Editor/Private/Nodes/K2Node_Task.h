@@ -101,6 +101,7 @@ protected:
     FText NodeTooltip;
 
 public:
+    UPROPERTY()
     UClass* PrestatedClass;
 
 private:

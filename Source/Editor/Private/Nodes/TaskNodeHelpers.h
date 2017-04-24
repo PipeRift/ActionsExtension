@@ -18,7 +18,9 @@ struct TaskNodeHelpers {
 
     static void SetNodeFunc(UEdGraphNode* NewNode, bool /*bIsTemplateNode*/, TWeakObjectPtr<UClass> ClassPtr);
 
-    static TSet<UClass*> GetBlueprintTaskClasses();
 
     static int32 RegistryTaskClassAction(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass, UClass* Class);
+
+    template < typename TBase >
+    static void GetAllBlueprintSubclasses(TSet< TAssetSubclassOf< TBase > >& OutSubclasses, bool bAllowAbstract, FString const& Path);
 };
