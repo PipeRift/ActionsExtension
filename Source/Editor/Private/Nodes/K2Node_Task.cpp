@@ -12,6 +12,8 @@
 #include "K2Node_CallFunction.h"
 #include "K2Node_AssignmentStatement.h"
 
+#include "TaskNodeHelpers.h"
+
 #include "TaskOwnerInterface.h"
 #include "TaskFunctionLibrary.h"
 #include "Task.h"
@@ -409,75 +411,9 @@ void UK2Node_Task::GetNodeAttributes(TArray<TKeyValuePair<FString, FString>>& Ou
 
 void UK2Node_Task::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
 {
-    struct GetMenuActions_Utils
-    {
-        static void RegisterTaskClassActions(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass)
-        {
-            UClass* TaskType = UTask::StaticClass();
-
-            int32 RegisteredCount = 0;
-            if (const UObject* RegistrarTarget = InActionRegistar.GetActionKeyFilter())
-            {
-                if (const UClass* TargetClass = Cast<UClass>(RegistrarTarget))
-                {
-                    if (!TargetClass->HasAnyClassFlags(CLASS_Abstract) && !TargetClass->IsChildOf(TaskType))
-                    {
-
-                        UBlueprintNodeSpawner* NewAction = UBlueprintNodeSpawner::Create(NodeClass);
-                        check(NewAction != nullptr);
-
-                        TWeakObjectPtr<UClass> TargetClassPtr = TargetClass;
-                        NewAction->CustomizeNodeDelegate = UBlueprintNodeSpawner::FCustomizeNodeDelegate::CreateStatic(GetMenuActions_Utils::SetNodeFunc, TargetClassPtr);
-
-                        if (NewAction)
-                        {
-                            RegisteredCount += (int32)InActionRegistar.AddBlueprintAction(TargetClass, NewAction);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // these nested loops are combing over the same classes/functions the
-                // FBlueprintActionDatabase does; ideally we save on perf and fold this in
-                // with FBlueprintActionDatabase, but we want to give separate modules
-                // the opportunity to add their own actions per class func
-                for (TObjectIterator<UClass> ClassIt; ClassIt; ++ClassIt)
-                {
-                    UClass* Class = *ClassIt;
-                    if (Class->HasAnyClassFlags(CLASS_Abstract) || !Class->IsChildOf(TaskType))
-                    {
-                        continue;
-                    }
-
-                    UBlueprintNodeSpawner* NewAction = UBlueprintNodeSpawner::Create(NodeClass);
-                    check(NewAction != nullptr);
-
-                    TWeakObjectPtr<UClass> TargetClassPtr = Class;
-                    NewAction->CustomizeNodeDelegate = UBlueprintNodeSpawner::FCustomizeNodeDelegate::CreateStatic(GetMenuActions_Utils::SetNodeFunc, TargetClassPtr);
-
-                    if (NewAction)
-                    {
-                        RegisteredCount += (int32)InActionRegistar.AddBlueprintAction(Class, NewAction);
-                    }
-                }
-            }
-            return;
-        }
-
-        static void SetNodeFunc(UEdGraphNode* NewNode, bool /*bIsTemplateNode*/, TWeakObjectPtr<UClass> ClassPtr)
-        {
-            UK2Node_Task* TaskNode = CastChecked<UK2Node_Task>(NewNode);
-            if (ClassPtr.IsValid())
-            {
-                TaskNode->PrestatedClass = ClassPtr.Get();
-            }
-        }
-    };
-
     //Registry subclasses creation
     UClass* NodeClass = GetClass();
-    GetMenuActions_Utils::RegisterTaskClassActions(ActionRegistrar, NodeClass);
+    TaskNodeHelpers::RegisterTaskClassActions(ActionRegistrar, NodeClass);
 
     //Registry base creation
     if (ActionRegistrar.IsOpenForRegistration(NodeClass))
