@@ -301,7 +301,7 @@ void UK2Node_Task::ExpandNode(class FKismetCompilerContext& CompilerContext, UEd
     //TODO: Create local variable for PrestatedClass
 
     //Move pin if connected else, copy the value
-    if (ClassPin->LinkedTo.Num() > 0)
+    if (!UsePrestatedClass() && ClassPin->LinkedTo.Num() > 0)
     {
         CompilerContext.MovePinLinksToIntermediate(*ClassPin, *CreateTask_WidgetType);
     }
@@ -686,7 +686,7 @@ FText UK2Node_Task::GetBaseNodeTitle() const
 
 FText UK2Node_Task::GetNodeTitleFormat() const
 {
-    return LOCTEXT("BTTask", "{ClassName}");
+    return LOCTEXT("BTTask", "Create {ClassName}");
 }
 
 //which class can be used with this node to create objects. All childs of class can be used.
