@@ -762,8 +762,13 @@ bool UK2Node_Task::FHelper::HandleDelegateImplementation(
     UK2Node_CustomEvent* CurrentCENode = CompilerContext.SpawnIntermediateEventNode<UK2Node_CustomEvent>(CurrentNode, PinForCurrentDelegateProperty, SourceGraph);
     {
         UK2Node_AddDelegate* AddDelegateNode = CompilerContext.SpawnIntermediateNode<UK2Node_AddDelegate>(CurrentNode, SourceGraph);
-        AddDelegateNode->SetFromProperty(CurrentProperty, false);
+
+        UBlueprint* Blueprint = FBlueprintEditorUtils::FindBlueprintForNodeChecked(CurrentNode);
+        bool const bIsSelfContext = Blueprint->SkeletonGeneratedClass->IsChildOf(CurrentProperty->GetOwnerClass());
+
+        AddDelegateNode->SetFromProperty(CurrentProperty, bIsSelfContext);
         AddDelegateNode->AllocateDefaultPins();
+
         bIsErrorFree &= Schema->TryCreateConnection(AddDelegateNode->FindPinChecked(Schema->PN_Self), ProxyObjectPin);
         bIsErrorFree &= Schema->TryCreateConnection(InOutLastThenPin, AddDelegateNode->FindPinChecked(Schema->PN_Execute));
         InOutLastThenPin = AddDelegateNode->FindPinChecked(Schema->PN_Then);
@@ -816,7 +821,12 @@ bool UK2Node_Task::FHelper::HandleDelegateBindImplementation(
 
 
     UK2Node_AddDelegate* AddDelegateNode = CompilerContext.SpawnIntermediateNode<UK2Node_AddDelegate>(CurrentNode, SourceGraph);
-    AddDelegateNode->SetFromProperty(CurrentProperty, false);
+    check(AddDelegateNode);
+
+    UBlueprint* Blueprint = FBlueprintEditorUtils::FindBlueprintForNodeChecked(CurrentNode);
+    bool const bIsSelfContext = Blueprint->SkeletonGeneratedClass->IsChildOf(CurrentProperty->GetOwnerClass());
+
+    AddDelegateNode->SetFromProperty(CurrentProperty, bIsSelfContext);
     AddDelegateNode->AllocateDefaultPins();
 
 
@@ -827,7 +837,6 @@ bool UK2Node_Task::FHelper::HandleDelegateBindImplementation(
     UEdGraphPin* AddDelegate_DelegatePin = AddDelegateNode->GetDelegatePin();
     bIsErrorFree &= CompilerContext.MovePinLinksToIntermediate(*DelegateRefPin, *AddDelegate_DelegatePin).CanSafeConnect();
     DelegateRefPin->PinType = AddDelegate_DelegatePin->PinType;
-
 
 
     return bIsErrorFree;
