@@ -1,4 +1,4 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+// Copyright 2015-2017 Piperift. All Rights Reserved.
 
 #pragma once
 
@@ -6,19 +6,19 @@
 #include "UObject/ObjectMacros.h"
 #include "EdGraph/EdGraphNodeUtils.h"
 #include "EdGraphSchema_K2.h"
+
 #include "K2Node.h"
 #include "K2Node_AddDelegate.h"
 #include "K2Node_CreateDelegate.h"
 #include "K2Node_Self.h"
 #include "K2Node_CustomEvent.h"
 #include "K2Node_TemporaryVariable.h"
-#include "K2Node_ConstructAsyncObjectFromClass.generated.h"
 
-class FBlueprintActionDatabaseRegistrar;
-class UEdGraph;
+#include "K2Node_Task.generated.h"
 
-UCLASS(abstract)
-class AIEXTENSIONEDITOR_API UK2Node_ConstructAsyncObjectFromClass : public UK2Node
+
+UCLASS(Blueprintable)
+class AIEXTENSIONEDITOR_API UK2Node_Task : public UK2Node
 {
     GENERATED_UCLASS_BODY()
 
@@ -32,16 +32,19 @@ class AIEXTENSIONEDITOR_API UK2Node_ConstructAsyncObjectFromClass : public UK2No
     virtual bool IsCompatibleWithGraph(const UEdGraph* TargetGraph) const override;
     virtual void PinConnectionListChanged(UEdGraphPin* Pin);
     virtual void GetPinHoverText(const UEdGraphPin& Pin, FString& HoverTextOut) const override;
-    //~ End UEdGraphNode Interface.
+    virtual void ExpandNode(class FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
+    // End UEdGraphNode interface.
 
     //~ Begin UK2Node Interface
     virtual bool IsNodeSafeToIgnore() const override { return true; }
     virtual void ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& OldPins) override;
-    virtual void GetNodeAttributes( TArray<TKeyValuePair<FString, FString>>& OutNodeAttributes ) const override;
+    virtual void GetNodeAttributes(TArray<TKeyValuePair<FString, FString>>& OutNodeAttributes) const override;
     virtual void GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const override;
     virtual FText GetMenuCategory() const override;
     //~ End UK2Node Interface
 
+
+protected:
     /** Create new pins to show properties on archetype */
     void CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* OutClassPins = nullptr);
 
@@ -50,8 +53,8 @@ class AIEXTENSIONEDITOR_API UK2Node_ConstructAsyncObjectFromClass : public UK2No
 
     /** Get the then output pin */
     UEdGraphPin* GetThenPin() const;
-    /** Get the blueprint input pin */	
-    UEdGraphPin* GetClassPin(const TArray<UEdGraphPin*>* InPinsToSearch=NULL) const;
+    /** Get the blueprint input pin */
+    UEdGraphPin* GetClassPin(const TArray<UEdGraphPin*>* InPinsToSearch = NULL) const;
     /** Get the world context input pin, can return NULL */
     UEdGraphPin* GetWorldContextPin(bool bChecked = true) const;
     /** Get the result output pin */
@@ -60,15 +63,15 @@ class AIEXTENSIONEDITOR_API UK2Node_ConstructAsyncObjectFromClass : public UK2No
     UEdGraphPin* GetOwnerPin() const;
 
     /** Get the class that we are going to spawn, if it's defined as default value */
-    UClass* GetClassToSpawn(const TArray<UEdGraphPin*>* InPinsToSearch=NULL) const;
+    UClass* GetClassToSpawn(const TArray<UEdGraphPin*>* InPinsToSearch = NULL) const;
 
     /** Returns if the node uses World Object Context input */
     virtual bool UseWorldContext() const;
 
     /** Returns if the node uses Owner input */
     virtual bool UseOwner() const { return true; }
-
-protected:
+    virtual bool UsePrestatedClass() const { return PrestatedClass != nullptr; }
+ 
     /** Gets the default node title when no class is selected */
     virtual FText GetBaseNodeTitle() const;
     /** Gets the node title when a class has been selected. */
@@ -77,17 +80,37 @@ protected:
     virtual UClass* GetClassPinBaseClass() const;
 
     /**
-     * Takes the specified "MutatablePin" and sets its 'PinToolTip' field (according
-     * to the specified description)
-     * 
-     * @param   MutatablePin	The pin you want to set tool-tip text on
-     * @param   PinDescription	A string describing the pin's purpose
-     */
+    * Takes the specified "MutatablePin" and sets its 'PinToolTip' field (according
+    * to the specified description)
+    *
+    * @param   MutatablePin	The pin you want to set tool-tip text on
+    * @param   PinDescription	A string describing the pin's purpose
+    */
     void SetPinToolTip(UEdGraphPin& MutatablePin, const FText& PinDescription) const;
 
     /** Refresh pins when class was changed */
     void OnClassPinChanged();
 
+
+
+    /** Output pin visibility control */
+    UPROPERTY(EditAnywhere, Category = PinOptions, EditFixedSize)
+    TArray<FOptionalPinFromProperty> ShowPinForProperties;
+
+    /** Tooltip text for this node. */
+    FText NodeTooltip;
+
+public:
+    UPROPERTY()
+    UClass* PrestatedClass;
+
+private:
+    /** Constructing FText strings can be costly, so we cache the node's title */
+    FNodeTextCache CachedNodeTitle;
+
+
+
+protected:
     struct AIEXTENSIONEDITOR_API FHelper
     {
         static FString WorldContextPinName;
@@ -103,22 +126,19 @@ protected:
         };
 
         static bool ValidDataPin(const UEdGraphPin* Pin, EEdGraphPinDirection Direction, const UEdGraphSchema_K2* Schema);
+
         static bool CreateDelegateForNewFunction(UEdGraphPin* DelegateInputPin, FName FunctionName, UK2Node* CurrentNode, UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext);
+
         static bool CopyEventSignature(UK2Node_CustomEvent* CENode, UFunction* Function, const UEdGraphSchema_K2* Schema);
+
         static bool HandleDelegateImplementation(
             UMulticastDelegateProperty* CurrentProperty, const TArray<FHelper::FOutputPinAndLocalVariable>& VariableOutputs,
             UEdGraphPin* ProxyObjectPin, UEdGraphPin*& InOutLastThenPin,
             UK2Node* CurrentNode, UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext);
+
         static bool HandleDelegateBindImplementation(
             UMulticastDelegateProperty* CurrentProperty,
             UEdGraphPin* ProxyObjectPin, UEdGraphPin*& InOutLastThenPin,
             UK2Node* CurrentNode, UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext);
     };
-
-    /** Tooltip text for this node. */
-    FText NodeTooltip;
-
-private:
-    /** Constructing FText strings can be costly, so we cache the node's title */
-    FNodeTextCache CachedNodeTitle;
 };
