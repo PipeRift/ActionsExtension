@@ -14,6 +14,8 @@
 #include "K2Node_CustomEvent.h"
 #include "K2Node_TemporaryVariable.h"
 
+#include "TaskOwnerInterface.h"
+
 #include "K2Node_Task.generated.h"
 
 

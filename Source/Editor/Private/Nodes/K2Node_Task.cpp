@@ -14,7 +14,6 @@
 
 #include "TaskNodeHelpers.h"
 
-#include "TaskOwnerInterface.h"
 #include "TaskFunctionLibrary.h"
 #include "Task.h"
 
