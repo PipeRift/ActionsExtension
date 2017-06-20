@@ -54,8 +54,10 @@ void TaskNodeHelpers::RegisterTaskClassActions(FBlueprintActionDatabaseRegistrar
             if (!BPClass.IsNull())
             {
                 UClass* Class = BPClass.LoadSynchronous();
-                check(Class);
-                RegisteredCount += RegistryTaskClassAction(InActionRegistar, NodeClass, Class);
+                if (Class)
+                {
+                    RegisteredCount += RegistryTaskClassAction(InActionRegistar, NodeClass, Class);
+                }
             }
         }
     }
