@@ -49,8 +49,14 @@ void TaskNodeHelpers::RegisterTaskClassActions(FBlueprintActionDatabaseRegistrar
         //Registry blueprint classes
         TSet<TAssetSubclassOf<UTask>> BPClasses;
         GetAllBlueprintSubclasses<UTask>(BPClasses, false, "");
-        for (auto& BPClass : BPClasses) {
-            RegisteredCount += RegistryTaskClassAction(InActionRegistar, NodeClass, BPClass.LoadSynchronous());
+        for (auto& BPClass : BPClasses)
+        {
+            if (!BPClass.IsNull())
+            {
+                UClass* Class = BPClass.LoadSynchronous();
+                check(Class);
+                RegisteredCount += RegistryTaskClassAction(InActionRegistar, NodeClass, Class);
+            }
         }
     }
     return;
