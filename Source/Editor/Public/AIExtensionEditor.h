@@ -2,8 +2,11 @@
 #pragma once
 
 #include "AIExtensionEditorPrivatePCH.h"
+
 #include "PropertyEditorModule.h"
 #include "IAssetTools.h"
+
+#include "TickableObject.h"
  
 DECLARE_LOG_CATEGORY_EXTERN(LogAIExtensionEditor, All, All)
  

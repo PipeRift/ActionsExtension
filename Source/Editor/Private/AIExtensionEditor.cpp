@@ -4,7 +4,6 @@
 
 #include "Kismet2/KismetEditorUtilities.h"
 
-#include "TickableObject.h"
 #include "Task.h"
 #include "Task_BehaviourTree.h"
 
