@@ -2,14 +2,14 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "AIController.h"
-
 #include "Perception/AIPerceptionComponent.h"
 
 #include "AISquad.h"
 #include "AIGeneric.generated.h"
 
+class UBehaviorTreeComponent;
+class UBlackboardComponent;
 
 /**
  *
@@ -30,19 +30,60 @@ enum class ECombatState : uint8
 UCLASS(Blueprintable)
 class AIEXTENSION_API AAIGeneric : public AAIController
 {
-    GENERATED_BODY()
+    GENERATED_UCLASS_BODY()
+
+    AAIGeneric();
+
+
+private:
+
+	UPROPERTY(transient)
+	UBlackboardComponent* BlackboardComp;
+
+	/* Cached BT component */
+	UPROPERTY(transient)
+	UBehaviorTreeComponent* BehaviorComp;
 
 public:
-    AAIGeneric(const FObjectInitializer& ObjectInitializer);
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere)
-    AAISquad* Squad;
+	UPROPERTY(EditAnywhere, Category=Behavior)
+	class UBehaviorTree* Behavior;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     UAIPerceptionComponent* AIPerceptionComponent;
 
+
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings")
     ECombatState State;
+
+    // Begin AController interface
+	virtual void Possess(class APawn* InPawn) override;
+	virtual void UnPossess() override;
+	virtual void GameHasEnded(class AActor* EndGameFocus = NULL, bool bIsWinner = false) override;
+	virtual void BeginInactiveState() override;
+	// End APlayerController interface
+
+	void Respawn();
+
+	/** Handle for efficient management of Respawn timer */
+	FTimerHandle TimerHandle_Respawn;
+    
+public:
+
+	/** Returns Blackboard component **/
+	FORCEINLINE UBlackboardComponent* GetBlackboard() const { return BlackboardComp; }
+	/** Returns Behavior component **/
+	FORCEINLINE UBehaviorTreeComponent* GetBehavior() const { return BehaviorComp; }
+
+
+
+    /***************************************
+    * Squads                               *
+    ***************************************/
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    AAISquad* Squad;
+
 
     UFUNCTION(BlueprintCallable)
     void JoinSquad(class AAISquad* SquadToJoin);
