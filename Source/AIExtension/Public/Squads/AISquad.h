@@ -1,28 +1,26 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2015-2017 Piperift. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "AIController.h"
-#include "AI_Generic.h"
-#include "AI_Squad.generated.h"
+#include "AISquad.generated.h"
 
 class ASquad;
 class USquadOrder;
+class AAIGeneric;
+
 /**
  * 
  */
 UCLASS()
-class AIEXTENSION_API AAI_Squad : public AAIController
+class AIEXTENSION_API AAISquad : public AAIController
 {
     GENERATED_BODY()
 
 public:
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
-    class ASquad* SquadPawn;
-
-    UPROPERTY(BlueprintReadWrite, EditAnywhere)
-    TArray<AAI_Generic*> Members;
+    TArray<AAIGeneric*> Members;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     FVector PositionIncrement;
@@ -31,19 +29,18 @@ public:
     TSubclassOf<USquadOrder> CurrentOrder;
 
     UFUNCTION(BlueprintCallable)
-    bool HasMember(AAI_Generic* member);
+    FORCEINLINE bool HasMember(const AAIGeneric* member) const {
+        return Members.Contains(member);
+    }
 
     UFUNCTION(BlueprintCallable)
-    class ASquad* GetSquadPawn();
+    ASquad* GetSquadPawn();
 
     UFUNCTION(BlueprintCallable)
-    void MoveToGrid();
+    void AddMember(AAIGeneric* member);
 
     UFUNCTION(BlueprintCallable)
-    void AddMember(AAI_Generic* member);
-
-    UFUNCTION(BlueprintCallable)
-    void RemoveMember(AAI_Generic* member);
+    void RemoveMember(AAIGeneric* member);
 
     UFUNCTION(BlueprintCallable)
     void SendOrder(USquadOrder* order);

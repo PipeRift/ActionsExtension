@@ -1,12 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2015-2017 Piperift. All Rights Reserved.
 
 #include "AIExtension/Private/AIExtensionPrivatePCH.h"
-#include "AI_Generic.h"
+#include "AIGeneric.h"
 #include "BTD_IsAlive.h"
 
 bool UBTD_IsAlive::PerformConditionCheckAI(AAIController* OwnerController)
 {
-    auto AIGen = Cast<AAI_Generic>(OwnerController);
-
+    const auto AIGen = Cast<AAIGeneric>(OwnerController);
     return IsValid(AIGen);
 }

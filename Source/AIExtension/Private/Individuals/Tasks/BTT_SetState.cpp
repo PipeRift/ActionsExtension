@@ -1,13 +1,17 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "AIExtension/Private/AIExtensionPrivatePCH.h"
-#include "AI_Generic.h"
+#include "AIGeneric.h"
 #include "BTT_SetState.h"
+
+UBTT_SetState::UBTT_SetState()
+{
+    State = ECombatState::Passive;
+}
 
 EBTNodeResult::Type UBTT_SetState::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-    AController* Controller = Cast<AController>(OwnerComp.GetOwner());
-    auto AIGen = Cast<AAI_Generic>(Controller);
+    auto AIGen = Cast<AAIGeneric>(OwnerComp.GetOwner());
 
     if (!IsValid(AIGen))
     {

@@ -1,15 +1,17 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2015-2017 Piperift. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AI_Squad.h"
-#include "Runtime/Engine/Classes/Components/TextRenderComponent.h"
-#include "Runtime/Engine/Classes/Components/SphereComponent.h"
+#include "Components/TextRenderComponent.h"
+#include "Components/SphereComponent.h"
 #include "GameFramework/Pawn.h"
+
+#include "AISquad.h"
 #include "Squad.generated.h"
 
-UCLASS()
+
+UCLASS(BlueprintType)
 class AIEXTENSION_API ASquad : public APawn
 {
 	GENERATED_BODY()
@@ -28,13 +30,13 @@ public:
     FVector PositionIncrement;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
-    class AAI_Squad* SquadAI;
+    AAISquad* SquadAI;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
-    class UTextRenderComponent* TextRender;
+    UTextRenderComponent* TextRender;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
-    class USphereComponent* ObjectiveDirection;
+    USphereComponent* ObjectiveDirection;
 
 protected:
 	// Called when the game starts or when spawned
@@ -50,5 +52,5 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     
     UFUNCTION(BlueprintCallable)
-    AAI_Squad* GetSquad();
+    AAISquad* GetAI();
 };

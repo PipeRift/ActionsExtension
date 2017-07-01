@@ -1,10 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2015-2017 Piperift. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Squad.h"
-#include "AI_Generic.h"
+#include "AIGeneric.h"
 #include "UObject/NoExportTypes.h"
 #include "SquadOrder.generated.h"
 
@@ -21,7 +21,7 @@ public:
     class ASquad* Squad;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
-    class AAI_Generic* Member;
+    class AAIGeneric* Member;
 
     UFUNCTION(BlueprintCallable)
     void Apply();

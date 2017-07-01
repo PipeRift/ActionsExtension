@@ -1,7 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2015-2017 Piperift. All Rights Reserved.
 
-#include "AIExtension/Private/AIExtensionPrivatePCH.h"
-#include "Runtime/AIModule/Classes/Blueprint/AIBlueprintHelperLibrary.h"
+#include "AIExtensionPrivatePCH.h"
+#include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Squad.h"
 
 
@@ -10,6 +10,8 @@ ASquad::ASquad()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
     TextRender = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextRender"));
     TextRender->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
@@ -46,11 +48,11 @@ void ASquad::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
-AAI_Squad* ASquad::GetSquad()
+AAISquad* ASquad::GetAI()
 {
     if (!IsValid(SquadAI))
     {
-        SquadAI = Cast<AAI_Squad>(UAIBlueprintHelperLibrary::GetAIController(this));
+        SquadAI = Cast<AAISquad>(UAIBlueprintHelperLibrary::GetAIController(this));
     }
 
     return SquadAI;

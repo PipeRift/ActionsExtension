@@ -1,10 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2015-2017 Piperift. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "EAIEnums.h"
 #include "BTT_SetState.generated.h"
 
 /**
@@ -16,8 +15,10 @@ class AIEXTENSION_API UBTT_SetState : public UBTTaskNode
 	GENERATED_BODY()	
 	
 public:
+    UBTT_SetState();
+
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
-    ECombatState State = ECombatState::EPassive;
+    ECombatState State;
 
     virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };
