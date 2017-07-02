@@ -37,23 +37,23 @@ class AIEXTENSION_API AAIGeneric : public AAIController
 
 private:
 
-	UPROPERTY(transient)
+	UPROPERTY(Transient)
 	UBlackboardComponent* BlackboardComp;
 
 	/* Cached BT component */
-	UPROPERTY(transient)
+	UPROPERTY(Transient)
 	UBehaviorTreeComponent* BehaviorComp;
 
 public:
 
-	UPROPERTY(EditAnywhere, Category=Behavior)
+	UPROPERTY(EditAnywhere, Category = Generic)
 	class UBehaviorTree* Behavior;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     UAIPerceptionComponent* AIPerceptionComponent;
 
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings")
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Generic)
     ECombatState State;
 
     // Begin AController interface
@@ -81,7 +81,7 @@ public:
     * Squads                               *
     ***************************************/
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Generic)
     AAISquad* Squad;
 
 

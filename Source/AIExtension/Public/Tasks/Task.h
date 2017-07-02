@@ -23,6 +23,8 @@ enum class ETaskState : uint8
     NOT_RUN  UMETA(DisplayName = "Not Run")
 };
 
+DECLARE_LOG_CATEGORY_EXTERN(TaskLog, Log, All);
+
 class UTaskManagerComponent;
 
 /**
@@ -34,8 +36,6 @@ class AIEXTENSION_API UTask : public UObject, public FTickableGameObject, public
     GENERATED_UCLASS_BODY()
 
 public:
-    void Initialize(ITaskOwnerInterface* InTaskParent);
-
     UFUNCTION(BlueprintCallable, Category = Task)
     void Activate();
 
@@ -91,9 +91,9 @@ private:
     //~ End Ticking
 
 protected:
+    UPROPERTY()
     ETaskState State;
 
-    ITaskOwnerInterface* Parent;
     UPROPERTY()
     TSet<UTask*> ChildrenTasks;
 
@@ -104,7 +104,7 @@ protected:
     virtual bool IsTickable() const override {
         return bWantsToTick && IsActivated()
             && !IsPendingKill()
-            && Parent && !GetParent()->IsPendingKill();
+            && IsInitialized() && !GetParent()->IsPendingKill();
     }
 
     virtual TStatId GetStatId() const override {
@@ -115,7 +115,10 @@ protected:
 public:
     //Inlines
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE bool IsInitialized() const { return Parent != nullptr; }
+    const bool IsInitialized() const {
+        UObject const * const Outer = GetOuter();
+        return Outer && Outer->GetClass()->ImplementsInterface(UTaskOwnerInterface::StaticClass());
+    }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
     FORCEINLINE bool IsActivated() const { return IsInitialized() && State == ETaskState::RUNNING; }
@@ -133,11 +136,18 @@ public:
     FORCEINLINE ETaskState GetState() const { return State; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    UObject* GetParent() const { return Parent ? Cast<UObject>(Parent) : nullptr; }
+    FORCEINLINE UObject* const GetParent() const {
+        return IsInitialized() ? GetOuter() : nullptr;
+    }
+
+    FORCEINLINE ITaskOwnerInterface* GetParentInterface() const {
+        return Cast<ITaskOwnerInterface>(GetOuter());
+    }
 
 
     virtual UWorld* GetWorld() const override {
-        const UObject* InParent = GetParent();
+        const UObject* const InParent = GetParent();
+
         return InParent ? InParent->GetWorld() : nullptr;
     }
 };

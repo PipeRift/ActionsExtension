@@ -10,6 +10,7 @@
 #include "TaskManagerComponent.h"
 #include "GameplayTaskOwnerInterface.h"
 
+DEFINE_LOG_CATEGORY(TaskLog);
 
 UTask::UTask(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -23,22 +24,23 @@ UTask::UTask(const FObjectInitializer& ObjectInitializer)
     TickRate = 0.15f;
 }
 
-void UTask::Initialize(ITaskOwnerInterface* InTaskParent)
-{
-    //AddToRoot();
-
-    Parent = InTaskParent;
-    State = ETaskState::NOT_RUN;
-
-    //Registry this children task in the owner
-    bool bRegistryResult = Parent->AddChildren(this);
-    if (!bRegistryResult) {
-        GetTaskOwnerComponent()->AddChildren(this);
-    }
-}
-
 void UTask::Activate()
 {
+    State = ETaskState::NOT_RUN;
+
+    ITaskOwnerInterface* const Parent = GetParentInterface();
+    if (!Parent) {
+        UE_LOG(TaskLog, Error, TEXT("Task's Outer must have a TaskOwnerInterface! Detroying for safety."));
+        Destroy();
+        return;
+    }
+
+    //Registry this children task in the owner
+    const bool bSuccess = Parent->AddChildren(this);
+    if (!bSuccess) {
+        GetTaskOwnerComponent()->AddChildren(this);
+    }
+
     if (!IsInitialized() || IsActivated() || IsPendingKill())
         return;
 
@@ -134,9 +136,9 @@ void UTask::Tick(float DeltaTime)
 UTaskManagerComponent* UTask::GetTaskOwnerComponent()
 {
     //Owner will always contain this interface.
-    checkf(Parent, TEXT("Owner should always contain a ITaskOwnerInterface"));
+    checkf(IsInitialized(), TEXT("Owner should always contain a ITaskOwnerInterface"));
 
-    return Parent->GetTaskOwnerComponent();
+    return GetParentInterface()->GetTaskOwnerComponent();
 }
 
 UTaskManagerComponent* UTask::ExposedGetTaskOwnerComponent()

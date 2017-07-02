@@ -447,7 +447,7 @@ void UK2Node_Task::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* Out
 
 
     // Create the set of output pins through the optional pin manager
-    FTaskOptionalPinManager OptionalPinManager(InClass, false);
+    FTaskOptionalPinManager OptionalPinManager(InClass, true);
     OptionalPinManager.RebuildPropertyList(ShowPinForProperties, InClass);
     //OptionalPinManager.CreateVisiblePins(ShowPinForProperties, InClass, EGPD_Output, this); //BUG: Replaces delegate pins
 
@@ -487,7 +487,7 @@ void UK2Node_Task::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* Out
                     K2Schema->ConstructBasicPinTooltip(*Pin, Property->GetToolTipText(), Pin->PinToolTip);
                 }
             }
-            else if (bIsDelegate) {
+            else if (bIsDelegate && Property->HasAllPropertyFlags(CPF_BlueprintAssignable)) {
                 if (UMulticastDelegateProperty* Delegate = Cast<UMulticastDelegateProperty>(*PropertyIt))
                 {
                     UFunction* DelegateSignatureFunction = Delegate->SignatureFunction;
