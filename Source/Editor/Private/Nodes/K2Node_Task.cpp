@@ -26,82 +26,6 @@ FString UK2Node_Task::FHelper::WorldContextPinName(TEXT("WorldContextObject"));
 FString UK2Node_Task::FHelper::ClassPinName(TEXT("Class"));
 FString UK2Node_Task::FHelper::OwnerPinName(TEXT("Owner"));
 
-namespace
-{
-    // Optional pin manager subclass.
-    struct FTaskOptionalPinManager : public FOptionalPinManager
-    {
-        FTaskOptionalPinManager(UClass* InClass, bool bExcludeObjectContainers)
-            :FOptionalPinManager()
-        {
-            SrcClass = InClass;
-            bExcludeObjectArrayProperties = bExcludeObjectContainers;
-            bExcludeObjectContainerProperties = bExcludeObjectContainers;
-        }
-
-        virtual void GetRecordDefaults(UProperty* TestProperty, FOptionalPinFromProperty& Record) const override
-        {
-            FOptionalPinManager::GetRecordDefaults(TestProperty, Record);
-
-            // Show pin unless the property is owned by a parent class.
-            Record.bShowPin = TestProperty->GetOwnerClass() == SrcClass;
-        }
-
-        virtual bool CanTreatPropertyAsOptional(UProperty* TestProperty) const override
-        {
-            // Don't expose anything not marked BlueprintReadOnly/BlueprintReadWrite.
-            if (!TestProperty || !TestProperty->HasAllPropertyFlags(CPF_BlueprintVisible))
-            {
-                return false;
-            }
-
-            if (UArrayProperty* TestArrayProperty = Cast<UArrayProperty>(TestProperty))
-            {
-                // We only use the Inner type if the flag is set. This is done for backwards-compatibility (some BPs may already rely on the previous behavior when the property value was allowed to be exposed).
-                if (bExcludeObjectArrayProperties && TestArrayProperty->Inner)
-                {
-                    TestProperty = TestArrayProperty->Inner;
-                }
-            }
-            else if (USetProperty* TestSetProperty = Cast<USetProperty>(TestProperty))
-            {
-                if (bExcludeObjectContainerProperties && TestSetProperty->ElementProp)
-                {
-                    TestProperty = TestSetProperty->ElementProp;
-                }
-            }
-            else if (UMapProperty* TestMapProperty = Cast<UMapProperty>(TestProperty))
-            {
-                // Since we can't treat the key or value as read-only right now, we exclude any TMap that has a non-class UObject reference as its key or value type.
-                return !(bExcludeObjectContainerProperties
-                    && ((TestMapProperty->KeyProp && TestMapProperty->KeyProp->IsA<UObjectProperty>() && !TestMapProperty->KeyProp->IsA<UClassProperty>())
-                        || (TestMapProperty->ValueProp && TestMapProperty->ValueProp->IsA<UObjectProperty>() && !TestMapProperty->ValueProp->IsA<UClassProperty>())));
-            }
-
-            // Don't expose object properties (except for those containing class objects).
-            // @TODO - Could potentially expose object reference values if/when we have support for 'const' input pins.
-            return !TestProperty->IsA<UObjectProperty>() || TestProperty->IsA<UClassProperty>();
-        }
-
-        virtual void CustomizePinData(UEdGraphPin* Pin, FName SourcePropertyName, int32 ArrayIndex, UProperty* Property = nullptr) const override
-        {
-            check(Pin);
-
-            // Move into the advanced view if the property metadata is set.
-            Pin->bAdvancedView = Property && Property->HasAnyPropertyFlags(CPF_AdvancedDisplay);
-        }
-
-    private:
-        // Class type for which optional pins are being managed.
-        UClass* SrcClass;
-
-        // Indicates whether or not object array properties will be excluded (for backwards-compatibility).
-        bool bExcludeObjectArrayProperties;
-
-        // Indicates whether or not object container properties will be excluded (will supersede the array-specific flag when true).
-        bool bExcludeObjectContainerProperties;
-    };
-}
 
 
 UK2Node_Task::UK2Node_Task(const FObjectInitializer& ObjectInitializer)
@@ -440,12 +364,7 @@ void UK2Node_Task::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* Out
 
     const UObject* const ClassDefaultObject = InClass->GetDefaultObject(false);
 
-
-    // Create the set of output pins through the optional pin manager
-    FTaskOptionalPinManager OptionalPinManager(InClass, true);
-    OptionalPinManager.RebuildPropertyList(ShowPinForProperties, InClass);
-    //OptionalPinManager.CreateVisiblePins(ShowPinForProperties, InClass, EGPD_Output, this); //BUG: Replaces delegate pins
-
+    
     for (TFieldIterator<UProperty> PropertyIt(InClass, EFieldIteratorFlags::IncludeSuper); PropertyIt; ++PropertyIt)
     {
         UProperty* Property = *PropertyIt;
@@ -461,7 +380,7 @@ void UK2Node_Task::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* Out
                 !bIsDelegate)
             {
                 UEdGraphPin* Pin = CreatePin(EGPD_Input, TEXT(""), TEXT(""), NULL, false, false, Property->GetName());
-                const bool bPinGood = (Pin != NULL) && K2Schema->ConvertPropertyToPinType(Property, /*out*/ Pin->PinType);
+                const bool bPinGood = (Pin != NULL) && K2Schema->ConvertPropertyToPinType(Property, Pin->PinType);
 
                 if (OutClassPins && Pin)
                 {
@@ -488,10 +407,12 @@ void UK2Node_Task::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* Out
                 {
                     UFunction* DelegateSignatureFunction = Delegate->SignatureFunction;
                     UEdGraphPin* Pin;
-                    if (DelegateSignatureFunction->NumParms < 1) {
+                    if (DelegateSignatureFunction->NumParms < 1)
+                    {
                         Pin = CreatePin(EGPD_Output, K2Schema->PC_Exec, TEXT(""), NULL, false, false, Delegate->GetName());
                     }
-                    else {
+                    else
+                    {
                         Pin = CreatePin(EGPD_Input, K2Schema->PC_Delegate, TEXT(""), NULL, false, true, Delegate->GetName(), true);
                         Pin->PinFriendlyName = FText::Format(NSLOCTEXT("K2Node", "PinFriendlyDelegatetName", "{0} Event"), FText::FromString(Delegate->GetName()));
 
@@ -796,12 +717,9 @@ bool UK2Node_Task::FHelper::HandleDelegateBindImplementation(
     UK2Node_AddDelegate* AddDelegateNode = CompilerContext.SpawnIntermediateNode<UK2Node_AddDelegate>(CurrentNode, SourceGraph);
     check(AddDelegateNode);
 
-    UBlueprint* Blueprint = FBlueprintEditorUtils::FindBlueprintForNodeChecked(CurrentNode);
-    bool const bIsSelfContext = Blueprint->SkeletonGeneratedClass->IsChildOf(CurrentProperty->GetOwnerClass());
 
-    AddDelegateNode->SetFromProperty(CurrentProperty, bIsSelfContext);
+    AddDelegateNode->SetFromProperty(CurrentProperty, false);
     AddDelegateNode->AllocateDefaultPins();
-
 
     bIsErrorFree &= Schema->TryCreateConnection(AddDelegateNode->FindPinChecked(Schema->PN_Self), ObjectPin);
     bIsErrorFree &= Schema->TryCreateConnection(InOutLastThenPin, AddDelegateNode->FindPinChecked(Schema->PN_Execute));
@@ -810,7 +728,6 @@ bool UK2Node_Task::FHelper::HandleDelegateBindImplementation(
     UEdGraphPin* AddDelegate_DelegatePin = AddDelegateNode->GetDelegatePin();
     bIsErrorFree &= CompilerContext.MovePinLinksToIntermediate(*DelegateRefPin, *AddDelegate_DelegatePin).CanSafeConnect();
     DelegateRefPin->PinType = AddDelegate_DelegatePin->PinType;
-
 
     return bIsErrorFree;
 }

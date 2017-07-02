@@ -123,7 +123,7 @@ void UTask::Tick(float DeltaTime)
         if (TickTimeElapsed < TickRate)
             return;
 
-        // Limited Tick
+        // Delayed Tick
         TaskTick(TickTimeElapsed);
         ReceiveTick(TickTimeElapsed);
 
