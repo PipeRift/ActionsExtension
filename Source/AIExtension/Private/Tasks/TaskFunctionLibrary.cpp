@@ -13,12 +13,3 @@ UTask* UTaskFunctionLibrary::CreateTask(const TScriptInterface<ITaskOwnerInterfa
 
     return NewObject<UTask>(Owner.GetObject(), TaskType);
 }
-
-void UTaskFunctionLibrary::ActivateTask(UTask* const Task)
-{
-    if (Task) {
-        Task->Activate();
-    }
-}
-
-

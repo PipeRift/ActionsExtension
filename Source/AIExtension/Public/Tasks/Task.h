@@ -53,7 +53,7 @@ public:
     void Cancel();
 
     /** Event when play begins for this actor. */
-    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, meta = (DisplayName = "Activate"))
+    UFUNCTION(BlueprintNativeEvent, meta = (DisplayName = "Activate"))
     void ReceiveActivate();
 
     /** Event when finishing this task. */
@@ -95,16 +95,14 @@ protected:
     ETaskState State;
 
     UPROPERTY()
-    TSet<UTask*> ChildrenTasks;
+    TArray<UTask*> ChildrenTasks;
 
     //~ Begin Tickable Object Interface
     virtual void Tick(float DeltaTime) override;
     virtual void TaskTick(float DeltaTime) {}
 
     virtual bool IsTickable() const override {
-        return bWantsToTick && IsActivated()
-            && !IsPendingKill()
-            && IsInitialized() && !GetParent()->IsPendingKill();
+        return !IsDefaultSubobject() && bWantsToTick && IsActivated() && !GetParent()->IsPendingKill();
     }
 
     virtual TStatId GetStatId() const override {
@@ -114,20 +112,21 @@ protected:
 
 public:
     //Inlines
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    const bool IsInitialized() const {
+    const bool IsValid() const {
         UObject const * const Outer = GetOuter();
-        return Outer && Outer->GetClass()->ImplementsInterface(UTaskOwnerInterface::StaticClass());
+        return !IsPendingKill() && Outer->GetClass()->ImplementsInterface(UTaskOwnerInterface::StaticClass());
     }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE bool IsActivated() const { return IsInitialized() && State == ETaskState::RUNNING; }
+    FORCEINLINE bool IsActivated() const {
+        return IsValid() && State == ETaskState::RUNNING;
+    }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE bool Succeeded() const { return IsInitialized() && State == ETaskState::SUCCESS; }
+    FORCEINLINE bool Succeeded() const { return IsValid() && State == ETaskState::SUCCESS; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE bool Failed() const { return IsInitialized() && State == ETaskState::FAILURE; }
+    FORCEINLINE bool Failed() const { return IsValid() && State == ETaskState::FAILURE; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
     FORCEINLINE bool IsCanceled() const { return State == ETaskState::CANCELED; }
@@ -137,7 +136,7 @@ public:
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
     FORCEINLINE UObject* const GetParent() const {
-        return IsInitialized() ? GetOuter() : nullptr;
+        return IsValid() ? GetOuter() : nullptr;
     }
 
     FORCEINLINE ITaskOwnerInterface* GetParentInterface() const {

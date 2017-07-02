@@ -41,7 +41,7 @@ void UTask::Activate()
         GetTaskOwnerComponent()->AddChildren(this);
     }
 
-    if (!IsInitialized() || IsActivated() || IsPendingKill())
+    if (!IsValid() || IsActivated())
         return;
 
     State = ETaskState::RUNNING;
@@ -53,14 +53,12 @@ void UTask::Activate()
 
 const bool UTask::AddChildren(UTask* NewChildren)
 {
-    ChildrenTasks.Add(NewChildren);
-    return true;
+    return ChildrenTasks.AddUnique(NewChildren) != INDEX_NONE;
 }
 
 const bool UTask::RemoveChildren(UTask* Children)
 {
-    ChildrenTasks.Remove(Children);
-    return true;
+    return ChildrenTasks.Remove(Children) > 0;
 }
 
 void UTask::ReceiveActivate_Implementation() {}
@@ -84,22 +82,30 @@ void UTask::Finish(bool bSuccess, bool bError) {
 
 void UTask::Cancel()
 {
+    const UObject* const Parent = GetParent();
+
     if (IsActivated()){
         State = ETaskState::CANCELED;
-        
-        const UTaskManagerComponent* TaskManager = GetTaskOwnerComponent();
+
         // If we're in the process of being garbage collected it is unsafe to call out to blueprints
-        if (TaskManager && !TaskManager->HasAnyFlags(RF_BeginDestroyed) && !TaskManager->IsUnreachable())
+        if (Parent && !Parent->HasAnyFlags(RF_BeginDestroyed) && !Parent->IsUnreachable())
         {
             ReceiveCanceled();
         }
     }
 
     Destroy();
+
+    if(Parent && !Parent->IsPendingKill()) {
+        GetParentInterface()->RemoveChildren(this);
+    }
 }
 
 void UTask::Destroy()
 {
+    //Mark for destruction
+    MarkPendingKill();
+
     //Cancel and destroy all children tasks
     for (auto* Children : ChildrenTasks)
     {
@@ -107,11 +113,6 @@ void UTask::Destroy()
             Children->Cancel();
         }
     }
-
-    //RemoveFromRoot();
-
-    //Mark for destruction
-    MarkPendingKill();
 }
 
 void UTask::Tick(float DeltaTime)
@@ -136,7 +137,7 @@ void UTask::Tick(float DeltaTime)
 UTaskManagerComponent* UTask::GetTaskOwnerComponent()
 {
     //Owner will always contain this interface.
-    checkf(IsInitialized(), TEXT("Owner should always contain a ITaskOwnerInterface"));
+    checkf(IsValid(), TEXT("Owner should always have a ITaskOwnerInterface"));
 
     return GetParentInterface()->GetTaskOwnerComponent();
 }

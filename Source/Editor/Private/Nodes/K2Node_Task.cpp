@@ -331,11 +331,6 @@ void UK2Node_Task::ExpandNode(class FKismetCompilerContext& CompilerContext, UEd
     UEdGraphPin* LastThenPin = FKismetCompilerUtilities::GenerateAssignmentNodes(CompilerContext, SourceGraph, CreateTaskNode, this, CreateTask_Result, GetClassToSpawn());
 
 
-    //////////////////////////////////////////////////////////////////////////
-    // GATHER OUTPUT PARAMETERS AND PAIR THEM WITH LOCAL VARIABLES
-    TArray<FHelper::FOutputPinAndLocalVariable> VariableOutputs;
-    //Not Implemented
-
     // FOR EACH DELEGATE DEFINE EVENT, CONNECT IT TO DELEGATE AND IMPLEMENT A CHAIN OF ASSIGMENTS
     for (TFieldIterator<UMulticastDelegateProperty> PropertyIt(GetClassToSpawn(), EFieldIteratorFlags::ExcludeSuper); PropertyIt && bIsErrorFree; ++PropertyIt)
     {
@@ -343,7 +338,7 @@ void UK2Node_Task::ExpandNode(class FKismetCompilerContext& CompilerContext, UEd
 
         const UFunction* DelegateSignatureFunction = Property->SignatureFunction;
         if (DelegateSignatureFunction->NumParms < 1) {
-            bIsErrorFree &= FHelper::HandleDelegateImplementation(Property, VariableOutputs, CreateTask_Result, LastThenPin, this, SourceGraph, CompilerContext);
+            bIsErrorFree &= FHelper::HandleDelegateImplementation(Property, CreateTask_Result, LastThenPin, this, SourceGraph, CompilerContext);
         }
         else
         {
@@ -488,7 +483,8 @@ void UK2Node_Task::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* Out
                 }
             }
             else if (bIsDelegate && Property->HasAllPropertyFlags(CPF_BlueprintAssignable)) {
-                if (UMulticastDelegateProperty* Delegate = Cast<UMulticastDelegateProperty>(*PropertyIt))
+                UMulticastDelegateProperty* const Delegate = Cast<UMulticastDelegateProperty>(*PropertyIt);
+                if (Delegate)
                 {
                     UFunction* DelegateSignatureFunction = Delegate->SignatureFunction;
                     UEdGraphPin* Pin;
@@ -742,7 +738,7 @@ bool UK2Node_Task::FHelper::CopyEventSignature(UK2Node_CustomEvent* CENode, UFun
 }
 
 bool UK2Node_Task::FHelper::HandleDelegateImplementation(
-    UMulticastDelegateProperty* CurrentProperty, const TArray<FHelper::FOutputPinAndLocalVariable>& VariableOutputs,
+    UMulticastDelegateProperty* CurrentProperty,
     UEdGraphPin* ProxyObjectPin, UEdGraphPin*& InOutLastThenPin,
     UK2Node* CurrentNode, UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext)
 {
@@ -779,27 +775,6 @@ bool UK2Node_Task::FHelper::HandleDelegateImplementation(
     }
 
     UEdGraphPin* LastActivatedNodeThen = CurrentCENode->FindPinChecked(Schema->PN_Then);
-    for (auto OutputPair : VariableOutputs) // CREATE CHAIN OF ASSIGMENTS
-    {
-        UEdGraphPin* PinWithData = CurrentCENode->FindPin(OutputPair.OutputPin->PinName);
-        if (PinWithData == NULL)
-        {
-            /*FText ErrorMessage = FText::Format(LOCTEXT("MissingDataPin", "ICE: Pin @@ was expecting a data output pin named {0} on @@ (each delegate must have the same signature)"), FText::FromString(OutputPair.OutputPin->PinName));
-            CompilerContext.MessageLog.Error(*ErrorMessage.ToString(), OutputPair.OutputPin, CurrentCENode);
-            return false;*/
-            continue;
-        }
-
-        UK2Node_AssignmentStatement* AssignNode = CompilerContext.SpawnIntermediateNode<UK2Node_AssignmentStatement>(CurrentNode, SourceGraph);
-        AssignNode->AllocateDefaultPins();
-        bIsErrorFree &= Schema->TryCreateConnection(LastActivatedNodeThen, AssignNode->GetExecPin());
-        bIsErrorFree &= Schema->TryCreateConnection(OutputPair.TempVar->GetVariablePin(), AssignNode->GetVariablePin());
-        AssignNode->NotifyPinConnectionListChanged(AssignNode->GetVariablePin());
-        bIsErrorFree &= Schema->TryCreateConnection(AssignNode->GetValuePin(), PinWithData);
-        AssignNode->NotifyPinConnectionListChanged(AssignNode->GetValuePin());
-
-        LastActivatedNodeThen = AssignNode->GetThenPin();
-    }
 
     bIsErrorFree &= CompilerContext.MovePinLinksToIntermediate(*PinForCurrentDelegateProperty, *LastActivatedNodeThen).CanSafeConnect();
     return bIsErrorFree;
@@ -817,7 +792,6 @@ bool UK2Node_Task::FHelper::HandleDelegateBindImplementation(
     check(CurrentProperty && Schema);
     UEdGraphPin* DelegateRefPin = CurrentNode->FindPinChecked(CurrentProperty->GetName());
     check(DelegateRefPin);
-
 
     UK2Node_AddDelegate* AddDelegateNode = CompilerContext.SpawnIntermediateNode<UK2Node_AddDelegate>(CurrentNode, SourceGraph);
     check(AddDelegateNode);

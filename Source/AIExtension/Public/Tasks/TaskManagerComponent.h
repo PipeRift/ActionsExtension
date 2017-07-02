@@ -34,5 +34,5 @@ public:
 
 protected:
     UPROPERTY()
-    TSet<UTask*> ChildrenTasks;
+    TArray<UTask*> ChildrenTasks;
 };

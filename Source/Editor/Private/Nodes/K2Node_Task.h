@@ -134,7 +134,7 @@ protected:
         static bool CopyEventSignature(UK2Node_CustomEvent* CENode, UFunction* Function, const UEdGraphSchema_K2* Schema);
 
         static bool HandleDelegateImplementation(
-            UMulticastDelegateProperty* CurrentProperty, const TArray<FHelper::FOutputPinAndLocalVariable>& VariableOutputs,
+            UMulticastDelegateProperty* CurrentProperty,
             UEdGraphPin* ProxyObjectPin, UEdGraphPin*& InOutLastThenPin,
             UK2Node* CurrentNode, UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext);
 

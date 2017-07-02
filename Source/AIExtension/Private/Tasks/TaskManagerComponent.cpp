@@ -48,16 +48,12 @@ void UTaskManagerComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 
 const bool UTaskManagerComponent::AddChildren(UTask* NewChildren)
 {
-    ChildrenTasks.Add(NewChildren);
-    return true;
+    return ChildrenTasks.AddUnique(NewChildren) != INDEX_NONE;
 }
 
 const bool UTaskManagerComponent::RemoveChildren(UTask* Children)
 {
-    if (ChildrenTasks.Contains(Children)) {
-        ChildrenTasks.Remove(Children);
-    }
-    return true;
+    return ChildrenTasks.Remove(Children) > 0;
 }
 
 UTaskManagerComponent* UTaskManagerComponent::GetTaskOwnerComponent()
