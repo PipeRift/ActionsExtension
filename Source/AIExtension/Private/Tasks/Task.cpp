@@ -26,8 +26,6 @@ UTask::UTask(const FObjectInitializer& ObjectInitializer)
 
 void UTask::Activate()
 {
-    State = ETaskState::NOT_RUN;
-
     ITaskOwnerInterface* const Parent = GetParentInterface();
     if (!Parent) {
         UE_LOG(TaskLog, Error, TEXT("Task's Outer must have a TaskOwnerInterface! Detroying for safety."));
@@ -103,6 +101,9 @@ void UTask::Cancel()
 
 void UTask::Destroy()
 {
+    if (IsPendingKill())
+        return;
+
     //Mark for destruction
     MarkPendingKill();
 
