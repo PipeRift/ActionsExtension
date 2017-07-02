@@ -16,7 +16,7 @@ class AIEXTENSION_API UTaskFunctionLibrary : public UBlueprintFunctionLibrary
 
 public:
     UFUNCTION(BlueprintCallable, meta = (DefaultToSelf = "Owner", DisplayName = "Create Task", BlueprintInternalUseOnly = "true"), Category = BehaviourTree)
-    static UTask* CreateTask(const TScriptInterface<ITaskOwnerInterface>& InOwner, const TSubclassOf<class UTask>& TaskType);
+    static UTask* CreateTask(const TScriptInterface<ITaskOwnerInterface>& Owner, const TSubclassOf<class UTask> TaskType);
     
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "Activate", BlueprintInternalUseOnly = "true"), Category = BehaviourTree)
     static void ActivateTask(UTask* const Task);

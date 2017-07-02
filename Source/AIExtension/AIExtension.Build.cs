@@ -6,7 +6,6 @@ public class AIExtension : ModuleRules
 {
 	public AIExtension(ReadOnlyTargetRules TargetRules) : base(TargetRules)
     {
-		
 		PublicIncludePaths.AddRange(
 			new string[] {
                 "AIExtension/Public"

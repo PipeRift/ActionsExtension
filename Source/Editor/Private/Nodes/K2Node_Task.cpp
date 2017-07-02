@@ -295,10 +295,10 @@ void UK2Node_Task::ExpandNode(class FKismetCompilerContext& CompilerContext, UEd
     CreateTaskNode->AllocateDefaultPins();
 
     //allocate nodes for created widget.
-    UEdGraphPin* CreateTask_Exec = CreateTaskNode->GetExecPin();
-    UEdGraphPin* CreateTask_Owner = CreateTaskNode->FindPinChecked(FHelper::OwnerPinName);
+    UEdGraphPin* CreateTask_Exec       = CreateTaskNode->GetExecPin();
+    UEdGraphPin* CreateTask_Owner      = CreateTaskNode->FindPinChecked(FHelper::OwnerPinName);
     UEdGraphPin* CreateTask_WidgetType = CreateTaskNode->FindPinChecked(ParamName_WidgetType);
-    UEdGraphPin* CreateTask_Result = CreateTaskNode->GetReturnValuePin();
+    UEdGraphPin* CreateTask_Result     = CreateTaskNode->GetReturnValuePin();
 
     // Move 'exec' pin to 'UTaskFunctionLibrary::CreateTask'
     CompilerContext.MovePinLinksToIntermediate(*ExecPin, *CreateTask_Exec);
