@@ -9,19 +9,22 @@
 #include "AISquad.h"
 
 
-class ASquad* AAISquad::GetSquadPawn()
+void AAISquad::AddMember(AAIGeneric* Member)
 {
-    return Cast<ASquad>(GetPawn());
+    Members.Emplace(Member);
 }
 
-void AAISquad::AddMember(AAIGeneric * member)
+void AAISquad::RemoveMember(AAIGeneric* Member)
 {
-    Members.Emplace(member);
+    Members.Remove(Member);
 }
 
-void AAISquad::RemoveMember(AAIGeneric * member)
+void AAISquad::SetLeader(AAIGeneric* NewLeader)
 {
-    Members.Remove(member);
+    if(Members.Contains(NewLeader))
+    {
+        Leader = NewLeader;
+    }
 }
 
 void AAISquad::SendOrder(USquadOrder * order)

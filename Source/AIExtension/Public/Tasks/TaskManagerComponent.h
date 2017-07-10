@@ -12,7 +12,7 @@ class AIEXTENSION_API UTaskManagerComponent : public UActorComponent, public ITa
 {
     GENERATED_BODY()
 
-public:	
+public:
     // Sets default values for this component's properties
     UTaskManagerComponent();
 
@@ -25,14 +25,15 @@ protected:
 public:	
     // Called every frame
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+    
+    // Begin ITaskOwnerInterface interface
     virtual const bool AddChildren(UTask* NewChildren) override;
     virtual const bool RemoveChildren(UTask* Children) override;
-
-
     virtual UTaskManagerComponent* GetTaskOwnerComponent() override;
+    // End ITaskOwnerInterface interface
 
 protected:
+
     UPROPERTY()
     TArray<UTask*> ChildrenTasks;
 };

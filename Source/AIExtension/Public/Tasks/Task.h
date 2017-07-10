@@ -9,6 +9,8 @@
 
 #include "Task.generated.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(TaskLog, Log, All);
+
 /**
  * Result of a node execution
  */
@@ -18,14 +20,17 @@ enum class ETaskState : uint8
     RUNNING  UMETA(DisplayName = "Running"),
     SUCCESS  UMETA(DisplayName = "Success"),
     FAILURE  UMETA(DisplayName = "Failure"),
-    ERROR    UMETA(DisplayName = "Error"),
+    ABORTED  UMETA(DisplayName = "Abort"),
     CANCELED UMETA(DisplayName = "Canceled"),
     NOT_RUN  UMETA(DisplayName = "Not Run")
 };
 
-DECLARE_LOG_CATEGORY_EXTERN(TaskLog, Log, All);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTaskActivated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTaskFinished, const ETaskState, Reason);
 
 class UTaskManagerComponent;
+
 
 /**
  * 
@@ -36,6 +41,7 @@ class AIEXTENSION_API UTask : public UObject, public FTickableGameObject, public
     GENERATED_UCLASS_BODY()
 
 public:
+
     UFUNCTION(BlueprintCallable, Category = Task)
     void Activate();
 
@@ -48,26 +54,18 @@ public:
     void ReceiveTick(float DeltaTime);
 
     UFUNCTION(BlueprintCallable, Category = Task)
-    void Finish(bool bSuccess, bool bError);
+    void Finish(bool bSuccess);
+
+    /** Called when any error occurs */
+    UFUNCTION(BlueprintCallable, Category = Task)
+    void Abort();
+
+    /** Called when the task needs to be stopped from running */
     UFUNCTION(BlueprintCallable, Category = Task)
     void Cancel();
 
-    /** Event when play begins for this actor. */
-    UFUNCTION(BlueprintNativeEvent, meta = (DisplayName = "Activate"))
-    void ReceiveActivate();
-
-    /** Event when finishing this task. */
-    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Finished"))
-    void ReceiveFinished(bool bSucceded);
-
-    /** Event when this task is canceled. */
-    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Canceled"))
-    void ReceiveCanceled();
-
-
     void Destroy();
 
-    virtual void OnActivation() {}
 
     virtual UTaskManagerComponent* GetTaskOwnerComponent() override;
 
@@ -87,10 +85,13 @@ public:
     float TickRate;
 
 private:
+
     float TickTimeElapsed;
     //~ End Ticking
 
+
 protected:
+
     UPROPERTY()
     ETaskState State;
 
@@ -111,7 +112,33 @@ protected:
     //~ End Tickable Object Interface
 
 public:
-    //Inlines
+
+    inline virtual void OnActivation() {
+        OnTaskActivation.Broadcast();
+        ReceiveActivate();
+    }
+
+    virtual void OnFinish(const ETaskState Reason);
+
+    /** Event when play begins for this actor. */
+    UFUNCTION(BlueprintNativeEvent, meta = (DisplayName = "Activate"))
+    void ReceiveActivate();
+
+    /** Event when finishing this task. */
+    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Finished"))
+    void ReceiveFinished(const ETaskState Reason);
+
+    // DELEGATES
+    UPROPERTY()
+    FTaskActivated OnTaskActivation;
+
+    UPROPERTY()
+    FTaskFinished OnTaskFinished;
+
+
+
+    // INLINES
+
     const bool IsValid() const {
         UObject const * const Outer = GetOuter();
         return !IsPendingKill() && Outer->GetClass()->ImplementsInterface(UTaskOwnerInterface::StaticClass());
@@ -148,5 +175,12 @@ public:
         const UObject* const InParent = GetParent();
 
         return InParent ? InParent->GetWorld() : nullptr;
+    }
+
+    static FORCEINLINE FString StateToString(ETaskState Value) {
+        const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("ETaskState"), true);
+        if (!EnumPtr) return FString("Invalid");
+
+        return EnumPtr->GetNameByValue((int64)Value).ToString();
     }
 };

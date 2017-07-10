@@ -61,42 +61,39 @@ const bool UTask::RemoveChildren(UTask* Children)
 
 void UTask::ReceiveActivate_Implementation() {}
 
-void UTask::Finish(bool bSuccess, bool bError) {
+void UTask::Finish(bool bSuccess) {
     if (!IsActivated() || IsPendingKill())
         return;
 
-    if (bError) {
-        State = ETaskState::ERROR;
-        Destroy();
-        return;
-    }
-
     State = bSuccess ? ETaskState::SUCCESS : ETaskState::FAILURE;
-    
-    ReceiveFinished(bSuccess);
+    OnFinish(State);
+    Destroy();
+}
+
+void UTask::Abort() {
+    if (!IsActivated() || IsPendingKill())
+        return;
+
+    OnFinish(State = ETaskState::ABORTED);
 
     Destroy();
 }
 
+
 void UTask::Cancel()
 {
-    const UObject* const Parent = GetParent();
+    if (IsPendingKill())
+        return;
 
-    if (IsActivated()){
-        State = ETaskState::CANCELED;
-
-        // If we're in the process of being garbage collected it is unsafe to call out to blueprints
-        if (Parent && !Parent->HasAnyFlags(RF_BeginDestroyed) && !Parent->IsUnreachable())
-        {
-            ReceiveCanceled();
-        }
+    if(!IsActivated())
+    {
+        Destroy();
+        return;
     }
 
+    OnFinish(State = ETaskState::CANCELED);
+    
     Destroy();
-
-    if(Parent && !Parent->IsPendingKill()) {
-        GetParentInterface()->RemoveChildren(this);
-    }
 }
 
 void UTask::Destroy()
@@ -112,7 +109,7 @@ void UTask::Destroy()
     {
         if (Children) {
             Children->Cancel();
-        }
+        }   
     }
 }
 
@@ -132,6 +129,19 @@ void UTask::Tick(float DeltaTime)
         //Normal Tick
         TaskTick(DeltaTime);
         ReceiveTick(DeltaTime);
+    }
+}
+
+void UTask::OnFinish(const ETaskState Reason)
+{
+    OnTaskFinished.Broadcast(Reason);
+
+    const UObject* const Parent = GetParent();
+
+    // If we're in the process of being garbage collected it is unsafe to call out to blueprints
+    if (Parent && !Parent->HasAnyFlags(RF_BeginDestroyed) && !Parent->IsUnreachable())
+    {
+        ReceiveFinished(Reason);
     }
 }
 

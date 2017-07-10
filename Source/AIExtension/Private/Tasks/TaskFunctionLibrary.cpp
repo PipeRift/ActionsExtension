@@ -3,13 +3,22 @@
 #include "AIExtensionPrivatePCH.h"
 #include "TaskFunctionLibrary.h"
 
-UTask* UTaskFunctionLibrary::CreateTask(const TScriptInterface<ITaskOwnerInterface>& Owner, const TSubclassOf<class UTask> TaskType)
+UTask* UTaskFunctionLibrary::CreateTask(const TScriptInterface<ITaskOwnerInterface>& Owner, const TSubclassOf<class UTask> TaskType, bool bAutoActivate/* = false*/)
 {
     if (!Owner.GetObject())
         return nullptr;
 
-    if (!TaskType->IsValidLowLevel() || TaskType == UTask::StaticClass())
+    if (!TaskType.Get() || TaskType == UTask::StaticClass())
         return nullptr;
 
-    return NewObject<UTask>(Owner.GetObject(), TaskType);
+    if (!bAutoActivate)
+    {
+        return NewObject<UTask>(Owner.GetObject(), TaskType);
+    }
+    else
+    {
+        UTask* Task = NewObject<UTask>(Owner.GetObject(), TaskType);
+        Task->Activate();
+        return Task;
+    }
 }

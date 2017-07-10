@@ -6,21 +6,43 @@
 #include "AIController.h"
 #include "AISquad.generated.h"
 
-class ASquad;
 class USquadOrder;
 class AAIGeneric;
+
+
+/**
+*
+*/
+UENUM(BlueprintType)
+enum class ECombatState : uint8
+{
+    Passive,
+    Suspicion,
+    Alert,
+    Combat
+};
+
 
 /**
  * 
  */
 UCLASS()
-class AIEXTENSION_API AAISquad : public AAIController
+class AIEXTENSION_API AAISquad : public AInfo
 {
     GENERATED_BODY()
 
+protected:
+
+    UPROPERTY(EditAnywhere, Category = Generic)
+    ECombatState State;
+
 public:
+
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     TArray<AAIGeneric*> Members;
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    AAIGeneric* Leader;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     FVector PositionIncrement;
@@ -28,20 +50,38 @@ public:
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     TSubclassOf<USquadOrder> CurrentOrder;
 
+
     UFUNCTION(BlueprintCallable)
     FORCEINLINE bool HasMember(const AAIGeneric* member) const {
         return Members.Contains(member);
     }
 
     UFUNCTION(BlueprintCallable)
-    ASquad* GetSquadPawn();
+    void AddMember(AAIGeneric* Member);
 
     UFUNCTION(BlueprintCallable)
-    void AddMember(AAIGeneric* member);
+    void RemoveMember(AAIGeneric* Member);
 
     UFUNCTION(BlueprintCallable)
-    void RemoveMember(AAIGeneric* member);
+    virtual void SetLeader(AAIGeneric* NewLeader);
 
     UFUNCTION(BlueprintCallable)
-    void SendOrder(USquadOrder* order);
+    inline AAIGeneric* GetLeader() const
+    {
+        return Leader;
+    }
+
+    UFUNCTION(BlueprintCallable)
+    void SendOrder(USquadOrder* Order);
+
+
+
+    /***************************************
+    * INLINES                              *
+    ***************************************/
+
+    /** Get the current State of this AI */
+    FORCEINLINE const ECombatState GetState() {
+        return State;
+    }
 };

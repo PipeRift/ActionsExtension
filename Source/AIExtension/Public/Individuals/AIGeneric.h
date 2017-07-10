@@ -5,30 +5,24 @@
 #include "AIController.h"
 #include "Perception/AIPerceptionComponent.h"
 
+#include "TaskOwnerInterface.h"
+
 #include "AISquad.h"
 #include "AIGeneric.generated.h"
+
 
 class UBehaviorTreeComponent;
 class UBlackboardComponent;
 
-/**
- *
- */
-UENUM(BlueprintType)
-enum class ECombatState : uint8
-{
-    Passive,
-    Suspicion,
-    Alert,
-    Combat
-};
+class UTask;
+class UTaskManagerComponent;
 
 
 /**
  * 
  */
 UCLASS(Blueprintable)
-class AIEXTENSION_API AAIGeneric : public AAIController
+class AIEXTENSION_API AAIGeneric : public AAIController, public ITaskOwnerInterface
 {
     GENERATED_UCLASS_BODY()
 
@@ -46,34 +40,49 @@ private:
 
 public:
 
-	UPROPERTY(EditAnywhere, Category = Generic)
-	class UBehaviorTree* Behavior;
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    class UTaskManagerComponent* TaskManagerComponent;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     UAIPerceptionComponent* AIPerceptionComponent;
 
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Generic)
+	UPROPERTY(EditAnywhere, Category = Generic)
+	class UBehaviorTree* Behavior;
+
+    UPROPERTY(EditAnywhere, Category = Generic)
     ECombatState State;
+
+private:
+
+    /** Handle for efficient management of Respawn timer */
+    FTimerHandle TimerHandle_Respawn;
+
+
+public:
 
     // Begin AController interface
 	virtual void Possess(class APawn* InPawn) override;
 	virtual void UnPossess() override;
 	virtual void GameHasEnded(class AActor* EndGameFocus = NULL, bool bIsWinner = false) override;
 	virtual void BeginInactiveState() override;
-	// End APlayerController interface
+	// End AController interface
+
+
+    // Begin ITaskOwnerInterface interface
+    virtual const bool AddChildren(UTask* NewChildren) override;
+    virtual const bool RemoveChildren(UTask* Children) override;
+    virtual UTaskManagerComponent* GetTaskOwnerComponent() override;
+    // End ITaskOwnerInterface interface
+
 
 	void Respawn();
 
-	/** Handle for efficient management of Respawn timer */
-	FTimerHandle TimerHandle_Respawn;
-    
-public:
+    /** Set the current State of this AI */
+    void SetState(const ECombatState InState);
 
-	/** Returns Blackboard component **/
-	FORCEINLINE UBlackboardComponent* GetBlackboard() const { return BlackboardComp; }
-	/** Returns Behavior component **/
-	FORCEINLINE UBehaviorTreeComponent* GetBehavior() const { return BehaviorComp; }
+    /** Get the current State of this AI */
+    const ECombatState GetState();
 
 
 
@@ -81,26 +90,45 @@ public:
     * Squads                               *
     ***************************************/
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Generic)
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Squad)
     AAISquad* Squad;
 
 
-    UFUNCTION(BlueprintCallable)
-    void JoinSquad(class AAISquad* SquadToJoin);
+    UFUNCTION(BlueprintCallable, Category = Squad)
+    void JoinSquad(AAISquad* SquadToJoin);
 
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, Category = Squad)
     void LeaveSquad();
 
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Squad)
+    FORCEINLINE AAISquad* GetSquad() const
+    {
+        return Squad;
+    }
+
+    UFUNCTION(BlueprintCallable, Category = Squad)
     FORCEINLINE bool IsInSquad() const {
         return IsValid(Squad) && Squad->HasMember(this);
     }
 
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, Category = Squad)
     FORCEINLINE UClass* GetOrder() const {
-        if(!IsInSquad() || !Squad->CurrentOrder)
+        if (!IsInSquad() || !Squad->CurrentOrder)
+        {
             return NULL;
+        }
 
         return Squad->CurrentOrder->GetClass();
     }
+
+
+
+    /***************************************
+    * INLINES                              *
+    ***************************************/
+
+    /** Returns Blackboard component **/
+    FORCEINLINE UBlackboardComponent* GetBlackboard() const { return BlackboardComp; }
+    /** Returns Behavior component **/
+    FORCEINLINE UBehaviorTreeComponent* GetBehavior() const { return BehaviorComp; }
 };

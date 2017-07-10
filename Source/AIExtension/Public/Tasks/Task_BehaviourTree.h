@@ -46,12 +46,14 @@ public:
     void Failure(bool bError);
 
 private:
+
     void SetState(EBTState NewState);
 
     UPROPERTY()
     UTask* LastExecutedNode;
 
 public:
+
     //Inlines
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
     FORCEINLINE bool IsRunning() { return BTState == EBTState::RUNNING; }
