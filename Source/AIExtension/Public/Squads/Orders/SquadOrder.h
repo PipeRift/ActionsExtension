@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Squad.h"
+#include "AISquad.h"
 #include "AIGeneric.h"
 #include "UObject/NoExportTypes.h"
 #include "SquadOrder.generated.h"
@@ -18,7 +18,7 @@ class AIEXTENSION_API USquadOrder : public UObject
 
 public:
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
-    class ASquad* Squad;
+    class AAISquad* Squad;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     class AAIGeneric* Member;

@@ -104,8 +104,11 @@ void AAIGeneric::GameHasEnded(AActor* EndGameFocus, bool bIsWinner)
 
 void AAIGeneric::JoinSquad(AAISquad * SquadToJoin)
 {
-    Squad = SquadToJoin;
-    Squad->AddMember(this);
+    if (SquadToJoin != NULL)
+    {
+        Squad = SquadToJoin;
+        Squad->AddMember(this);
+    }
 }
 
 void AAIGeneric::LeaveSquad()

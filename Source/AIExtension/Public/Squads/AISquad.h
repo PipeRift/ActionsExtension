@@ -26,7 +26,7 @@ enum class ECombatState : uint8
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable)
 class AIEXTENSION_API AAISquad : public AInfo
 {
     GENERATED_BODY()
@@ -36,12 +36,20 @@ protected:
     UPROPERTY(EditAnywhere, Category = Generic)
     ECombatState State;
 
+    //Used for editor only
+    UPROPERTY(EditInstanceOnly, meta = (DisplayName = "Members"))
+    TArray<APawn*> EditorMembers;
+
+    //Used for editor only
+    UPROPERTY(EditInstanceOnly, meta = (DisplayName = "Leader"))
+    APawn* EditorLeader;
+
 public:
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    UPROPERTY(BlueprintReadWrite)
     TArray<AAIGeneric*> Members;
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    UPROPERTY(BlueprintReadWrite)
     AAIGeneric* Leader;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
@@ -50,6 +58,8 @@ public:
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     TSubclassOf<USquadOrder> CurrentOrder;
 
+
+    virtual void BeginPlay() override;
 
     UFUNCTION(BlueprintCallable)
     FORCEINLINE bool HasMember(const AAIGeneric* member) const {
@@ -74,7 +84,10 @@ public:
     UFUNCTION(BlueprintCallable)
     void SendOrder(USquadOrder* Order);
 
-
+#if WITH_EDITORONLY_DATA
+    virtual bool CanEditChange(const UProperty* InProperty) const override;
+    virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 
     /***************************************
     * INLINES                              *
