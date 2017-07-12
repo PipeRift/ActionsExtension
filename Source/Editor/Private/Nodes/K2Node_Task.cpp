@@ -256,17 +256,21 @@ void UK2Node_Task::ExpandNode(class FKismetCompilerContext& CompilerContext, UEd
 
 
     // FOR EACH DELEGATE DEFINE EVENT, CONNECT IT TO DELEGATE AND IMPLEMENT A CHAIN OF ASSIGMENTS
-    for (TFieldIterator<UMulticastDelegateProperty> PropertyIt(GetClassToSpawn(), EFieldIteratorFlags::ExcludeSuper); PropertyIt && bIsErrorFree; ++PropertyIt)
+    for (TFieldIterator<UMulticastDelegateProperty> PropertyIt(GetClassToSpawn(), EFieldIteratorFlags::IncludeSuper); PropertyIt && bIsErrorFree; ++PropertyIt)
     {
         UMulticastDelegateProperty* Property = *PropertyIt;
 
-        const UFunction* DelegateSignatureFunction = Property->SignatureFunction;
-        if (DelegateSignatureFunction->NumParms < 1) {
-            bIsErrorFree &= FHelper::HandleDelegateImplementation(Property, CreateTask_Result, LastThenPin, this, SourceGraph, CompilerContext);
-        }
-        else
+        if (Property && Property->HasAllPropertyFlags(CPF_BlueprintAssignable))
         {
-            bIsErrorFree &= FHelper::HandleDelegateBindImplementation(Property, CreateTask_Result, LastThenPin, this, SourceGraph, CompilerContext);
+            const UFunction* DelegateSignatureFunction = Property->SignatureFunction;
+            if (DelegateSignatureFunction->NumParms < 1)
+            {
+                bIsErrorFree &= FHelper::HandleDelegateImplementation(Property, CreateTask_Result, LastThenPin, this, SourceGraph, CompilerContext);
+            }
+            else
+            {
+                bIsErrorFree &= FHelper::HandleDelegateBindImplementation(Property, CreateTask_Result, LastThenPin, this, SourceGraph, CompilerContext);
+            }
         }
     }
 
