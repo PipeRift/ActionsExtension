@@ -1,7 +1,7 @@
 {
-	"FileVersion": 3,
-	"Version": 3,
-	"VersionName": "0.4",
+	"FileVersion": 5,
+	"Version": 5,
+	"VersionName": "0.5",
 	"FriendlyName": "AI Extension",
 	"Description": "A plugin that adds blueprint oriented Artificial Intelligence features to Unreal Engine 4",
 	"Category": "Gameplay",
