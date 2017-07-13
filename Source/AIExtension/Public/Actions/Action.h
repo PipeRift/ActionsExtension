@@ -43,7 +43,7 @@ class AIEXTENSION_API UAction : public UObject, public FTickableGameObject, publ
 
 public:
 
-    UFUNCTION(BlueprintCallable, Category = Task)
+    UFUNCTION(BlueprintCallable, Category = Action)
     void Activate();
 
     virtual const bool AddChildren(UAction* NewChildren) override;
@@ -54,15 +54,15 @@ public:
     UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Tick"))
     void ReceiveTick(float DeltaTime);
 
-    UFUNCTION(BlueprintCallable, Category = Task)
-    void Finish(bool bSuccess);
+    UFUNCTION(BlueprintCallable, Category = Action)
+    void Finish(bool bSuccess = true);
 
     /** Called when any error occurs */
-    UFUNCTION(BlueprintCallable, Category = Task)
+    UFUNCTION(BlueprintCallable, Category = Action)
     void Abort();
 
     /** Called when the task needs to be stopped from running */
-    UFUNCTION(BlueprintCallable, Category = Task)
+    UFUNCTION(BlueprintCallable, Category = Action)
     void Cancel();
 
     void Destroy();
@@ -70,7 +70,7 @@ public:
 
     virtual UActionManagerComponent* GetTaskOwnerComponent() override;
 
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task, meta = (DisplayName = "GetTaskOwnerComponent"))
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action, meta = (DisplayName = "GetTaskOwnerComponent"))
     UActionManagerComponent* ExposedGetTaskOwnerComponent() {
         return GetTaskOwnerComponent();
     }
@@ -103,7 +103,7 @@ protected:
     virtual void TaskTick(float DeltaTime) {}
 
     virtual bool IsTickable() const override {
-        return !IsDefaultSubobject() && bWantsToTick && IsActivated() && !GetParent()->IsPendingKill();
+        return !IsDefaultSubobject() && bWantsToTick && IsRunning() && !GetParent()->IsPendingKill();
     }
 
     virtual TStatId GetStatId() const override {
@@ -111,12 +111,12 @@ protected:
     }
     //~ End Tickable Object Interface
 
-public:
-
     inline virtual void OnActivation() {
         OnTaskActivation.Broadcast();
         ReceiveActivate();
     }
+
+public:
 
     virtual void OnFinish(const ETaskState Reason);
 
@@ -143,24 +143,24 @@ public:
         return !IsPendingKill() && Outer->GetClass()->ImplementsInterface(UActionOwnerInterface::StaticClass());
     }
 
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE bool IsActivated() const {
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
+    FORCEINLINE bool IsRunning() const {
         return IsValid() && State == ETaskState::RUNNING;
     }
 
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
     FORCEINLINE bool Succeeded() const { return IsValid() && State == ETaskState::SUCCESS; }
 
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
     FORCEINLINE bool Failed() const { return IsValid() && State == ETaskState::FAILURE; }
 
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
     FORCEINLINE bool IsCanceled() const { return State == ETaskState::CANCELED; }
 
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
     FORCEINLINE ETaskState GetState() const { return State; }
 
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
     FORCEINLINE UObject* const GetParent() const {
         return IsValid() ? GetOuter() : nullptr;
     }
@@ -169,7 +169,7 @@ public:
         return Cast<IActionOwnerInterface>(GetOuter());
     }
 
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
     FORCEINLINE AActor* GetTaskOwnerActor();
 
 

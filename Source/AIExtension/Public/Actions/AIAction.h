@@ -15,7 +15,9 @@ class AIEXTENSION_API UAIAction : public UAction
 {
     GENERATED_BODY()
 
-    UPROPERTY()
+protected:
+
+    UPROPERTY(BlueprintReadOnly, Category = "Action")
     AAIGeneric* AI;
 
 	virtual void OnActivation() override {

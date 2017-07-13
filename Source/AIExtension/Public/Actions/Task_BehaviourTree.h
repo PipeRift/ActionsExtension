@@ -51,10 +51,4 @@ private:
 
     UPROPERTY()
     UAction* LastExecutedNode;
-
-public:
-
-    //Inlines
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    FORCEINLINE bool IsRunning() { return BTState == EBTState::RUNNING; }
 };

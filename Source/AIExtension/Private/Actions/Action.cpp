@@ -39,7 +39,7 @@ void UAction::Activate()
         GetTaskOwnerComponent()->AddChildren(this);
     }
 
-    if (!IsValid() || IsActivated())
+    if (!IsValid() || IsRunning())
         return;
 
     State = ETaskState::RUNNING;
@@ -59,10 +59,14 @@ const bool UAction::RemoveChildren(UAction* Children)
     return ChildrenTasks.Remove(Children) > 0;
 }
 
-void UAction::ReceiveActivate_Implementation() {}
+void UAction::ReceiveActivate_Implementation() {
+    //Finish by default
+    Finish(true);
+}
+
 
 void UAction::Finish(bool bSuccess) {
-    if (!IsActivated() || IsPendingKill())
+    if (!IsRunning() || IsPendingKill())
         return;
 
     State = bSuccess ? ETaskState::SUCCESS : ETaskState::FAILURE;
@@ -71,7 +75,7 @@ void UAction::Finish(bool bSuccess) {
 }
 
 void UAction::Abort() {
-    if (!IsActivated() || IsPendingKill())
+    if (!IsRunning() || IsPendingKill())
         return;
 
     OnFinish(State = ETaskState::ABORTED);
@@ -85,7 +89,7 @@ void UAction::Cancel()
     if (IsPendingKill())
         return;
 
-    if(!IsActivated())
+    if(!IsRunning())
     {
         Destroy();
         return;
