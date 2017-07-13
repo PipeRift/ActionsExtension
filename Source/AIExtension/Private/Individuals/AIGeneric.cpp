@@ -8,13 +8,13 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
-#include "Tasks/TaskManagerComponent.h"
+#include "Actions/ActionManagerComponent.h"
 
 
 AAIGeneric::AAIGeneric(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     AIPerceptionComponent = ObjectInitializer.CreateDefaultSubobject<UAIPerceptionComponent>(this, TEXT("Perception"));
-    TaskManagerComponent  = ObjectInitializer.CreateDefaultSubobject<UTaskManagerComponent>(this, TEXT("Task Manager"));
+    ActionManagerComponent  = ObjectInitializer.CreateDefaultSubobject<UActionManagerComponent>(this, TEXT("Action Manager"));
     
  	BlackboardComp = ObjectInitializer.CreateDefaultSubobject<UBlackboardComponent>(this, TEXT("BlackBoard"));
 	BrainComponent = BehaviorComp = ObjectInitializer.CreateDefaultSubobject<UBehaviorTreeComponent>(this, TEXT("Behavior"));	
@@ -58,22 +58,22 @@ void AAIGeneric::BeginInactiveState()
 }
 
 
-const bool AAIGeneric::AddChildren(UTask* NewChildren)
+const bool AAIGeneric::AddChildren(UAction* NewChildren)
 {
-    check(TaskManagerComponent);
-    return TaskManagerComponent->AddChildren(NewChildren);
+    check(ActionManagerComponent);
+    return ActionManagerComponent->AddChildren(NewChildren);
 }
 
-const bool AAIGeneric::RemoveChildren(UTask* Children)
+const bool AAIGeneric::RemoveChildren(UAction* Children)
 {
-    check(TaskManagerComponent);
-    return TaskManagerComponent->RemoveChildren(Children);
+    check(ActionManagerComponent);
+    return ActionManagerComponent->RemoveChildren(Children);
 }
 
-UTaskManagerComponent* AAIGeneric::GetTaskOwnerComponent()
+UActionManagerComponent* AAIGeneric::GetTaskOwnerComponent()
 {
-    check(TaskManagerComponent);
-    return TaskManagerComponent;
+    check(ActionManagerComponent);
+    return ActionManagerComponent;
 }
 
 

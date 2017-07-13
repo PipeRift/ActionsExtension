@@ -9,17 +9,17 @@
 #include "BlueprintActionDatabaseRegistrar.h"
 //#include "Kismet2/BlueprintEditorUtils.h"
 
-#include "Task.h"
+#include "Action.h"
 
-class UK2Node_Task;
+class UK2Node_Action;
 
-struct TaskNodeHelpers {
-    static void RegisterTaskClassActions(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass);
+struct ActionNodeHelpers {
+    static void RegisterActionClassActions(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass);
 
     static void SetNodeFunc(UEdGraphNode* NewNode, bool /*bIsTemplateNode*/, TWeakObjectPtr<UClass> ClassPtr);
 
 
-    static int32 RegistryTaskClassAction(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass, UClass* Class);
+    static int32 RegistryActionClassAction(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass, UClass* Class);
 
     template < typename TBase >
     static void GetAllBlueprintSubclasses(TSet< TAssetSubclassOf< TBase > >& OutSubclasses, bool bAllowAbstract, FString const& Path);

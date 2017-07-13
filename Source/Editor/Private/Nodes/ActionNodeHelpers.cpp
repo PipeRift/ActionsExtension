@@ -2,15 +2,15 @@
 
 #include "AIExtensionEditorPrivatePCH.h"
 
-#include "K2Node_Task.h"
+#include "K2Node_Action.h"
 #include "ARFilter.h"
 #include "AssetRegistryModule.h"
 
-#include "TaskNodeHelpers.h"
+#include "ActionNodeHelpers.h"
 
-void TaskNodeHelpers::RegisterTaskClassActions(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass)
+void ActionNodeHelpers::RegisterActionClassActions(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass)
 {
-    UClass* TaskType = UTask::StaticClass();
+    UClass* TaskType = UAction::StaticClass();
 
     int32 RegisteredCount = 0;
     if (const UObject* RegistrarTarget = InActionRegistar.GetActionKeyFilter())
@@ -43,12 +43,12 @@ void TaskNodeHelpers::RegisterTaskClassActions(FBlueprintActionDatabaseRegistrar
                 continue;
             }
 
-            RegisteredCount += RegistryTaskClassAction(InActionRegistar, NodeClass, Class);
+            RegisteredCount += RegistryActionClassAction(InActionRegistar, NodeClass, Class);
         }
 
         //Registry blueprint classes
-        TSet<TAssetSubclassOf<UTask>> BPClasses;
-        GetAllBlueprintSubclasses<UTask>(BPClasses, false, "");
+        TSet<TAssetSubclassOf<UAction>> BPClasses;
+        GetAllBlueprintSubclasses<UAction>(BPClasses, false, "");
         for (auto& BPClass : BPClasses)
         {
             if (!BPClass.IsNull())
@@ -56,7 +56,7 @@ void TaskNodeHelpers::RegisterTaskClassActions(FBlueprintActionDatabaseRegistrar
                 UClass* Class = BPClass.LoadSynchronous();
                 if (Class)
                 {
-                    RegisteredCount += RegistryTaskClassAction(InActionRegistar, NodeClass, Class);
+                    RegisteredCount += RegistryActionClassAction(InActionRegistar, NodeClass, Class);
                 }
             }
         }
@@ -64,9 +64,9 @@ void TaskNodeHelpers::RegisterTaskClassActions(FBlueprintActionDatabaseRegistrar
     return;
 }
 
-void TaskNodeHelpers::SetNodeFunc(UEdGraphNode* NewNode, bool /*bIsTemplateNode*/, TWeakObjectPtr<UClass> ClassPtr)
+void ActionNodeHelpers::SetNodeFunc(UEdGraphNode* NewNode, bool /*bIsTemplateNode*/, TWeakObjectPtr<UClass> ClassPtr)
 {
-    UK2Node_Task* TaskNode = CastChecked<UK2Node_Task>(NewNode);
+    UK2Node_Action* TaskNode = CastChecked<UK2Node_Action>(NewNode);
     if (ClassPtr.IsValid())
     {
         TaskNode->PrestatedClass = ClassPtr.Get();
@@ -74,7 +74,7 @@ void TaskNodeHelpers::SetNodeFunc(UEdGraphNode* NewNode, bool /*bIsTemplateNode*
 }
 
 template<typename TBase>
-void TaskNodeHelpers::GetAllBlueprintSubclasses(TSet< TAssetSubclassOf< TBase > >& Subclasses, bool bAllowAbstract, FString const& Path)
+void ActionNodeHelpers::GetAllBlueprintSubclasses(TSet< TAssetSubclassOf< TBase > >& Subclasses, bool bAllowAbstract, FString const& Path)
 {
     static const FName GeneratedClassTag = TEXT("GeneratedClass");
     static const FName ClassFlagsTag = TEXT("ClassFlags");
@@ -149,7 +149,7 @@ void TaskNodeHelpers::GetAllBlueprintSubclasses(TSet< TAssetSubclassOf< TBase > 
     }
 }
 
-int32 TaskNodeHelpers::RegistryTaskClassAction(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass, UClass* Class)
+int32 ActionNodeHelpers::RegistryActionClassAction(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass, UClass* Class)
 {
     UBlueprintNodeSpawner* NewAction = UBlueprintNodeSpawner::Create(NodeClass);
     check(NewAction != nullptr);

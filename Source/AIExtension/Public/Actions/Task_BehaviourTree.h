@@ -4,7 +4,7 @@
 
 #include "BrainComponent.h"
 #include "GameplayTaskOwnerInterface.h"
-#include "Task.h"
+#include "Action.h"
 #include "Task_BehaviourTree.generated.h"
 
 /**
@@ -24,7 +24,7 @@ enum class EBTState : uint8
  * 
  */
 UCLASS(Blueprintable)
-class AIEXTENSION_API UTask_BehaviourTree : public UTask
+class AIEXTENSION_API UTask_BehaviourTree : public UAction
 {
     GENERATED_BODY()
 
@@ -50,7 +50,7 @@ private:
     void SetState(EBTState NewState);
 
     UPROPERTY()
-    UTask* LastExecutedNode;
+    UAction* LastExecutedNode;
 
 public:
 

@@ -1,18 +1,18 @@
 // Copyright 2015-2017 Piperift. All Rights Reserved.
 
 #include "AIExtensionPrivatePCH.h"
-#include "Task.h"
+#include "Action.h"
 
 #include "Engine/EngineTypes.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
 
-#include "TaskManagerComponent.h"
+#include "ActionManagerComponent.h"
 #include "GameplayTaskOwnerInterface.h"
 
 DEFINE_LOG_CATEGORY(TaskLog);
 
-UTask::UTask(const FObjectInitializer& ObjectInitializer)
+UAction::UAction(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
     TickTimeElapsed = 0;
@@ -24,9 +24,9 @@ UTask::UTask(const FObjectInitializer& ObjectInitializer)
     TickRate = 0.15f;
 }
 
-void UTask::Activate()
+void UAction::Activate()
 {
-    ITaskOwnerInterface* const Parent = GetParentInterface();
+    IActionOwnerInterface* const Parent = GetParentInterface();
     if (!Parent) {
         UE_LOG(TaskLog, Error, TEXT("Task's Outer must have a TaskOwnerInterface! Detroying for safety."));
         Destroy();
@@ -49,19 +49,19 @@ void UTask::Activate()
     ReceiveActivate();
 }
 
-const bool UTask::AddChildren(UTask* NewChildren)
+const bool UAction::AddChildren(UAction* NewChildren)
 {
     return ChildrenTasks.AddUnique(NewChildren) != INDEX_NONE;
 }
 
-const bool UTask::RemoveChildren(UTask* Children)
+const bool UAction::RemoveChildren(UAction* Children)
 {
     return ChildrenTasks.Remove(Children) > 0;
 }
 
-void UTask::ReceiveActivate_Implementation() {}
+void UAction::ReceiveActivate_Implementation() {}
 
-void UTask::Finish(bool bSuccess) {
+void UAction::Finish(bool bSuccess) {
     if (!IsActivated() || IsPendingKill())
         return;
 
@@ -70,7 +70,7 @@ void UTask::Finish(bool bSuccess) {
     Destroy();
 }
 
-void UTask::Abort() {
+void UAction::Abort() {
     if (!IsActivated() || IsPendingKill())
         return;
 
@@ -80,7 +80,7 @@ void UTask::Abort() {
 }
 
 
-void UTask::Cancel()
+void UAction::Cancel()
 {
     if (IsPendingKill())
         return;
@@ -96,7 +96,7 @@ void UTask::Cancel()
     Destroy();
 }
 
-void UTask::Destroy()
+void UAction::Destroy()
 {
     if (IsPendingKill())
         return;
@@ -113,7 +113,7 @@ void UTask::Destroy()
     }
 }
 
-void UTask::Tick(float DeltaTime)
+void UAction::Tick(float DeltaTime)
 {
     if (TickRate > 0) {
         TickTimeElapsed += DeltaTime;
@@ -132,7 +132,7 @@ void UTask::Tick(float DeltaTime)
     }
 }
 
-void UTask::OnFinish(const ETaskState Reason)
+void UAction::OnFinish(const ETaskState Reason)
 {
     OnTaskFinished.Broadcast(Reason);
 
@@ -145,7 +145,7 @@ void UTask::OnFinish(const ETaskState Reason)
     }
 }
 
-UTaskManagerComponent* UTask::GetTaskOwnerComponent()
+UActionManagerComponent* UAction::GetTaskOwnerComponent()
 {
     //Owner will always contain this interface.
     checkf(IsValid(), TEXT("Owner should always have a ITaskOwnerInterface"));
@@ -153,12 +153,7 @@ UTaskManagerComponent* UTask::GetTaskOwnerComponent()
     return GetParentInterface()->GetTaskOwnerComponent();
 }
 
-UTaskManagerComponent* UTask::ExposedGetTaskOwnerComponent()
-{
-    return GetTaskOwnerComponent();
-}
-
-AActor* UTask::GetTaskOwnerActor()
+AActor* UAction::GetTaskOwnerActor()
 {
     return GetTaskOwnerComponent()->GetOwner();
 }

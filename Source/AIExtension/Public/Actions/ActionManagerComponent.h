@@ -3,18 +3,18 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
-#include "TaskOwnerInterface.h"
-#include "TaskManagerComponent.generated.h"
+#include "ActionOwnerInterface.h"
+#include "ActionManagerComponent.generated.h"
 
 
 UCLASS(Blueprintable, ClassGroup = (Tasks), meta = (BlueprintSpawnableComponent))
-class AIEXTENSION_API UTaskManagerComponent : public UActorComponent, public ITaskOwnerInterface
+class AIEXTENSION_API UActionManagerComponent : public UActorComponent, public IActionOwnerInterface
 {
     GENERATED_BODY()
 
 public:
     // Sets default values for this component's properties
-    UTaskManagerComponent();
+    UActionManagerComponent();
 
 protected:
     // Called when the game starts
@@ -27,13 +27,13 @@ public:
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
     
     // Begin ITaskOwnerInterface interface
-    virtual const bool AddChildren(UTask* NewChildren) override;
-    virtual const bool RemoveChildren(UTask* Children) override;
-    virtual UTaskManagerComponent* GetTaskOwnerComponent() override;
+    virtual const bool AddChildren(UAction* NewChildren) override;
+    virtual const bool RemoveChildren(UAction* Children) override;
+    virtual UActionManagerComponent* GetTaskOwnerComponent() override;
     // End ITaskOwnerInterface interface
 
 protected:
 
     UPROPERTY()
-    TArray<UTask*> ChildrenTasks;
+    TArray<UAction*> ChildrenTasks;
 };

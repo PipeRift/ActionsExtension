@@ -5,9 +5,9 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 #include "UObject/ScriptInterface.h"
-#include "TaskOwnerInterface.h"
+#include "ActionOwnerInterface.h"
 
-#include "Task.generated.h"
+#include "Action.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(TaskLog, Log, All);
 
@@ -29,14 +29,15 @@ enum class ETaskState : uint8
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTaskActivated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTaskFinished, const ETaskState, Reason);
 
-class UTaskManagerComponent;
+
+class UActionManagerComponent;
 
 
 /**
  * 
  */
 UCLASS(Blueprintable, meta = (ExposedAsyncProxy))
-class AIEXTENSION_API UTask : public UObject, public FTickableGameObject, public ITaskOwnerInterface
+class AIEXTENSION_API UAction : public UObject, public FTickableGameObject, public IActionOwnerInterface
 {
     GENERATED_UCLASS_BODY()
 
@@ -45,8 +46,8 @@ public:
     UFUNCTION(BlueprintCallable, Category = Task)
     void Activate();
 
-    virtual const bool AddChildren(UTask* NewChildren) override;
-    virtual const bool RemoveChildren(UTask* Children) override;
+    virtual const bool AddChildren(UAction* NewChildren) override;
+    virtual const bool RemoveChildren(UAction* Children) override;
 
 
     /** Event when tick is received for this tickable object . */
@@ -67,13 +68,12 @@ public:
     void Destroy();
 
 
-    virtual UTaskManagerComponent* GetTaskOwnerComponent() override;
+    virtual UActionManagerComponent* GetTaskOwnerComponent() override;
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task, meta = (DisplayName = "GetTaskOwnerComponent"))
-    UTaskManagerComponent* ExposedGetTaskOwnerComponent();
-
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
-    AActor* GetTaskOwnerActor();
+    UActionManagerComponent* ExposedGetTaskOwnerComponent() {
+        return GetTaskOwnerComponent();
+    }
 
 
     //~ Begin Ticking
@@ -96,7 +96,7 @@ protected:
     ETaskState State;
 
     UPROPERTY()
-    TArray<UTask*> ChildrenTasks;
+    TArray<UAction*> ChildrenTasks;
 
     //~ Begin Tickable Object Interface
     virtual void Tick(float DeltaTime) override;
@@ -107,7 +107,7 @@ protected:
     }
 
     virtual TStatId GetStatId() const override {
-        RETURN_QUICK_DECLARE_CYCLE_STAT(UTask, STATGROUP_Tickables);
+        RETURN_QUICK_DECLARE_CYCLE_STAT(UAction, STATGROUP_Tickables);
     }
     //~ End Tickable Object Interface
 
@@ -136,12 +136,11 @@ public:
     FTaskFinished OnTaskFinished;
 
 
-
     // INLINES
 
     const bool IsValid() const {
         UObject const * const Outer = GetOuter();
-        return !IsPendingKill() && Outer->GetClass()->ImplementsInterface(UTaskOwnerInterface::StaticClass());
+        return !IsPendingKill() && Outer->GetClass()->ImplementsInterface(UActionOwnerInterface::StaticClass());
     }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
@@ -166,9 +165,13 @@ public:
         return IsValid() ? GetOuter() : nullptr;
     }
 
-    FORCEINLINE ITaskOwnerInterface* GetParentInterface() const {
-        return Cast<ITaskOwnerInterface>(GetOuter());
+    FORCEINLINE IActionOwnerInterface* GetParentInterface() const {
+        return Cast<IActionOwnerInterface>(GetOuter());
     }
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Task)
+    FORCEINLINE AActor* GetTaskOwnerActor();
+
 
 
     virtual UWorld* GetWorld() const override {
@@ -179,7 +182,8 @@ public:
 
     static FORCEINLINE FString StateToString(ETaskState Value) {
         const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("ETaskState"), true);
-        if (!EnumPtr) return FString("Invalid");
+        if (!EnumPtr)
+            return FString("Invalid");
 
         return EnumPtr->GetNameByValue((int64)Value).ToString();
     }

@@ -5,7 +5,7 @@
 #include "AIController.h"
 #include "Perception/AIPerceptionComponent.h"
 
-#include "TaskOwnerInterface.h"
+#include "ActionOwnerInterface.h"
 
 #include "AISquad.h"
 #include "AIGeneric.generated.h"
@@ -14,15 +14,15 @@
 class UBehaviorTreeComponent;
 class UBlackboardComponent;
 
-class UTask;
-class UTaskManagerComponent;
+class UAction;
+class UActionManagerComponent;
 
 
 /**
  * 
  */
 UCLASS(Blueprintable)
-class AIEXTENSION_API AAIGeneric : public AAIController, public ITaskOwnerInterface
+class AIEXTENSION_API AAIGeneric : public AAIController, public IActionOwnerInterface
 {
     GENERATED_UCLASS_BODY()
 
@@ -41,7 +41,7 @@ private:
 public:
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
-    class UTaskManagerComponent* TaskManagerComponent;
+    class UActionManagerComponent* ActionManagerComponent;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     UAIPerceptionComponent* AIPerceptionComponent;
@@ -70,9 +70,9 @@ public:
 
 
     // Begin ITaskOwnerInterface interface
-    virtual const bool AddChildren(UTask* NewChildren) override;
-    virtual const bool RemoveChildren(UTask* Children) override;
-    virtual UTaskManagerComponent* GetTaskOwnerComponent() override;
+    virtual const bool AddChildren(UAction* NewChildren) override;
+    virtual const bool RemoveChildren(UAction* Children) override;
+    virtual UActionManagerComponent* GetTaskOwnerComponent() override;
     // End ITaskOwnerInterface interface
 
 

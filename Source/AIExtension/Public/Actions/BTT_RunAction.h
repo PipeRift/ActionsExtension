@@ -5,32 +5,32 @@
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
 
-#include "Task.h"
-#include "TaskOwnerInterface.h"
+#include "Action.h"
+#include "ActionOwnerInterface.h"
 
-#include "BTT_RunTask.generated.h"
+#include "BTT_RunAction.generated.h"
 
 
 /**
  * 
  */
 UCLASS()
-class AIEXTENSION_API UBTT_RunTask : public UBTTaskNode, public ITaskOwnerInterface
+class AIEXTENSION_API UBTT_RunAction : public UBTTaskNode, public IActionOwnerInterface
 {
 	GENERATED_BODY()	
 	
 public:
-    UBTT_RunTask();
+    UBTT_RunAction();
 
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Node, meta = (DisplayName = "Task"))
-    TSubclassOf<UTask> TaskClass;
-
-    UPROPERTY()
-    TScriptInterface<ITaskOwnerInterface> TaskInterface;
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Node, meta = (DisplayName = "Action"))
+    TSubclassOf<UAction> ActionClass;
 
     UPROPERTY()
-    UTask* Task;
+    TScriptInterface<IActionOwnerInterface> ActionInterface;
+
+    UPROPERTY()
+    UAction* Action;
 
     UPROPERTY(Transient)
     UBehaviorTreeComponent* OwnerComp;
@@ -43,11 +43,11 @@ public:
 
 
     // Begin ITaskOwnerInterface interface
-    virtual const bool AddChildren(UTask* NewChildren) override;
-    virtual const bool RemoveChildren(UTask* Children) override;
-    virtual UTaskManagerComponent* GetTaskOwnerComponent() override;
+    virtual const bool AddChildren(UAction* NewChildren) override;
+    virtual const bool RemoveChildren(UAction* Children) override;
+    virtual UActionManagerComponent* GetTaskOwnerComponent() override;
     // End ITaskOwnerInterface interface
 
     UFUNCTION()
-    void OnRunTaskFinished(const ETaskState Reason);
+    void OnRunActionFinished(const ETaskState Reason);
 };

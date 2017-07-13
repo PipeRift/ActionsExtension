@@ -14,13 +14,13 @@
 #include "K2Node_CustomEvent.h"
 #include "K2Node_TemporaryVariable.h"
 
-#include "TaskOwnerInterface.h"
+#include "ActionOwnerInterface.h"
 
-#include "K2Node_Task.generated.h"
+#include "K2Node_Action.generated.h"
 
 
 UCLASS(Blueprintable)
-class AIEXTENSIONEDITOR_API UK2Node_Task : public UK2Node
+class AIEXTENSIONEDITOR_API UK2Node_Action : public UK2Node
 {
     GENERATED_UCLASS_BODY()
 
