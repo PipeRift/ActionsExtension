@@ -40,10 +40,10 @@ private:
 
 public:
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
     class UActionManagerComponent* ActionManagerComponent;
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
     UAIPerceptionComponent* AIPerceptionComponent;
 
 
