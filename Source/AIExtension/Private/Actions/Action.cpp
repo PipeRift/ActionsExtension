@@ -33,19 +33,20 @@ void UAction::Activate()
         return;
     }
 
+    if (!IsValid() || IsRunning())
+        return;
+
     //Registry this children task in the owner
     const bool bSuccess = Parent->AddChildren(this);
     if (!bSuccess) {
         GetTaskOwnerComponent()->AddChildren(this);
     }
 
-    if (!IsValid() || IsRunning())
-        return;
-
     State = ETaskState::RUNNING;
     
     OnActivation();
-    //Freezes the game
+
+    //Being called two times!
     ReceiveActivate();
 }
 
