@@ -45,9 +45,6 @@ void UAction::Activate()
     State = ETaskState::RUNNING;
     
     OnActivation();
-
-    //Being called two times!
-    ReceiveActivate();
 }
 
 const bool UAction::AddChildren(UAction* NewChildren)
