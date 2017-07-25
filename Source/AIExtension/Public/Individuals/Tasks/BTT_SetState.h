@@ -17,8 +17,10 @@ class AIEXTENSION_API UBTT_SetState : public UBTTaskNode
 public:
     UBTT_SetState();
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Node)
     ECombatState State;
 
     virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+
+    virtual FString GetStaticDescription() const override;
 };

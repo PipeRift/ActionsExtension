@@ -13,12 +13,12 @@
 UENUM(BlueprintType)
 enum class ECompareStateMode : uint8
 {
-    Equals         UMETA(DisplayName = "Equals"),
-    GreaterThan    UMETA(DisplayName = "Greater Than"),
-    LessThan       UMETA(DisplayName = "Less Than"),
-    GreaterOrEqual UMETA(DisplayName = "Greater Than or Equal to"),
-    LessOrEqual    UMETA(DisplayName = "Less Than or Equal to"),
-    NotEqual       UMETA(DisplayName = "Not Equal")
+    Equals         UMETA(DisplayName = "Is Equal to"),
+    Greater        UMETA(DisplayName = "is Greater than"),
+    Less           UMETA(DisplayName = "is Less than"),
+    GreaterOrEqual UMETA(DisplayName = "is Greater or Equal to"),
+    LessOrEqual    UMETA(DisplayName = "is Less or Equal to"),
+    NotEqual       UMETA(DisplayName = "is Not Equal than")
 };
 
 UCLASS()
@@ -27,12 +27,17 @@ class AIEXTENSION_API UBTD_CompareState : public UBTDecorator
 	GENERATED_BODY()
 	
 public:
-    UPROPERTY(BlueprintReadWrite, EditAnywhere)
-    ECompareStateMode Comparison = ECompareStateMode::Equals;
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere)
-    ECombatState Towards = ECombatState::Passive;
+    UBTD_CompareState();
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Node)
+    ECompareStateMode Comparison;
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Node, meta = (DisplayName = "Towards"))
+    ECombatState State;
 
     UFUNCTION(BlueprintCallable)
     bool PerformConditionCheckAI(class AAIController* OwnerController);
+
+    virtual FString GetStaticDescription() const override;
 };

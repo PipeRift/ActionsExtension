@@ -5,9 +5,7 @@
 #include "AI/Navigation/RecastNavMesh.h"
 
 
-
-
-TSubclassOf<UNavArea> UAIFunctionLibrary::ProjectPointToNavArea(UObject* WorldContext, const FVector& Location, const FVector Extent, TSubclassOf<UNavigationQueryFilter> FilterClass /*= NULL*/, AController* Querier /*= NULL*/)
+TSubclassOf<UNavArea> UAIFunctionLibrary::ProjectPointToNavArea(UObject* WorldContext, const FVector& Location, const FVector Extent /*= FVector(200,200,200)*/, TSubclassOf<UNavigationQueryFilter> FilterClass /*= NULL*/, AController* Querier /*= NULL*/)
 {
     UWorld* World = NULL;
 

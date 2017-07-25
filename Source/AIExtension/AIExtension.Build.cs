@@ -30,7 +30,11 @@ public class AIExtension : ModuleRules
 			// ... add other public dependencies that you statically link with here ...
 		});
 
-        
+        PrivateDependencyModuleNames.AddRange(new string[]
+        {
+            "GameplayTags"
+        });
+
         if (UEBuildConfiguration.bBuildDeveloperTools || (Target.Configuration != UnrealTargetConfiguration.Shipping && Target.Configuration != UnrealTargetConfiguration.Test))
         {
             PrivateDependencyModuleNames.Add("GameplayDebugger");

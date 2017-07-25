@@ -11,14 +11,18 @@
 #include "Actions/ActionManagerComponent.h"
 
 
+static ConstructorHelpers::FObjectFinderOptional<UBehaviorTree> GenericBehavior(TEXT("/AIExtension/Base/Individuals/BT_Generic"));
+
 AAIGeneric::AAIGeneric(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
+
     AIPerceptionComponent = ObjectInitializer.CreateDefaultSubobject<UAIPerceptionComponent>(this, TEXT("Perception"));
     ActionManagerComponent  = ObjectInitializer.CreateDefaultSubobject<UActionManagerComponent>(this, TEXT("Action Manager"));
     
  	BlackboardComp = ObjectInitializer.CreateDefaultSubobject<UBlackboardComponent>(this, TEXT("BlackBoard"));
 	BrainComponent = BehaviorComp = ObjectInitializer.CreateDefaultSubobject<UBehaviorTreeComponent>(this, TEXT("Behavior"));	
 
+    Behavior = GenericBehavior.Get();
 
     State = ECombatState::Passive;
 }
