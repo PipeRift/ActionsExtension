@@ -48,18 +48,18 @@ public:
     UAIPerceptionComponent* AIPerceptionComponent;
 
     /** Behaviors */
-	UPROPERTY(EditAnywhere, Category = "Generic|Behavior", meta = (DisplayName = "Base"))
+	UPROPERTY(EditAnywhere, Category = "AI|Behavior", meta = (DisplayName = "Base"))
     UBehaviorTree* BaseBehavior;
-    UPROPERTY(EditAnywhere, Category = "Generic|Behavior", meta = (DisplayName = "Combat", DisplayThumbnail = false))
+    UPROPERTY(EditAnywhere, Category = "AI|Behavior", meta = (DisplayName = "Combat", DisplayThumbnail = false))
     UBehaviorTree* CombatBehavior;
-    UPROPERTY(EditAnywhere, Category = "Generic|Behavior", meta = (DisplayName = "Alert", DisplayThumbnail = false))
+    UPROPERTY(EditAnywhere, Category = "AI|Behavior", meta = (DisplayName = "Alert", DisplayThumbnail = false))
     UBehaviorTree* AlertBehavior;
-    UPROPERTY(EditAnywhere, Category = "Generic|Behavior", meta = (DisplayName = "Suspicion", DisplayThumbnail = false))
+    UPROPERTY(EditAnywhere, Category = "AI|Behavior", meta = (DisplayName = "Suspicion", DisplayThumbnail = false))
     UBehaviorTree* SuspicionBehavior;
-    UPROPERTY(EditAnywhere, Category = "Generic|Behavior", meta = (DisplayName = "Passive", DisplayThumbnail = false))
+    UPROPERTY(EditAnywhere, Category = "AI|Behavior", meta = (DisplayName = "Passive", DisplayThumbnail = false))
     UBehaviorTree* PassiveBehavior;
 
-    UPROPERTY(EditAnywhere, Category = Generic)
+    UPROPERTY(EditAnywhere, Category = AI)
     ECombatState State;
 
 private:
@@ -85,12 +85,21 @@ public:
     // End ITaskOwnerInterface interface
 
 
+    UFUNCTION(BlueprintCallable, Category = AI)
 	void Respawn();
 
+    UFUNCTION(BlueprintCallable, Category = "AI|Combat System")
+    void StartCombat(AAIGeneric* InTarget);
+
+    UFUNCTION(BlueprintCallable, Category = "AI|Combat System")
+    void FinishCombat(ECombatState DestinationState = ECombatState::Alert);
+
     /** Set the current State of this AI */
+    UFUNCTION(BlueprintCallable, Category = "AI|Combat System")
     void SetState(const ECombatState InState);
 
     /** Get the current State of this AI */
+    UFUNCTION(BlueprintPure,     Category = "AI|Combat System")
     const ECombatState GetState();
 
 
@@ -120,15 +129,8 @@ public:
         return IsValid(Squad) && Squad->HasMember(this);
     }
 
-    UFUNCTION(BlueprintCallable, Category = Squad)
-    FORCEINLINE UClass* GetOrder() const {
-        if (!IsInSquad() || !Squad->CurrentOrder)
-        {
-            return NULL;
-        }
-
-        return Squad->CurrentOrder->GetClass();
-    }
+    UFUNCTION(BlueprintPure, Category = Squad)
+    UClass* GetSquadOrder() const;
 
 
 
@@ -137,10 +139,18 @@ public:
     ***************************************/
 
     /** Returns Blackboard component **/
+    UFUNCTION(BlueprintPure, Category = AI)
     FORCEINLINE UBlackboardComponent* GetBlackboard() const { return BlackboardComp; }
+
     /** Returns Behavior component **/
+    UFUNCTION(BlueprintPure, Category = AI)
     FORCEINLINE UBehaviorTreeComponent* GetBehavior() const { return BehaviorComp; }
 
 private:
+
+    /***************************************
+    * HELPERS                              *
+    ***************************************/
+
     void SetDynamicSubBehavior(FName GameplayTag, UBehaviorTree* SubBehavior);
 };

@@ -77,11 +77,11 @@ public:
 
 
     //~ Begin Ticking
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Object)
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Action)
     uint8 bWantsToTick:1;
 
     //Tick length in seconds. 0 is default tick rate
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Object)
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Action)
     float TickRate;
 
 private:

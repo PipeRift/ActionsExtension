@@ -34,7 +34,7 @@ public:
         return EnumToString(FindObject<UEnum>(ANY_PACKAGE, TEXT("ECombatState"), true), Value);
     }
 
-    /** Convert a combat state into a String */
+    /** Convert a compare state into a String */
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "AI|Combat", meta = (DisplayName = "ToString"))
     static FORCEINLINE FString CompareStateModeToString(ECompareStateMode Value) {
         return EnumToString(FindObject<UEnum>(ANY_PACKAGE, TEXT("ECompareStateMode"), true), Value);

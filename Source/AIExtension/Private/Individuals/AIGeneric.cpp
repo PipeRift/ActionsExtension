@@ -90,6 +90,23 @@ void AAIGeneric::Respawn()
 	GetWorld()->GetAuthGameMode()->RestartPlayer(this);
 }
 
+void AAIGeneric::StartCombat(AAIGeneric* InTarget)
+{
+    if (!InTarget)
+        return;
+
+    BlackboardComp->SetValueAsObject(TEXT("Target"), InTarget);
+    SetState(ECombatState::Combat);
+}
+
+void AAIGeneric::FinishCombat(ECombatState DestinationState /*= ECombatState::Alert*/)
+{
+    if (State != ECombatState::Combat || DestinationState == ECombatState::Combat)
+        return;
+
+    SetState(DestinationState);
+}
+
 void AAIGeneric::GameHasEnded(AActor* EndGameFocus, bool bIsWinner)
 {
 	// Stop the behavior tree/logic
@@ -124,6 +141,17 @@ void AAIGeneric::LeaveSquad()
     Squad->RemoveMember(this);
     Squad = NULL;
 }
+
+UClass* AAIGeneric::GetSquadOrder() const
+{
+    if (!IsInSquad() || !Squad->CurrentOrder)
+    {
+        return NULL;
+    }
+
+    return Squad->CurrentOrder->GetClass();
+}
+
 
 void AAIGeneric::SetDynamicSubBehavior(FName GameplayTag, UBehaviorTree* SubBehavior)
 {
