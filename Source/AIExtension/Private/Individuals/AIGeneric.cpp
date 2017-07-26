@@ -22,7 +22,7 @@ AAIGeneric::AAIGeneric(const FObjectInitializer& ObjectInitializer) : Super(Obje
  	BlackboardComp = ObjectInitializer.CreateDefaultSubobject<UBlackboardComponent>(this, TEXT("BlackBoard"));
 	BrainComponent = BehaviorComp = ObjectInitializer.CreateDefaultSubobject<UBehaviorTreeComponent>(this, TEXT("Behavior"));	
 
-    Behavior = GenericBehavior.Get();
+    BaseBehavior = GenericBehavior.Get();
 
     State = ECombatState::Passive;
 }
@@ -32,14 +32,18 @@ void AAIGeneric::Possess(APawn* InPawn)
 	Super::Possess(InPawn);
 
 	// start behavior
-	if (Behavior)
+	if (BaseBehavior)
 	{
-		if (Behavior->BlackboardAsset)
+		if (BaseBehavior->BlackboardAsset)
 		{
-			BlackboardComp->InitializeBlackboard(*Behavior->BlackboardAsset);
+			BlackboardComp->InitializeBlackboard(*BaseBehavior->BlackboardAsset);
 		}
 
-		BehaviorComp->StartTree(*Behavior);
+		BehaviorComp->StartTree(*BaseBehavior);
+        SetDynamicSubBehavior(FAIExtensionModule::FBehaviorTags::Combat,    CombatBehavior);
+        SetDynamicSubBehavior(FAIExtensionModule::FBehaviorTags::Alert,     AlertBehavior);
+        SetDynamicSubBehavior(FAIExtensionModule::FBehaviorTags::Suspicion, SuspicionBehavior);
+        SetDynamicSubBehavior(FAIExtensionModule::FBehaviorTags::Passive,   PassiveBehavior);
 	}
 }
 
@@ -119,6 +123,14 @@ void AAIGeneric::LeaveSquad()
 {
     Squad->RemoveMember(this);
     Squad = NULL;
+}
+
+void AAIGeneric::SetDynamicSubBehavior(FName GameplayTag, UBehaviorTree* SubBehavior)
+{
+    if (BehaviorComp && SubBehavior)
+    {
+        BehaviorComp->SetDynamicSubtree(FGameplayTag::RequestGameplayTag(GameplayTag), SubBehavior);
+    }
 }
 
 void AAIGeneric::SetState(ECombatState InState)

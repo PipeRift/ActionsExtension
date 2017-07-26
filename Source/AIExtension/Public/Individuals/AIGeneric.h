@@ -13,6 +13,7 @@
 
 class UBehaviorTreeComponent;
 class UBlackboardComponent;
+class UBehaviorTree;
 
 class UAction;
 class UActionManagerComponent;
@@ -46,9 +47,17 @@ public:
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
     UAIPerceptionComponent* AIPerceptionComponent;
 
-
-	UPROPERTY(EditAnywhere, Category = Generic)
-	class UBehaviorTree* Behavior;
+    /** Behaviors */
+	UPROPERTY(EditAnywhere, Category = "Generic|Behavior", meta = (DisplayName = "Base"))
+    UBehaviorTree* BaseBehavior;
+    UPROPERTY(EditAnywhere, Category = "Generic|Behavior", meta = (DisplayName = "Combat", DisplayThumbnail = false))
+    UBehaviorTree* CombatBehavior;
+    UPROPERTY(EditAnywhere, Category = "Generic|Behavior", meta = (DisplayName = "Alert", DisplayThumbnail = false))
+    UBehaviorTree* AlertBehavior;
+    UPROPERTY(EditAnywhere, Category = "Generic|Behavior", meta = (DisplayName = "Suspicion", DisplayThumbnail = false))
+    UBehaviorTree* SuspicionBehavior;
+    UPROPERTY(EditAnywhere, Category = "Generic|Behavior", meta = (DisplayName = "Passive", DisplayThumbnail = false))
+    UBehaviorTree* PassiveBehavior;
 
     UPROPERTY(EditAnywhere, Category = Generic)
     ECombatState State;
@@ -131,4 +140,7 @@ public:
     FORCEINLINE UBlackboardComponent* GetBlackboard() const { return BlackboardComp; }
     /** Returns Behavior component **/
     FORCEINLINE UBehaviorTreeComponent* GetBehavior() const { return BehaviorComp; }
+
+private:
+    void SetDynamicSubBehavior(FName GameplayTag, UBehaviorTree* SubBehavior);
 };

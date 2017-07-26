@@ -10,16 +10,20 @@ DEFINE_LOG_CATEGORY(LogAIExtension)
 
 #define LOCTEXT_NAMESPACE "AIExtensionModule"
 
+FName FAIExtensionModule::FBehaviorTags::Combat   (TEXT("AI.Behavior.Combat"));
+FName FAIExtensionModule::FBehaviorTags::Alert    (TEXT("AI.Behavior.Alert"));
+FName FAIExtensionModule::FBehaviorTags::Suspicion(TEXT("AI.Behavior.Suspicion"));
+FName FAIExtensionModule::FBehaviorTags::Passive  (TEXT("AI.Behavior.Passive"));
 
 void FAIExtensionModule::StartupModule()
 {
     UE_LOG(LogAIExtension, Warning, TEXT("AIExtension: Log Started"));
 
     // This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-    
-    RegisterSettings();
 
     LoadGameplayTags();
+
+    RegisterSettings();
 }
 
 void FAIExtensionModule::ShutdownModule()
@@ -79,10 +83,10 @@ void FAIExtensionModule::LoadGameplayTags()
 {
     UGameplayTagsManager& GameplayTags = UGameplayTagsManager::Get();
 
-    GameplayTags.AddNativeGameplayTag("AI.Behavior.Passive");
-    GameplayTags.AddNativeGameplayTag("AI.Behavior.Suspicion");
-    GameplayTags.AddNativeGameplayTag("AI.Behavior.Alert");
-    GameplayTags.AddNativeGameplayTag("AI.Behavior.Combat");
+    GameplayTags.AddNativeGameplayTag(FBehaviorTags::Passive);
+    GameplayTags.AddNativeGameplayTag(FBehaviorTags::Suspicion);
+    GameplayTags.AddNativeGameplayTag(FBehaviorTags::Alert);
+    GameplayTags.AddNativeGameplayTag(FBehaviorTags::Combat);
 }
 
 bool FAIExtensionModule::HandleSettingsSaved()

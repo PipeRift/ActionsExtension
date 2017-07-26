@@ -14,8 +14,10 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogAIExtension, All, All);
 
+
 class FAIExtensionModule : public IModuleInterface
 {
+
 public:
 
     // Get Jink Core module instance
@@ -47,4 +49,13 @@ private:
 
     // Callbacks for when the settings were saved.
     bool HandleSettingsSaved();
+
+public:
+    struct FBehaviorTags
+    {
+        static FName Combat;
+        static FName Alert;
+        static FName Suspicion;
+        static FName Passive;
+    };
 };
