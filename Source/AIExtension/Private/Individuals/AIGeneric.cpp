@@ -119,7 +119,7 @@ void AAIGeneric::GameHasEnded(AActor* EndGameFocus, bool bIsWinner)
 	GetWorldTimerManager().ClearTimer(TimerHandle_Respawn);
 
 	// Clear any target
-	//SetEnemy(NULL);	
+    FinishCombat();
 }
 
 
