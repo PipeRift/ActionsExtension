@@ -72,10 +72,10 @@ const bool AAIGeneric::AddChildren(UAction* NewChildren)
     return ActionManagerComponent->AddChildren(NewChildren);
 }
 
-const bool AAIGeneric::RemoveChildren(UAction* Children)
+const bool AAIGeneric::RemoveChildren(UAction* RemChildren)
 {
     check(ActionManagerComponent);
-    return ActionManagerComponent->RemoveChildren(Children);
+    return ActionManagerComponent->RemoveChildren(RemChildren);
 }
 
 UActionManagerComponent* AAIGeneric::GetTaskOwnerComponent()

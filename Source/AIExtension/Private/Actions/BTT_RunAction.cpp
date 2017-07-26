@@ -55,7 +55,7 @@ EBTNodeResult::Type UBTT_RunAction::ExecuteTask(UBehaviorTreeComponent& InOwnerC
     return Action? EBTNodeResult::InProgress : EBTNodeResult::Failed;
 }
 
-EBTNodeResult::Type UBTT_RunAction::AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UBTT_RunAction::AbortTask(UBehaviorTreeComponent& InOwnerComp, uint8* NodeMemory)
 {
     if(Action)
     {
@@ -64,9 +64,9 @@ EBTNodeResult::Type UBTT_RunAction::AbortTask(UBehaviorTreeComponent& OwnerComp,
     return EBTNodeResult::Aborted;
 }
 
-void UBTT_RunAction::DescribeRuntimeValues(const UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTDescriptionVerbosity::Type Verbosity, TArray<FString>& Values) const
+void UBTT_RunAction::DescribeRuntimeValues(const UBehaviorTreeComponent& InOwnerComp, uint8* NodeMemory, EBTDescriptionVerbosity::Type Verbosity, TArray<FString>& Values) const
 {
-    Super::DescribeRuntimeValues(OwnerComp, NodeMemory, Verbosity, Values);
+    Super::DescribeRuntimeValues(InOwnerComp, NodeMemory, Verbosity, Values);
 
     if (Action)
     {

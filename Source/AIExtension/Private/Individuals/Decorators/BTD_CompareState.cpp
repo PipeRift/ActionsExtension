@@ -21,22 +21,22 @@ bool UBTD_CompareState::PerformConditionCheckAI(AAIController* OwnerController)
         return false;
     }
 
-    auto State = AIGen->State;
+    auto CurrentState = AIGen->State;
 
     switch (Comparison)
     {
         case ECompareStateMode::Equals:
-            return State == State;
+            return CurrentState == State;
         case ECompareStateMode::Greater:
-            return State > State;
+            return CurrentState > State;
         case ECompareStateMode::Less:
-            return State < State;
+            return CurrentState < State;
         case ECompareStateMode::GreaterOrEqual:
-            return State >= State;
+            return CurrentState >= State;
         case ECompareStateMode::LessOrEqual:
-            return State <= State;
+            return CurrentState <= State;
         case ECompareStateMode::NotEqual:
-            return State != State;
+            return CurrentState != State;
         default:
             return false;
     }

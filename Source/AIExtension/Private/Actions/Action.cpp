@@ -154,8 +154,3 @@ UActionManagerComponent* UAction::GetTaskOwnerComponent()
 
     return GetParentInterface()->GetTaskOwnerComponent();
 }
-
-AActor* UAction::GetTaskOwnerActor()
-{
-    return GetTaskOwnerComponent()->GetOwner();
-}

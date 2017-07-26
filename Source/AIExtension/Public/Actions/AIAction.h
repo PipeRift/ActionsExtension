@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Actions/Action.h"
+#include "Action.h"
 #include "AIGeneric.h"
 
 #include "AIAction.generated.h"

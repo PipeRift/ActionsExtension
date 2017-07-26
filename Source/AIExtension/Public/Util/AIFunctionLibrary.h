@@ -50,7 +50,7 @@ public:
 #if WITH_EDITOR
         return EnumPtr->GetDisplayNameTextByValue((int64)Value).ToString();
 #else
-        return EnumPtr->GetEnumName((int64)Value);
+        return EnumPtr->GetNameByValue((int64)Value).ToString();
 #endif
     }
 };
