@@ -170,9 +170,7 @@ public:
     }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
-    FORCEINLINE AActor* GetTaskOwnerActor() {
-        return GetTaskOwnerComponent()->GetOwner();
-    }
+    AActor* GetTaskOwnerActor();
 
 
 

@@ -147,6 +147,11 @@ void UAction::OnFinish(const ETaskState Reason)
     }
 }
 
+AActor* UAction::GetTaskOwnerActor()
+{
+    return GetTaskOwnerComponent()->GetOwner();
+}
+
 UActionManagerComponent* UAction::GetTaskOwnerComponent()
 {
     //Owner will always contain this interface.

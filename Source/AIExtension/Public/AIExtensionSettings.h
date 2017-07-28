@@ -3,7 +3,10 @@
 #pragma once
 
 #include "Object.h"
+
+#include "FactionInfo.h"
 #include "AIExtensionSettings.generated.h"
+
 
 /**
  * Find Custom Config documentation here: wiki.unrealengine.com/CustomSettings 
@@ -16,4 +19,6 @@ class AIEXTENSION_API UAIExtensionSettings : public UObject
 public:
     UAIExtensionSettings(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {}
 
+    UPROPERTY(config, EditAnywhere, Category = Custom)
+    TArray<FFactionInfo> Factions;
 };
