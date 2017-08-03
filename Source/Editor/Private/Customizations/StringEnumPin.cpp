@@ -22,7 +22,7 @@ TSharedRef<SWidget> SStringEnumPin::GetDefaultValueWidget()
         .OptionsSource(&CachedItems)
         .OnGenerateWidget(this, &SStringEnumPin::HandleStringEnumComboBoxGenerateWidget)
         .OnSelectionChanged(this, &SStringEnumPin::OnSelectionChanged)
-        //.InitiallySelectedItem(GetVariableFactionValue())
+        //.InitiallySelectedItem(GetVariablFFactionValue())
         [
             SNew(STextBlock)
             .Text(this, &SStringEnumPin::GetSelectedItem)

@@ -29,7 +29,7 @@ protected:
     /** Returns all the enum items.
     * This is for override purposes.
     */
-    virtual const TArray<FString> GetEnumItems() override;
+    virtual void GetEnumItems(TArray<FString>& Values) const override;
 
     /** Returns all the enum items.
     * This is for override purposes.

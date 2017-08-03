@@ -17,8 +17,25 @@ class AIEXTENSION_API UAIExtensionSettings : public UObject
     GENERATED_BODY()
     
 public:
-    UAIExtensionSettings(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {}
+
+    UAIExtensionSettings(const FObjectInitializer& ObjectInitializer)
+        : Super(ObjectInitializer)
+    {
+        Factions.Add(FFactionInfo("Default", FColor::Blue));
+    }
 
     UPROPERTY(config, EditAnywhere, Category = Custom)
     TArray<FFactionInfo> Factions;
+
+    UPROPERTY(config, EditAnywhere, Category = Custom)
+    TSet<FFactionRelation> Relations;
+
+protected:
+
+#if WITH_EDITOR
+    virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
+    virtual bool CanEditChange(const UProperty* InProperty) const override;
+
+    void SanitizeRelations(EPropertyChangeType::Type ChangeType, int32 RelationIndex = INDEX_NONE);
+#endif
 };

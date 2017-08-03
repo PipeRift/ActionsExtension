@@ -54,6 +54,7 @@ public class AIExtensionEditor : ModuleRules
                 "DetailCustomizations",
                 "ContentBrowser",
                 "Settings",
+                "AIModule",
                 "AIExtension"
 				// ... add private dependencies that you statically link with here ...	
 			}

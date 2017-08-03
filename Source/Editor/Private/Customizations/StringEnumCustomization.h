@@ -50,7 +50,7 @@ protected:
     /** Returns all the enum items.
     * This is for override purposes.
     */
-    virtual const TArray<FString> GetEnumItems();
+    virtual void GetEnumItems(TArray<FString>& Values) const;
 
     /** Called when selection changed.
     * This is for override purposes.

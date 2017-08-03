@@ -11,10 +11,10 @@
 
 void FStringEnumCustomization::CustomizeHeader(TSharedRef<class IPropertyHandle> StructPropertyHandle, class FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils) 
 {
-    if (CanCustomizeHeader(StructPropertyHandle, HeaderRow, StructCustomizationUtils)) {
-
+    if (CanCustomizeHeader(StructPropertyHandle, HeaderRow, StructCustomizationUtils))
+    {    
         UpdateItems();
-        
+
         HeaderRow.NameContent()
         [
             StructPropertyHandle->CreatePropertyNameWidget()
@@ -26,8 +26,9 @@ void FStringEnumCustomization::CustomizeHeader(TSharedRef<class IPropertyHandle>
             SAssignNew(ComboBox, SComboBox<TSharedPtr<FString>>)
             .OptionsSource(&CachedItems)
             .OnGenerateWidget(this, &FStringEnumCustomization::HandleStringEnumComboBoxGenerateWidget)
+            .OnComboBoxOpening(this, &FStringEnumCustomization::UpdateItems)
             .OnSelectionChanged(this, &FStringEnumCustomization::OnSelectionChanged)
-            //.InitiallySelectedItem(GetVariableFactionValue())
+            //.InitiallySelectedItem(GetVariablFFactionValue())
             [
                 SNew(STextBlock)
                 .Text(this, &FStringEnumCustomization::GetSelectedItem)
@@ -64,7 +65,9 @@ void FStringEnumCustomization::OnSelectionChanged(TSharedPtr<FString> SelectedIt
 /** Display the current column selection */
 void FStringEnumCustomization::UpdateItems()
 {
-    const TArray<FString>& Items = GetEnumItems();
+    TArray<FString> Items;
+    GetEnumItems(Items);
+
     CachedItems.Empty();
     
     //Convert FString to Shared Ptrs and Populate the array
@@ -77,15 +80,13 @@ void FStringEnumCustomization::UpdateItems()
         }
     }
 
-    if (ComboBox.IsValid()) {
+    /*if (ComboBox.IsValid()) {
         ComboBox->RefreshOptions();
-    }
+    }*/
 }
 
-const TArray<FString> FStringEnumCustomization::GetEnumItems() {
-    TArray<FString> Values;
+void FStringEnumCustomization::GetEnumItems(TArray<FString>& Values) const {
     Values.Add(FString("None"));
-    return Values;
 }
 
 /** Display the current column selection */

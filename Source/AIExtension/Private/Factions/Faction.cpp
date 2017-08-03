@@ -7,16 +7,16 @@
 
 #include "Faction.h"
 
-bool FFaction::GetFactionInfo(FFactionInfo& Info)
+const FFaction FFaction::NoFaction(NO_FACTION);
+
+FFactionInfo* FFaction::GetFactionInfo() const
 {
-    const UAIExtensionSettings* Settings = GetDefault<UAIExtensionSettings>();
+    UAIExtensionSettings* Settings = GetMutableDefault<UAIExtensionSettings>();
 
     if (Settings->Factions.IsValidIndex(Id)) {
-        Info = Settings->Factions[Id];
-        return true;
+        return &Settings->Factions[Id];
     }
 
     //If the faction is not found, return default faction info.
-    Info = FFactionInfo();
-    return false;
+    return nullptr;
 }
