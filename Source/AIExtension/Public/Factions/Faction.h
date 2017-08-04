@@ -19,7 +19,7 @@ struct AIEXTENSION_API FFaction
 {
     GENERATED_USTRUCT_BODY()
 
-    FFaction() {}
+    FFaction() : Id(NO_FACTION) {}
 
     FFaction(int32 InId) : Id(InId) {}
 
@@ -31,10 +31,17 @@ struct AIEXTENSION_API FFaction
             Id = InTeam.GetId();
     }
 
+    
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     int32 Id;
 
+
     FFactionInfo* GetFactionInfo() const;
+
+    /*UFUNCTION(BlueprintPure, Category = Faction, meta = (DisplayName = "Get Faction Info"))
+    FORCEINLINE const FFactionInfo& exec_GetFactionInfo() const {
+        return *GetFactionInfo();
+    }*/
 
     FORCEINLINE const FGenericTeamId GetTeam() const {
         return Id != NO_FACTION? FGenericTeamId(Id) : FGenericTeamId::NoTeam;
@@ -48,22 +55,10 @@ struct AIEXTENSION_API FFaction
      * Attitude evaluation
      */
     FORCEINLINE bool IsHostileTo(const FFaction& Other) const {
-        return AttitudeTowards(Other) == ETeamAttitude::Hostile;
+        return GetAttitudeTowards(Other) == ETeamAttitude::Hostile;
     }
 
-    const ETeamAttitude::Type AttitudeTowards(const FFaction& Other) const {
-        if (this->IsNone() || Other.IsNone()) {
-            return ETeamAttitude::Hostile;
-        }
-
-        const UAIExtensionSettings* Settings = GetDefault<UAIExtensionSettings>();
-
-        const FFactionRelation* FoundRelationPtr = Settings->Relations.Find(FFactionRelation(*this, Other));
-        if (FoundRelationPtr == NULL)
-            return ETeamAttitude::Neutral;
-
-        return FoundRelationPtr->Attitude;
-    }
+    const ETeamAttitude::Type GetAttitudeTowards(const FFaction& Other) const;
 
     /**
      * Operator overloading & Hashes

@@ -20,3 +20,17 @@ FFactionInfo* FFaction::GetFactionInfo() const
     //If the faction is not found, return default faction info.
     return nullptr;
 }
+
+const ETeamAttitude::Type FFaction::GetAttitudeTowards(const FFaction& Other) const {
+    if (this->IsNone() || Other.IsNone()) {
+        return ETeamAttitude::Hostile;
+    }
+
+    const UAIExtensionSettings* Settings = GetDefault<UAIExtensionSettings>();
+
+    const FFactionRelation* FoundRelationPtr = Settings->Relations.Find(FFactionRelation(*this, Other));
+    if (FoundRelationPtr == NULL)
+        return ETeamAttitude::Neutral;
+
+    return FoundRelationPtr->Attitude;
+}

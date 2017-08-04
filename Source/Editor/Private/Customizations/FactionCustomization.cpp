@@ -15,9 +15,8 @@ bool FFactionCustomization::CanCustomizeHeader(TSharedRef<class IPropertyHandle>
 {
     StructHandle = StructPropertyHandle;
     IdHandle = StructPropertyHandle->GetChildHandle("Id");
-    TeamHandle = StructPropertyHandle->GetChildHandle("Team");
 
-    if (IdHandle->IsValidHandle() && TeamHandle->IsValidHandle()) {
+    if (IdHandle->IsValidHandle()) {
         if (FAIExtensionModule* Module = FAIExtensionModule::GetInstance())
         {
             //Bind On Settings Changed event
@@ -54,13 +53,11 @@ void FFactionCustomization::OnItemSelected(FString Value) {
     if (Id != INDEX_NONE)
     {
         IdHandle->SetValue(Id);
-        TeamHandle->SetValue(FGenericTeamId(Id));
     }
     else
     {
         //Priority not found. Set default value
         IdHandle->SetValue(NO_FACTION);
-        TeamHandle->SetValue(FGenericTeamId());
     }
 }
 

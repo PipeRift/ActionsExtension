@@ -18,7 +18,7 @@ struct AIEXTENSION_API FFactionRelation
     GENERATED_USTRUCT_BODY()
     
     FFactionRelation() : 
-        FactionA(FFaction::NoFaction), FactionB(FFaction::NoFaction), Attitude(ETeamAttitude::Neutral), Guid(FGuid::NewGuid())
+        FactionA(FFaction::NoFaction), FactionB(FFaction::NoFaction), Attitude(ETeamAttitude::Neutral)
     {}
 
     FFactionRelation(FFaction A, FFaction B, ETeamAttitude::Type InAttitude = ETeamAttitude::Neutral) :

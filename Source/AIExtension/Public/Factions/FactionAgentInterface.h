@@ -25,14 +25,30 @@ class AIEXTENSION_API IFactionAgentInterface : public IGenericTeamAgentInterface
 public:
 
     /** Retrieve faction identifier in form of Faction */
-    UFUNCTION(BlueprintImplementableEvent, Category = Faction)
-    FFaction GetFaction() const;
+    UFUNCTION(BlueprintImplementableEvent, Category = Faction, meta = (DisplayName = "GetFaction"))
+    FFaction EventGetFaction() const;
 
     /** Assigns faction */
-    UFUNCTION(BlueprintImplementableEvent, Category = Faction)
-    void SetFaction(const FFaction& Factory) const;
+    UFUNCTION(BlueprintImplementableEvent, Category = Faction, meta = (DisplayName = "SetFaction"))
+    void EventSetFaction(const FFaction& Faction);
 
 private:
+
+
+    /** Retrieve faction identifier in form of Faction */
+    virtual FFaction GetFaction() const;
+
+    /** Assigns faction */
+    virtual void SetFaction(const FFaction& Faction);
+
+    /** Retrieved owner attitude toward given Other object */
+    virtual const ETeamAttitude::Type GetAttitudeTowards(const AActor& Other) const
+    {
+        const IFactionAgentInterface* OtherFactionAgent = Cast<const IFactionAgentInterface>(&Other);
+        return OtherFactionAgent ? GetFaction().GetAttitudeTowards(OtherFactionAgent->GetFaction())
+            : ETeamAttitude::Neutral;
+    }
+
     /** Begin GenericTeamAgent interface */
 
     /** Assigns Team Agent to given TeamID */
@@ -42,15 +58,13 @@ private:
 
     /** Retrieve team identifier in form of FGenericTeamId */
     virtual FGenericTeamId GetGenericTeamId() const override {
-        return GetFaction().Team;
+        return GetFaction().GetTeam();
     }
 
     /** Retrieved owner attitude toward given Other object */
     virtual ETeamAttitude::Type GetTeamAttitudeTowards(const AActor& Other) const override
     {
-        const IGenericTeamAgentInterface* OtherTeamAgent = Cast<const IGenericTeamAgentInterface>(&Other);
-        return OtherTeamAgent ? FGenericTeamId::GetAttitude(GetGenericTeamId(), OtherTeamAgent->GetGenericTeamId())
-            : ETeamAttitude::Neutral;
+        return GetAttitudeTowards(Other);
     }
 
     /** End GenericTeamAgent interface */

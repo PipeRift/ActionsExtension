@@ -22,8 +22,7 @@ protected:
     /** Handle to the struct properties being customized */
     TSharedPtr<IPropertyHandle> StructHandle;
     TSharedPtr<IPropertyHandle> IdHandle;
-    TSharedPtr<IPropertyHandle> TeamHandle;
-
+    
     virtual bool CanCustomizeHeader(TSharedRef<class IPropertyHandle> StructPropertyHandle, class FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& StructCustomizationUtils) override;
 
     /** Returns all the enum items.

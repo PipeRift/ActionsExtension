@@ -6,6 +6,7 @@
 #include "Perception/AIPerceptionComponent.h"
 
 #include "ActionOwnerInterface.h"
+#include "FactionAgentInterface.h"
 
 #include "AISquad.h"
 #include "AIGeneric.generated.h"
@@ -23,7 +24,7 @@ class UActionManagerComponent;
  * 
  */
 UCLASS(Blueprintable)
-class AIEXTENSION_API AAIGeneric : public AAIController, public IActionOwnerInterface
+class AIEXTENSION_API AAIGeneric : public AAIController, public IActionOwnerInterface, public IFactionAgentInterface
 {
     GENERATED_UCLASS_BODY()
 
@@ -63,6 +64,9 @@ public:
     ECombatState State;
 
 private:
+
+    UPROPERTY(EditAnywhere, Category = AI)
+    FFaction Faction;
 
     /** Handle for efficient management of Respawn timer */
     FTimerHandle TimerHandle_Respawn;
@@ -108,7 +112,7 @@ public:
     * Squads                               *
     ***************************************/
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Squad)
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = AI)
     AAISquad* Squad;
 
 
@@ -132,6 +136,19 @@ public:
     UFUNCTION(BlueprintPure, Category = Squad)
     UClass* GetSquadOrder() const;
 
+
+    /***************************************
+    * Factions                             *
+    ***************************************/
+
+    /** Retrieve faction identifier in form of Faction */
+    virtual FFaction GetFaction() const override;
+
+    /** Assigns faction */
+    virtual void SetFaction(const FFaction& InFaction) override;
+
+    virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override { SetFaction(FFaction(NewTeamID)); }
+    virtual FGenericTeamId GetGenericTeamId() const override { return GetFaction().GetTeam(); }
 
 
     /***************************************

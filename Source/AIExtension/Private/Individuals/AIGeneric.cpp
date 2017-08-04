@@ -152,6 +152,18 @@ UClass* AAIGeneric::GetSquadOrder() const
     return Squad->CurrentOrder->GetClass();
 }
 
+FFaction AAIGeneric::GetFaction() const
+{
+    const FFaction EventFaction = EventGetFaction();
+    return EventFaction.IsNone() ? Faction : EventFaction;
+}
+
+void AAIGeneric::SetFaction(const FFaction & InFaction)
+{
+    Faction = InFaction;
+    EventSetFaction(InFaction);
+}
+
 
 void AAIGeneric::SetDynamicSubBehavior(FName GameplayTag, UBehaviorTree* SubBehavior)
 {
