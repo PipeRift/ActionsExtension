@@ -26,7 +26,7 @@ public:
 
     /** Retrieve faction identifier in form of Faction */
     UFUNCTION(BlueprintImplementableEvent, Category = Faction, meta = (DisplayName = "GetFaction"))
-    FFaction EventGetFaction() const;
+    void EventGetFaction(FFaction& OutFaction) const;
 
     /** Assigns faction */
     UFUNCTION(BlueprintImplementableEvent, Category = Faction, meta = (DisplayName = "SetFaction"))

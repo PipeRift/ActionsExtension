@@ -14,7 +14,9 @@ UFactionAgentInterface::UFactionAgentInterface(const FObjectInitializer& ObjectI
 
 FFaction IFactionAgentInterface::GetFaction() const
 {
-    return EventGetFaction();
+    FFaction Faction;
+    EventGetFaction(Faction);
+    return Faction;
 }
 
 void IFactionAgentInterface::SetFaction(const FFaction & Faction)

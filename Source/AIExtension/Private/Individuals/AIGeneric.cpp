@@ -15,8 +15,6 @@ static ConstructorHelpers::FObjectFinderOptional<UBehaviorTree> GenericBehavior(
 
 AAIGeneric::AAIGeneric(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-
-    AIPerceptionComponent = ObjectInitializer.CreateDefaultSubobject<UAIPerceptionComponent>(this, TEXT("Perception"));
     ActionManagerComponent  = ObjectInitializer.CreateDefaultSubobject<UActionManagerComponent>(this, TEXT("Action Manager"));
     
  	BlackboardComp = ObjectInitializer.CreateDefaultSubobject<UBlackboardComponent>(this, TEXT("BlackBoard"));
@@ -25,6 +23,12 @@ AAIGeneric::AAIGeneric(const FObjectInitializer& ObjectInitializer) : Super(Obje
     BaseBehavior = GenericBehavior.Get();
 
     State = ECombatState::Passive;
+    Faction = FFaction::NoFaction;
+}
+
+void AAIGeneric::OnConstruction(const FTransform& Transform)
+{
+    Super::OnConstruction(Transform);
 }
 
 void AAIGeneric::Possess(APawn* InPawn)
@@ -152,16 +156,22 @@ UClass* AAIGeneric::GetSquadOrder() const
     return Squad->CurrentOrder->GetClass();
 }
 
+
+/***************************************
+* Squads                               *
+***************************************/
+
 FFaction AAIGeneric::GetFaction() const
 {
-    const FFaction EventFaction = EventGetFaction();
+    FFaction EventFaction;
+    Execute_EventGetFaction(this, EventFaction);
     return EventFaction.IsNone() ? Faction : EventFaction;
 }
 
 void AAIGeneric::SetFaction(const FFaction & InFaction)
 {
     Faction = InFaction;
-    EventSetFaction(InFaction);
+    Execute_EventSetFaction(this, InFaction);
 }
 
 

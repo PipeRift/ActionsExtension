@@ -4,6 +4,7 @@
 
 #include "AIController.h"
 #include "Perception/AIPerceptionComponent.h"
+#include "Perception/AISenseConfig_Sight.h"
 
 #include "ActionOwnerInterface.h"
 #include "FactionAgentInterface.h"
@@ -29,7 +30,7 @@ class AIEXTENSION_API AAIGeneric : public AAIController, public IActionOwnerInte
     GENERATED_UCLASS_BODY()
 
     AAIGeneric();
-
+    virtual void OnConstruction(const FTransform& Transform) override;
 
 private:
 
@@ -38,15 +39,12 @@ private:
 
 	/* Cached BT component */
 	UPROPERTY(Transient)
-	UBehaviorTreeComponent* BehaviorComp;
+    UBehaviorTreeComponent* BehaviorComp;
 
 public:
 
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
-    class UActionManagerComponent* ActionManagerComponent;
-
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
-    UAIPerceptionComponent* AIPerceptionComponent;
+    UPROPERTY(Category = AI, VisibleAnywhere, BlueprintReadOnly)
+    UActionManagerComponent* ActionManagerComponent;
 
     /** Behaviors */
 	UPROPERTY(EditAnywhere, Category = "AI|Behavior", meta = (DisplayName = "Base"))
@@ -142,9 +140,11 @@ public:
     ***************************************/
 
     /** Retrieve faction identifier in form of Faction */
+    UFUNCTION(BlueprintPure, Category = Faction)
     virtual FFaction GetFaction() const override;
 
     /** Assigns faction */
+    UFUNCTION(BlueprintCallable, Category = Faction)
     virtual void SetFaction(const FFaction& InFaction) override;
 
     virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override { SetFaction(FFaction(NewTeamID)); }
