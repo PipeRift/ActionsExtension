@@ -6,3 +6,11 @@
 
 
 
+void UAIAction::OnActivation()
+{
+    AI = Cast<AAIGeneric>(GetTaskOwnerActor());
+    if (!AI)
+        Abort();
+
+    Super::OnActivation();
+}

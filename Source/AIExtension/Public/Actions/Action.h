@@ -144,15 +144,13 @@ public:
     }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
-    FORCEINLINE bool IsRunning() const {
-        return IsValid() && State == ETaskState::RUNNING;
-    }
+    FORCEINLINE bool IsRunning() const { return IsValid() && State == ETaskState::RUNNING; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
     FORCEINLINE bool Succeeded() const { return IsValid() && State == ETaskState::SUCCESS; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
-    FORCEINLINE bool Failed() const { return IsValid() && State == ETaskState::FAILURE; }
+    FORCEINLINE bool Failed() const    { return IsValid() && State == ETaskState::FAILURE; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
     FORCEINLINE bool IsCanceled() const { return State == ETaskState::CANCELED; }

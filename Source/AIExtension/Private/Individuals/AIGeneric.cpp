@@ -41,6 +41,7 @@ void AAIGeneric::Possess(APawn* InPawn)
 		if (BaseBehavior->BlackboardAsset)
 		{
 			BlackboardComp->InitializeBlackboard(*BaseBehavior->BlackboardAsset);
+            BlackboardComp->SetValueAsObject(TEXT("SelfActor"), InPawn);
 		}
 
 		BehaviorComp->StartTree(*BaseBehavior);
@@ -186,8 +187,11 @@ void AAIGeneric::SetDynamicSubBehavior(FName GameplayTag, UBehaviorTree* SubBeha
 void AAIGeneric::SetState(ECombatState InState)
 {
     //Only allow State change when squad is not in a more important state
-    if (!IsInSquad() || Squad->GetState() < InState)
+    if (!IsInSquad() || Squad->GetState() < InState) {
         State = InState;
+        if (BlackboardComp)
+            BlackboardComp->SetValueAsEnum(TEXT("CombatState"), (uint8)InState);
+    }
 }
 
 const ECombatState AAIGeneric::GetState()

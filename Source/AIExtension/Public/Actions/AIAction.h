@@ -20,13 +20,5 @@ protected:
     UPROPERTY(BlueprintReadOnly, Category = "Action")
     AAIGeneric* AI;
 
-	virtual void OnActivation() override {
-        AI = Cast<AAIGeneric>(GetTaskOwnerActor());
-        if(!AI)
-            Abort();
-
-        Super::OnActivation();
-    }
-	
-	
+    virtual void OnActivation() override;
 };

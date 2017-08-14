@@ -8,8 +8,8 @@
 #include "FactionAgentInterface.generated.h"
 
 // This class does not need to be modified.
-UINTERFACE(MinimalAPI)
-class UFactionAgentInterface : public UGenericTeamAgentInterface
+UINTERFACE()
+class AIEXTENSION_API UFactionAgentInterface : public UGenericTeamAgentInterface
 {
     GENERATED_UINTERFACE_BODY()
 };
@@ -44,9 +44,27 @@ private:
     /** Retrieved owner attitude toward given Other object */
     virtual const ETeamAttitude::Type GetAttitudeTowards(const AActor& Other) const
     {
-        const IFactionAgentInterface* OtherFactionAgent = Cast<const IFactionAgentInterface>(&Other);
-        return OtherFactionAgent ? GetFaction().GetAttitudeTowards(OtherFactionAgent->GetFaction())
-            : ETeamAttitude::Neutral;
+        // OtherActor has Faction Agent Interface
+        if (Other.Implements<UFactionAgentInterface>())
+        {
+            const IFactionAgentInterface* OtherFactionAgent = Cast<IFactionAgentInterface>(&Other);
+            
+            FFaction OtherFaction;
+                
+            if (OtherFactionAgent)
+            {
+                //C++ Interface
+                OtherFaction = OtherFactionAgent->GetFaction();
+            }
+            else
+            {
+                //Blueprint Interface
+                IFactionAgentInterface::Execute_EventGetFaction(&Other, OtherFaction);
+            }
+
+            return GetFaction().GetAttitudeTowards(OtherFaction);
+        }
+        return ETeamAttitude::Neutral;
     }
 
     /** Begin GenericTeamAgent interface */
