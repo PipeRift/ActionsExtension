@@ -28,7 +28,7 @@ public:
     TArray<FFactionInfo> Factions;
 
     UPROPERTY(config, EditAnywhere, Category = Custom)
-    TSet<FFactionRelation> Relations;
+    TArray<FFactionRelation> Relations; //Moved from Set, serializing caused problems (4.16)
 
 protected:
 

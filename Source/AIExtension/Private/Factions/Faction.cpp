@@ -22,15 +22,15 @@ FFactionInfo* FFaction::GetFactionInfo() const
 }
 
 const ETeamAttitude::Type FFaction::GetAttitudeTowards(const FFaction& Other) const {
-    if (this->IsNone() || Other.IsNone()) {
-        return ETeamAttitude::Neutral;
-    }
-
     const UAIExtensionSettings* Settings = GetDefault<UAIExtensionSettings>();
 
-    const FFactionRelation* FoundRelationPtr = Settings->Relations.Find(FFactionRelation(*this, Other));
-    if (FoundRelationPtr == NULL)
+    const FFactionRelation* FoundRelationPtr = Settings->Relations.FindByKey(FFactionRelation(*this, Other));
+    if (FoundRelationPtr == NULL) {
+        //if (this->IsNone() || Other.IsNone()) {
+            //Default attitude for None Factions?
+        //}
         return ETeamAttitude::Neutral;
+    }
 
     return FoundRelationPtr->Attitude;
 }

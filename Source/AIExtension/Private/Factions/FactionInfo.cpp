@@ -26,13 +26,13 @@ void FFactionInfo::SetRelation(const FFaction& OtherFaction, const ETeamAttitude
 
     FFactionRelation InRelation(this->GetFaction(), OtherFaction, Attitude);
 
-    TSet<FFactionRelation>& Relations = GetMutableDefault<UAIExtensionSettings>()->Relations;
+    TArray<FFactionRelation>& Relations = GetMutableDefault<UAIExtensionSettings>()->Relations;
 
     //Remove possible similar relation
-    FFactionRelation* const FoundRelationPtr = Relations.Find(InRelation);
+    FFactionRelation* const FoundRelationPtr = Relations.FindByKey(InRelation);
     if (FoundRelationPtr == NULL) 
     {
-        Relations.Add(InRelation);
+        Relations.AddUnique(InRelation);
     }
     else
     {
