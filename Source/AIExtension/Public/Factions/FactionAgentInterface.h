@@ -32,8 +32,6 @@ public:
     UFUNCTION(BlueprintImplementableEvent, Category = Faction, meta = (DisplayName = "SetFaction"))
     void EventSetFaction(const FFaction& Faction);
 
-private:
-
 
     /** Retrieve faction identifier in form of Faction */
     virtual FFaction GetFaction() const;
@@ -42,30 +40,11 @@ private:
     virtual void SetFaction(const FFaction& Faction);
 
     /** Retrieved owner attitude toward given Other object */
-    virtual const ETeamAttitude::Type GetAttitudeTowards(const AActor& Other) const
-    {
-        // OtherActor has Faction Agent Interface
-        if (Other.Implements<UFactionAgentInterface>())
-        {
-            const IFactionAgentInterface* OtherFactionAgent = Cast<IFactionAgentInterface>(&Other);
-            
-            FFaction OtherFaction;
-                
-            if (OtherFactionAgent)
-            {
-                //C++ Interface
-                OtherFaction = OtherFactionAgent->GetFaction();
-            }
-            else
-            {
-                //Blueprint Interface
-                IFactionAgentInterface::Execute_EventGetFaction(&Other, OtherFaction);
-            }
+    virtual const ETeamAttitude::Type GetAttitudeTowards(const AActor& Other) const;
 
-            return GetFaction().GetAttitudeTowards(OtherFaction);
-        }
-        return ETeamAttitude::Neutral;
-    }
+    static const FFaction Execute_GetFaction(const AActor* Other);
+
+private:
 
     /** Begin GenericTeamAgent interface */
 

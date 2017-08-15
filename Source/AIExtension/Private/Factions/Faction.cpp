@@ -23,7 +23,7 @@ FFactionInfo* FFaction::GetFactionInfo() const
 
 const ETeamAttitude::Type FFaction::GetAttitudeTowards(const FFaction& Other) const {
     if (this->IsNone() || Other.IsNone()) {
-        return ETeamAttitude::Hostile;
+        return ETeamAttitude::Neutral;
     }
 
     const UAIExtensionSettings* Settings = GetDefault<UAIExtensionSettings>();

@@ -3,6 +3,9 @@
 #pragma once
 
 #include "Kismet/BlueprintFunctionLibrary.h"
+
+#include "GenericTeamAgentInterface.h"
+
 #include "AISquad.h"
 #include "BTD_CompareState.h"
 
@@ -27,6 +30,32 @@ public:
     static TSubclassOf<UNavArea> ProjectPointToNavArea(UObject* WorldContext, const FVector& Location, const FVector Extent = FVector(200,200,200), TSubclassOf<UNavigationQueryFilter> FilterClass = NULL, AController* Querier = NULL);
 
 
+    /***************************************/
+    /* Factions                            */
+    /***************************************/
+
+    UFUNCTION(BlueprintPure, Category = "Factions", meta = (CompactNodeTitle = "=="))
+    static FORCEINLINE bool Equals(const FFaction& A, const FFaction& B) {
+        return A == B;
+    }
+
+    UFUNCTION(BlueprintPure, Category = "Factions", meta = (CompactNodeTitle = "!="))
+        static FORCEINLINE bool NotEqual(const FFaction& A, const FFaction& B) {
+        return A != B;
+    }
+
+    UFUNCTION(BlueprintPure, Category = "Factions", meta = (DisplayName = "Get Attitude Towards"))
+    static const TEnumAsByte<ETeamAttitude::Type> GetInterfaceAttitudeTowards(TScriptInterface<IFactionAgentInterface> A, TScriptInterface<IFactionAgentInterface> B);
+
+    UFUNCTION(BlueprintPure, Category = "Factions")
+    static FORCEINLINE TEnumAsByte<ETeamAttitude::Type> GetAttitudeTowards(const FFaction& A, const FFaction& B) {
+        return A.GetAttitudeTowards(B);
+    }
+
+
+    /***************************************/
+    /* Enum To String                      */
+    /***************************************/
 
     /** Convert a combat state into a String */
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "AI|Combat", meta = (DisplayName = "ToString"))
