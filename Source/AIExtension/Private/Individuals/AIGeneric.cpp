@@ -6,7 +6,6 @@
 
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
-#include "BehaviorTree/BlackboardComponent.h"
 
 #include "Actions/ActionManagerComponent.h"
 
@@ -95,7 +94,7 @@ void AAIGeneric::Respawn()
 	GetWorld()->GetAuthGameMode()->RestartPlayer(this);
 }
 
-void AAIGeneric::StartCombat(AAIGeneric* InTarget)
+void AAIGeneric::StartCombat(APawn* InTarget)
 {
     if (!InTarget)
         return;
@@ -189,8 +188,7 @@ void AAIGeneric::SetState(ECombatState InState)
     //Only allow State change when squad is not in a more important state
     if (!IsInSquad() || Squad->GetState() < InState) {
         State = InState;
-        if (BlackboardComp)
-            BlackboardComp->SetValueAsEnum(TEXT("CombatState"), (uint8)InState);
+        BlackboardComp->SetValueAsEnum(TEXT("CombatState"), (uint8)InState);
     }
 }
 

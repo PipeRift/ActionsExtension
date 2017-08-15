@@ -5,6 +5,7 @@
 #include "AIController.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
+#include "BehaviorTree/BlackboardComponent.h"
 
 #include "ActionOwnerInterface.h"
 #include "FactionAgentInterface.h"
@@ -14,7 +15,6 @@
 
 
 class UBehaviorTreeComponent;
-class UBlackboardComponent;
 class UBehaviorTree;
 
 class UAction;
@@ -91,7 +91,7 @@ public:
 	void Respawn();
 
     UFUNCTION(BlueprintCallable, Category = "AI|Combat System")
-    void StartCombat(AAIGeneric* InTarget);
+    void StartCombat(APawn* InTarget);
 
     UFUNCTION(BlueprintCallable, Category = "AI|Combat System")
     void FinishCombat(ECombatState DestinationState = ECombatState::Alert);
@@ -103,6 +103,19 @@ public:
     /** Get the current State of this AI */
     UFUNCTION(BlueprintPure,     Category = "AI|Combat System")
     const ECombatState GetState();
+
+    /** Get the current combat Target of this AI */
+    UFUNCTION(BlueprintPure, Category = "AI|Combat System")
+    FORCEINLINE APawn* GetTarget() {
+        return Cast<APawn>(BlackboardComp->GetValueAsObject(TEXT("Target")));
+    }
+
+    /** Get the AI of the combat Target if existing */
+    UFUNCTION(BlueprintPure, Category = "AI|Combat System")
+    FORCEINLINE AAIGeneric* GetAITarget() {
+        const APawn* Target = GetTarget();
+        return Target ? Cast<AAIGeneric>(Target->GetController()) : nullptr;
+    }
 
 
 

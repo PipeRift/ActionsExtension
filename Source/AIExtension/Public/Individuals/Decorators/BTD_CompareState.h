@@ -36,8 +36,9 @@ public:
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Node, meta = (DisplayName = "Towards"))
     ECombatState State;
 
-    UFUNCTION(BlueprintCallable)
-    bool PerformConditionCheckAI(class AAIController* OwnerController);
 
+public:
+
+    virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
     virtual FString GetStaticDescription() const override;
 };

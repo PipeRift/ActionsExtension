@@ -9,36 +9,35 @@
 UBTD_CompareState::UBTD_CompareState()
     : Super()
 {
+    NodeName = TEXT("Compare State");
     Comparison = ECompareStateMode::Equals;
     State = ECombatState::Passive;
 }
 
-bool UBTD_CompareState::PerformConditionCheckAI(AAIController* OwnerController)
+bool UBTD_CompareState::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
-    const auto AIGen = Cast<AAIGeneric>(OwnerController);
-    if (!IsValid(AIGen))
-    {
+    AAIGeneric* AIOwner = Cast<AAIGeneric>(OwnerComp.GetAIOwner());
+    if (!IsValid(AIOwner))
         return false;
-    }
 
-    auto CurrentState = AIGen->State;
+    auto CurrentState = AIOwner->State;
 
     switch (Comparison)
     {
-        case ECompareStateMode::Equals:
-            return CurrentState == State;
-        case ECompareStateMode::Greater:
-            return CurrentState > State;
-        case ECompareStateMode::Less:
-            return CurrentState < State;
-        case ECompareStateMode::GreaterOrEqual:
-            return CurrentState >= State;
-        case ECompareStateMode::LessOrEqual:
-            return CurrentState <= State;
-        case ECompareStateMode::NotEqual:
-            return CurrentState != State;
-        default:
-            return false;
+    case ECompareStateMode::Equals:
+        return CurrentState == State;
+    case ECompareStateMode::Greater:
+        return CurrentState > State;
+    case ECompareStateMode::Less:
+        return CurrentState < State;
+    case ECompareStateMode::GreaterOrEqual:
+        return CurrentState >= State;
+    case ECompareStateMode::LessOrEqual:
+        return CurrentState <= State;
+    case ECompareStateMode::NotEqual:
+        return CurrentState != State;
+    default:
+        return false;
     }
 }
 
