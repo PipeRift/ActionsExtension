@@ -90,6 +90,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = AI)
 	void Respawn();
 
+    /* Start combat with InTarget */
     UFUNCTION(BlueprintCallable, Category = "AI|Combat System")
     void StartCombat(APawn* InTarget);
 
@@ -98,26 +99,40 @@ public:
 
     /** Set the current State of this AI */
     UFUNCTION(BlueprintCallable, Category = "AI|Combat System")
-    void SetState(const ECombatState InState);
+    const bool SetState(const ECombatState InState);
 
     /** Get the current State of this AI */
-    UFUNCTION(BlueprintPure,     Category = "AI|Combat System")
-    const ECombatState GetState();
+    UFUNCTION(BlueprintPure, Category = "AI|Combat System")
+    const ECombatState GetState() const;
 
     /** Get the current combat Target of this AI */
     UFUNCTION(BlueprintPure, Category = "AI|Combat System")
-    FORCEINLINE APawn* GetTarget() {
+    FORCEINLINE APawn* GetTarget() const {
         return Cast<APawn>(BlackboardComp->GetValueAsObject(TEXT("Target")));
     }
 
     /** Get the AI of the combat Target if existing */
     UFUNCTION(BlueprintPure, Category = "AI|Combat System")
-    FORCEINLINE AAIGeneric* GetAITarget() {
+    FORCEINLINE AAIGeneric* GetAITarget() const {
         const APawn* Target = GetTarget();
         return Target ? Cast<AAIGeneric>(Target->GetController()) : nullptr;
     }
 
+protected:
 
+    /** Check if this AI can start combat with Target */
+    virtual const bool CanAttack(APawn* Target) const;
+
+    /** Check if this AI can start combat with Target */
+    UFUNCTION(BlueprintNativeEvent, Category = "Combat", meta = (DisplayName = "Can Attack"))
+    bool ExecCanAttack(APawn* Target) const;
+
+    /** Check if this AI can start combat with Target */
+    UFUNCTION(BlueprintImplementableEvent, Category = "AI|Combat System")
+    void OnCombatStarted(APawn* Target);
+
+
+public:
 
     /***************************************
     * Squads                               *

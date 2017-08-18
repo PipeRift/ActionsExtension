@@ -25,11 +25,11 @@ class AIEXTENSION_API IFactionAgentInterface : public IGenericTeamAgentInterface
 public:
 
     /** Retrieve faction identifier in form of Faction */
-    UFUNCTION(BlueprintImplementableEvent, Category = Faction, meta = (DisplayName = "GetFaction"))
+    UFUNCTION(BlueprintImplementableEvent, Category = Faction, meta = (DisplayName = "Get Faction"))
     void EventGetFaction(FFaction& OutFaction) const;
 
     /** Assigns faction */
-    UFUNCTION(BlueprintImplementableEvent, Category = Faction, meta = (DisplayName = "SetFaction"))
+    UFUNCTION(BlueprintImplementableEvent, Category = Faction, meta = (DisplayName = "Set Faction"))
     void EventSetFaction(const FFaction& Faction);
 
 

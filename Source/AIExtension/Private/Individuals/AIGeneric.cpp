@@ -96,11 +96,12 @@ void AAIGeneric::Respawn()
 
 void AAIGeneric::StartCombat(APawn* InTarget)
 {
-    if (!InTarget || !IsHostileTowards(*InTarget))
+    if (!InTarget || !CanAttack(InTarget))
         return;
-
-    BlackboardComp->SetValueAsObject(TEXT("Target"), InTarget);
-    SetState(ECombatState::Combat);
+    if (SetState(ECombatState::Combat)) {
+        BlackboardComp->SetValueAsObject(TEXT("Target"), InTarget);
+        OnCombatStarted(InTarget);
+    }
 }
 
 void AAIGeneric::FinishCombat(ECombatState DestinationState /*= ECombatState::Alert*/)
@@ -124,6 +125,16 @@ void AAIGeneric::GameHasEnded(AActor* EndGameFocus, bool bIsWinner)
 
 	// Clear any target
     FinishCombat();
+}
+
+const bool AAIGeneric::CanAttack(APawn* Target) const
+{
+    return ExecCanAttack(Target);
+}
+
+bool AAIGeneric::ExecCanAttack_Implementation(APawn* Target) const
+{
+    return IsHostileTowards(*Target);
 }
 
 
@@ -183,16 +194,18 @@ void AAIGeneric::SetDynamicSubBehavior(FName GameplayTag, UBehaviorTree* SubBeha
     }
 }
 
-void AAIGeneric::SetState(ECombatState InState)
+const bool AAIGeneric::SetState(ECombatState InState)
 {
     //Only allow State change when squad is not in a more important state
     if (!IsInSquad() || Squad->GetState() < InState) {
         State = InState;
         BlackboardComp->SetValueAsEnum(TEXT("CombatState"), (uint8)InState);
+        return true;
     }
+    return false;
 }
 
-const ECombatState AAIGeneric::GetState()
+const ECombatState AAIGeneric::GetState() const
 {
     if (IsInSquad())
     {
