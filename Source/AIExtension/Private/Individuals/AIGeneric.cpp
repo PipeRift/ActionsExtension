@@ -96,7 +96,7 @@ void AAIGeneric::Respawn()
 
 void AAIGeneric::StartCombat(APawn* InTarget)
 {
-    if (!InTarget)
+    if (!InTarget || !IsHostileTowards(*InTarget))
         return;
 
     BlackboardComp->SetValueAsObject(TEXT("Target"), InTarget);

@@ -54,7 +54,7 @@ struct AIEXTENSION_API FFaction
     /**
      * Attitude evaluation
      */
-    FORCEINLINE bool IsHostileTo(const FFaction& Other) const {
+    FORCEINLINE bool IsHostileTowards(const FFaction& Other) const {
         return GetAttitudeTowards(Other) == ETeamAttitude::Hostile;
     }
 

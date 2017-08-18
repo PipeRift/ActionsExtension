@@ -39,8 +39,13 @@ public:
     /** Assigns faction */
     virtual void SetFaction(const FFaction& Faction);
 
-    /** Retrieved owner attitude toward given Other object */
+    /** Retrieve owner attitude towards given Other object */
     virtual const ETeamAttitude::Type GetAttitudeTowards(const AActor& Other) const;
+
+    /** Return if owner is hostile towards given Other object */
+    FORCEINLINE const bool IsHostileTowards(const AActor& Other) const {
+        return GetAttitudeTowards(Other) == ETeamAttitude::Hostile;
+    }
 
     static const FFaction Execute_GetFaction(const AActor* Other);
 
