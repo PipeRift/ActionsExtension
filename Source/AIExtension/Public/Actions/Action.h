@@ -14,7 +14,7 @@ DECLARE_LOG_CATEGORY_EXTERN(TaskLog, Log, All);
 /**
  * Result of a node execution
  */
-UENUM()
+UENUM(Blueprintable)
 enum class ETaskState : uint8
 {
     RUNNING  UMETA(DisplayName = "Running"),

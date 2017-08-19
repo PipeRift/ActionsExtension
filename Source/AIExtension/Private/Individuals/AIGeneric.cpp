@@ -96,10 +96,14 @@ void AAIGeneric::Respawn()
 
 void AAIGeneric::StartCombat(APawn* InTarget)
 {
-    if (!InTarget || !CanAttack(InTarget))
+    if (!CanAttack(InTarget))
         return;
-    if (SetState(ECombatState::Combat)) {
+
+    if (SetState(ECombatState::Combat))
+    {
         BlackboardComp->SetValueAsObject(TEXT("Target"), InTarget);
+
+        AddPotentialTarget(InTarget);
         OnCombatStarted(InTarget);
     }
 }
@@ -129,12 +133,47 @@ void AAIGeneric::GameHasEnded(AActor* EndGameFocus, bool bIsWinner)
 
 const bool AAIGeneric::CanAttack(APawn* Target) const
 {
-    return ExecCanAttack(Target);
+    return Target && Target != GetPawn() && (!IsInCombat() || Target != GetTarget()) && ExecCanAttack(Target);
 }
 
 bool AAIGeneric::ExecCanAttack_Implementation(APawn* Target) const
 {
     return IsHostileTowards(*Target);
+}
+
+
+/***************************************
+* Potential Targets                    *
+***************************************/
+
+void AAIGeneric::AddPotentialTarget(APawn* Target)
+{
+    if (CanAttack(Target))
+    {
+        PotentialTargets.Add(Target);
+
+        //Start combat if this is the first potential target
+        if (!IsInCombat() && GetTarget() != Target)
+            StartCombat(Target);
+    }
+}
+
+void AAIGeneric::RemovePotentialTarget(APawn* Target)
+{
+    if (!Target)
+        return;
+
+    PotentialTargets.Remove(Target);
+
+    //Finish combat if the target is the same
+    if (IsInCombat() && GetTarget() == Target)
+    {
+        FinishCombat();
+        if (PotentialTargets.Num() > 0)
+        {
+            StartCombat(PotentialTargets.Array()[0]);
+        }
+    }
 }
 
 

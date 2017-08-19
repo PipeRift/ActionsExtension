@@ -66,6 +66,9 @@ private:
     UPROPERTY(EditAnywhere, Category = AI)
     FFaction Faction;
 
+    UPROPERTY(Transient)
+    TSet<APawn*> PotentialTargets;
+
     /** Handle for efficient management of Respawn timer */
     FTimerHandle TimerHandle_Respawn;
 
@@ -105,6 +108,9 @@ public:
     UFUNCTION(BlueprintPure, Category = "AI|Combat System")
     const ECombatState GetState() const;
 
+    UFUNCTION(BlueprintPure, Category = "AI|Combat System")
+    FORCEINLINE bool IsInCombat() const { return GetTarget() && GetState() == ECombatState::Combat; }
+
     /** Get the current combat Target of this AI */
     UFUNCTION(BlueprintPure, Category = "AI|Combat System")
     FORCEINLINE APawn* GetTarget() const {
@@ -133,6 +139,30 @@ protected:
 
 
 public:
+
+    /***************************************
+    * Potential Targets                    *
+    ***************************************/
+
+    /** Get all potential targets */
+    const TSet<APawn*>& GetPotentialTargetsRef() const {
+        return PotentialTargets;
+    }
+
+    /** Get all potential targets */
+    UFUNCTION(BlueprintPure, Category = "AI|Combat System")
+    FORCEINLINE TSet<APawn*> GetPotentialTargets() const {
+        return PotentialTargets;
+    }
+
+    /** Add a new potential target */
+    UFUNCTION(BlueprintCallable, Category = "AI|Combat System")
+    void AddPotentialTarget(APawn* Target);
+
+    /** Remove a new potential target */
+    UFUNCTION(BlueprintCallable, Category = "AI|Combat System")
+    void RemovePotentialTarget(APawn* Target);
+
 
     /***************************************
     * Squads                               *
