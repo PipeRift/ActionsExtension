@@ -35,6 +35,18 @@ public class AIExtension : ModuleRules
             "GameplayTags"
         });
 
+
+        if (UEBuildConfiguration.bBuildEditor == true)
+        {
+            PrivateDependencyModuleNames.AddRange(
+                new string[]
+                {
+                    "SlateCore",
+                    "Slate"
+                }
+            );
+        }
+
         if (UEBuildConfiguration.bBuildDeveloperTools || (Target.Configuration != UnrealTargetConfiguration.Shipping && Target.Configuration != UnrealTargetConfiguration.Test))
         {
             PrivateDependencyModuleNames.Add("GameplayDebugger");

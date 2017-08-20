@@ -6,20 +6,29 @@
 
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
+#include "EnvironmentQuery/EnvQueryManager.h"
+#include "EnvironmentQuery/EnvQueryOption.h"
+#include "Framework/Notifications/NotificationManager.h"
+#include "Widgets/Notifications/SNotificationList.h"
 
 #include "Actions/ActionManagerComponent.h"
+#include "EnvQueryGenerator_Context.h"
+#include "EnvQueryContext_PotentialTargets.h"
 
+#define LOCTEXT_NAMESPACE "AAIGeneric"
 
-static ConstructorHelpers::FObjectFinderOptional<UBehaviorTree> GenericBehavior(TEXT("/AIExtension/Base/Individuals/BT_Generic"));
+static const TCHAR* TargetFilterAsset = TEXT("/AIExtension/Base/Individuals/EQS/TargetFilter");
 
 AAIGeneric::AAIGeneric(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
+
     ActionManagerComponent  = ObjectInitializer.CreateDefaultSubobject<UActionManagerComponent>(this, TEXT("Action Manager"));
     
  	BlackboardComp = ObjectInitializer.CreateDefaultSubobject<UBlackboardComponent>(this, TEXT("BlackBoard"));
 	BrainComponent = BehaviorComp = ObjectInitializer.CreateDefaultSubobject<UBehaviorTreeComponent>(this, TEXT("Behavior"));	
 
-    BaseBehavior = GenericBehavior.Get();
+    TargetFilter = LoadObject<UEnvQuery>(NULL, TargetFilterAsset);
+    BaseBehavior = LoadObject<UBehaviorTree>(NULL, TEXT("/AIExtension/Base/Individuals/BT_Generic"));
 
     State = ECombatState::Passive;
     Faction = FFaction::NoFaction;
@@ -176,6 +185,44 @@ void AAIGeneric::RemovePotentialTarget(APawn* Target)
     }
 }
 
+void AAIGeneric::TrySelectPotentialTarget()
+{
+    if(IsValidTargetFilter())
+    {
+        FEnvQueryRequest TargetFilterRequest = FEnvQueryRequest(TargetFilter, this);
+        TargetFilterRequest.Execute(EEnvQueryRunMode::SingleResult, this, &AAIGeneric::OnTargetSelectionFinished);
+    }
+}
+
+
+void AAIGeneric::OnTargetSelectionFinished(TSharedPtr<FEnvQueryResult> Result)
+{
+
+}
+
+const bool AAIGeneric::IsValidTargetFilter() const
+{
+    if (!TargetFilter)
+        return false;
+
+    const TArray<UEnvQueryOption*>& Options = TargetFilter->GetOptions();
+
+    //No Generators!
+    if (Options.Num() < 1)
+        return false;
+
+    for (auto It = Options.CreateConstIterator(); It; ++It)
+    {
+        const UEnvQueryGenerator_Context* ContextGenerator = Cast<UEnvQueryGenerator_Context>((*It)->Generator);
+        if (!ContextGenerator || ContextGenerator->Source != UEnvQueryContext_PotentialTargets::StaticClass())
+        {
+            //Any generator is not Context type or its context is not potential targets
+            return false;
+        }
+    }
+    return true;
+}
+
 
 /***************************************
 * Squads                               *
@@ -252,3 +299,34 @@ const ECombatState AAIGeneric::GetState() const
     }
     return  State;
 }
+
+#if WITH_EDITOR
+void AAIGeneric::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+    if (PropertyChangedEvent.Property != nullptr)
+    {
+        const FName PropertyName(PropertyChangedEvent.Property->GetFName());
+
+        if (PropertyName == GET_MEMBER_NAME_CHECKED(AAIGeneric, TargetFilter))
+        {
+            if (!IsValidTargetFilter())
+            {
+                if (!TargetFilter)
+                    return;
+
+                FText Message = FText::Format(LOCTEXT("TargetFilterEQSNotValid", "EnvQuery {0} must use 'EnvQueryGenerator_Context' with 'EnvQueryContext_PotentialTargets' as Source."), FText::FromString(TargetFilter->GetName()));
+                UE_LOG(LogTemp, Warning, TEXT("%s"), *Message.ToString());
+
+                FNotificationInfo Info(Message);
+                Info.ExpireDuration = 3.0f;
+                FSlateNotificationManager::Get().AddNotification(Info);
+
+                //Set default
+                TargetFilter = LoadObject<UEnvQuery>(NULL, TargetFilterAsset);
+            }
+        }
+    }
+}
+#endif //WITH_EDITOR
+
+#undef LOCTEXT_NAMESPACE

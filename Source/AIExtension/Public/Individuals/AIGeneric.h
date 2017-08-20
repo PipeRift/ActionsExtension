@@ -6,6 +6,8 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "EnvironmentQuery/EnvQuery.h"
+#include "EnvironmentQuery/EnvQueryTypes.h"
 
 #include "ActionOwnerInterface.h"
 #include "FactionAgentInterface.h"
@@ -46,16 +48,20 @@ public:
     UPROPERTY(Category = AI, VisibleAnywhere, BlueprintReadOnly)
     UActionManagerComponent* ActionManagerComponent;
 
+    /** Queries */
+    UPROPERTY(EditAnywhere, Category = "AI|Targets")
+    UEnvQuery* TargetFilter;
+
     /** Behaviors */
-	UPROPERTY(EditAnywhere, Category = "AI|Behavior", meta = (DisplayName = "Base"))
+	UPROPERTY(EditAnywhere, Category = "AI|Behaviors", meta = (DisplayName = "Base"))
     UBehaviorTree* BaseBehavior;
-    UPROPERTY(EditAnywhere, Category = "AI|Behavior", meta = (DisplayName = "Combat", DisplayThumbnail = false))
+    UPROPERTY(EditAnywhere, Category = "AI|Behaviors", meta = (DisplayName = "Combat", DisplayThumbnail = false))
     UBehaviorTree* CombatBehavior;
-    UPROPERTY(EditAnywhere, Category = "AI|Behavior", meta = (DisplayName = "Alert", DisplayThumbnail = false))
+    UPROPERTY(EditAnywhere, Category = "AI|Behaviors", meta = (DisplayName = "Alert", DisplayThumbnail = false))
     UBehaviorTree* AlertBehavior;
     UPROPERTY(EditAnywhere, Category = "AI|Behavior", meta = (DisplayName = "Suspicion", DisplayThumbnail = false))
     UBehaviorTree* SuspicionBehavior;
-    UPROPERTY(EditAnywhere, Category = "AI|Behavior", meta = (DisplayName = "Passive", DisplayThumbnail = false))
+    UPROPERTY(EditAnywhere, Category = "AI|Behaviors", meta = (DisplayName = "Passive", DisplayThumbnail = false))
     UBehaviorTree* PassiveBehavior;
 
     UPROPERTY(EditAnywhere, Category = AI)
@@ -163,6 +169,13 @@ public:
     UFUNCTION(BlueprintCallable, Category = "AI|Combat System")
     void RemovePotentialTarget(APawn* Target);
 
+    /** Search for a new target */
+    UFUNCTION(BlueprintCallable, Category = "AI|Combat System")
+    void TrySelectPotentialTarget();
+
+    void OnTargetSelectionFinished(TSharedPtr<FEnvQueryResult> Result);
+
+    const bool IsValidTargetFilter() const;
 
     /***************************************
     * Squads                               *
@@ -228,4 +241,8 @@ private:
     ***************************************/
 
     void SetDynamicSubBehavior(FName GameplayTag, UBehaviorTree* SubBehavior);
+
+#if WITH_EDITOR
+    virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif //WITH_EDITOR
 };
