@@ -48,9 +48,18 @@ public:
     UPROPERTY(Category = AI, VisibleAnywhere, BlueprintReadOnly)
     UActionManagerComponent* ActionManagerComponent;
 
-    /** Queries */
-    UPROPERTY(EditAnywhere, Category = "AI|Targets")
-    UEnvQuery* TargetFilter;
+    /** Targets */
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Targets")
+    bool bScanPotentialTargets;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Targets")
+    UEnvQuery* ScanQuery;
+
+    /* Potential target scan rate in seconds */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Targets")
+    float TargetScanRate;
+
 
     /** Behaviors */
 	UPROPERTY(EditAnywhere, Category = "AI|Behaviors", meta = (DisplayName = "Base"))
@@ -59,7 +68,7 @@ public:
     UBehaviorTree* CombatBehavior;
     UPROPERTY(EditAnywhere, Category = "AI|Behaviors", meta = (DisplayName = "Alert", DisplayThumbnail = false))
     UBehaviorTree* AlertBehavior;
-    UPROPERTY(EditAnywhere, Category = "AI|Behavior", meta = (DisplayName = "Suspicion", DisplayThumbnail = false))
+    UPROPERTY(EditAnywhere, Category = "AI|Behaviors", meta = (DisplayName = "Suspicion", DisplayThumbnail = false))
     UBehaviorTree* SuspicionBehavior;
     UPROPERTY(EditAnywhere, Category = "AI|Behaviors", meta = (DisplayName = "Passive", DisplayThumbnail = false))
     UBehaviorTree* PassiveBehavior;
@@ -72,11 +81,20 @@ private:
     UPROPERTY(EditAnywhere, Category = AI)
     FFaction Faction;
 
+    UPROPERTY(EditAnywhere, Category = AI)
+    float ReactionTime;
+
     UPROPERTY(Transient)
     TSet<APawn*> PotentialTargets;
 
+    /** Handle for efficient management of Reaction timer */
+    FTimerHandle TimerHandle_Reaction;
+
     /** Handle for efficient management of Respawn timer */
     FTimerHandle TimerHandle_Respawn;
+
+    /** Handle for efficient management of Target Scan timer */
+    FTimerHandle TimerHandle_TargetScan;
 
 
 public:
@@ -139,9 +157,13 @@ protected:
     UFUNCTION(BlueprintNativeEvent, Category = "Combat", meta = (DisplayName = "Can Attack"))
     bool ExecCanAttack(APawn* Target) const;
 
-    /** Check if this AI can start combat with Target */
+    /** Called after combat started */
     UFUNCTION(BlueprintImplementableEvent, Category = "AI|Combat System")
     void OnCombatStarted(APawn* Target);
+
+    /** Check after combat finished */
+    UFUNCTION(BlueprintImplementableEvent, Category = "AI|Combat System")
+    void OnCombatFinished(APawn* Target);
 
 
 public:
@@ -171,11 +193,11 @@ public:
 
     /** Search for a new target */
     UFUNCTION(BlueprintCallable, Category = "AI|Combat System")
-    void TrySelectPotentialTarget();
+    void TryScanPotentialTarget();
 
     void OnTargetSelectionFinished(TSharedPtr<FEnvQueryResult> Result);
 
-    const bool IsValidTargetFilter() const;
+    const bool IsValidScanQuery() const;
 
     /***************************************
     * Squads                               *

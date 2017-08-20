@@ -21,17 +21,20 @@ static const TCHAR* TargetFilterAsset = TEXT("/AIExtension/Base/Individuals/EQS/
 
 AAIGeneric::AAIGeneric(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-
     ActionManagerComponent  = ObjectInitializer.CreateDefaultSubobject<UActionManagerComponent>(this, TEXT("Action Manager"));
     
  	BlackboardComp = ObjectInitializer.CreateDefaultSubobject<UBlackboardComponent>(this, TEXT("BlackBoard"));
 	BrainComponent = BehaviorComp = ObjectInitializer.CreateDefaultSubobject<UBehaviorTreeComponent>(this, TEXT("Behavior"));	
 
-    TargetFilter = LoadObject<UEnvQuery>(NULL, TargetFilterAsset);
     BaseBehavior = LoadObject<UBehaviorTree>(NULL, TEXT("/AIExtension/Base/Individuals/BT_Generic"));
 
     State = ECombatState::Passive;
     Faction = FFaction::NoFaction;
+    ReactionTime = 0.2f;
+
+    bScanPotentialTargets = true;
+    ScanQuery = LoadObject<UEnvQuery>(NULL, TargetFilterAsset);
+    TargetScanRate = 0.3f;
 }
 
 void AAIGeneric::OnConstruction(const FTransform& Transform)
@@ -58,6 +61,8 @@ void AAIGeneric::Possess(APawn* InPawn)
         SetDynamicSubBehavior(FAIExtensionModule::FBehaviorTags::Suspicion, SuspicionBehavior);
         SetDynamicSubBehavior(FAIExtensionModule::FBehaviorTags::Passive,   PassiveBehavior);
 	}
+
+    GetWorldTimerManager().SetTimer(TimerHandle_TargetScan, this, &AAIGeneric::TryScanPotentialTarget, TargetScanRate);
 }
 
 void AAIGeneric::UnPossess()
@@ -105,8 +110,12 @@ void AAIGeneric::Respawn()
 
 void AAIGeneric::StartCombat(APawn* InTarget)
 {
-    if (!CanAttack(InTarget))
+    if (!CanAttack(InTarget) || (IsInCombat() && InTarget == GetTarget()))
         return;
+
+    //Is already in combat? Finish it!
+    if (IsInCombat())
+        FinishCombat(ECombatState::Alert);
 
     if (SetState(ECombatState::Combat))
     {
@@ -119,10 +128,13 @@ void AAIGeneric::StartCombat(APawn* InTarget)
 
 void AAIGeneric::FinishCombat(ECombatState DestinationState /*= ECombatState::Alert*/)
 {
-    if (State != ECombatState::Combat || DestinationState == ECombatState::Combat)
+    if (!IsInCombat() || DestinationState == ECombatState::Combat)
         return;
 
+    APawn* CurrentTarget = GetTarget();
     SetState(DestinationState);
+
+    OnCombatStarted(CurrentTarget);
 }
 
 void AAIGeneric::GameHasEnded(AActor* EndGameFocus, bool bIsWinner)
@@ -142,7 +154,9 @@ void AAIGeneric::GameHasEnded(AActor* EndGameFocus, bool bIsWinner)
 
 const bool AAIGeneric::CanAttack(APawn* Target) const
 {
-    return Target && Target != GetPawn() && (!IsInCombat() || Target != GetTarget()) && ExecCanAttack(Target);
+    if (!Target || Target == GetPawn() || !IsHostileTowards(*Target))
+        return false;
+    return ExecCanAttack(Target);
 }
 
 bool AAIGeneric::ExecCanAttack_Implementation(APawn* Target) const
@@ -163,7 +177,19 @@ void AAIGeneric::AddPotentialTarget(APawn* Target)
 
         //Start combat if this is the first potential target
         if (!IsInCombat() && GetTarget() != Target)
-            StartCombat(Target);
+        {
+            //Wait for reaction time
+            FTimerDelegate Callback;
+            Callback.BindLambda([Target, this]
+            {
+                //Repeat check later
+                if (!IsInCombat() && GetTarget() != Target)
+                {
+                    StartCombat(Target);
+                }
+            });
+            GetWorldTimerManager().SetTimer(TimerHandle_Reaction, Callback, ReactionTime, false);
+        }
     }
 }
 
@@ -185,27 +211,43 @@ void AAIGeneric::RemovePotentialTarget(APawn* Target)
     }
 }
 
-void AAIGeneric::TrySelectPotentialTarget()
+void AAIGeneric::TryScanPotentialTarget()
 {
-    if(IsValidTargetFilter())
+    if(bScanPotentialTargets && IsValidScanQuery())
     {
-        FEnvQueryRequest TargetFilterRequest = FEnvQueryRequest(TargetFilter, this);
+        FEnvQueryRequest TargetFilterRequest = FEnvQueryRequest(ScanQuery, this);
         TargetFilterRequest.Execute(EEnvQueryRunMode::SingleResult, this, &AAIGeneric::OnTargetSelectionFinished);
     }
+
+    GetWorldTimerManager().SetTimer(TimerHandle_TargetScan, this, &AAIGeneric::TryScanPotentialTarget, TargetScanRate);
 }
 
 
 void AAIGeneric::OnTargetSelectionFinished(TSharedPtr<FEnvQueryResult> Result)
 {
+    TArray<AActor*> Results;
+    Result->GetAllAsActors(Results);
 
+    //No results!
+    if (Results.Num() < 1)
+        return;
+
+    APawn* NewTarget = Cast<APawn>(Results[0]);
+
+    //No results!
+    if (!NewTarget)
+        return;
+
+    //A more important target has been found, attack him
+    StartCombat(NewTarget);
 }
 
-const bool AAIGeneric::IsValidTargetFilter() const
+const bool AAIGeneric::IsValidScanQuery() const
 {
-    if (!TargetFilter)
+    if (!ScanQuery)
         return false;
 
-    const TArray<UEnvQueryOption*>& Options = TargetFilter->GetOptions();
+    const TArray<UEnvQueryOption*>& Options = ScanQuery->GetOptions();
 
     //No Generators!
     if (Options.Num() < 1)
@@ -307,14 +349,14 @@ void AAIGeneric::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
     {
         const FName PropertyName(PropertyChangedEvent.Property->GetFName());
 
-        if (PropertyName == GET_MEMBER_NAME_CHECKED(AAIGeneric, TargetFilter))
+        if (PropertyName == GET_MEMBER_NAME_CHECKED(AAIGeneric, ScanQuery))
         {
-            if (!IsValidTargetFilter())
+            if (!IsValidScanQuery())
             {
-                if (!TargetFilter)
+                if (!ScanQuery)
                     return;
 
-                FText Message = FText::Format(LOCTEXT("TargetFilterEQSNotValid", "EnvQuery {0} must use 'EnvQueryGenerator_Context' with 'EnvQueryContext_PotentialTargets' as Source."), FText::FromString(TargetFilter->GetName()));
+                FText Message = FText::Format(LOCTEXT("TargetFilterEQSNotValid", "EnvQuery {0} must use 'EnvQueryGenerator_Context' with 'EnvQueryContext_PotentialTargets' as Source."), FText::FromString(ScanQuery->GetName()));
                 UE_LOG(LogTemp, Warning, TEXT("%s"), *Message.ToString());
 
                 FNotificationInfo Info(Message);
@@ -322,7 +364,7 @@ void AAIGeneric::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
                 FSlateNotificationManager::Get().AddNotification(Info);
 
                 //Set default
-                TargetFilter = LoadObject<UEnvQuery>(NULL, TargetFilterAsset);
+                ScanQuery = LoadObject<UEnvQuery>(NULL, TargetFilterAsset);
             }
         }
     }

@@ -22,7 +22,4 @@ class AIEXTENSION_API UEnvQueryGenerator_Context : public UEnvQueryGenerator
 
     virtual FText GetDescriptionTitle() const override;
     virtual FText GetDescriptionDetails() const override;
-	
-	
-	
 };
