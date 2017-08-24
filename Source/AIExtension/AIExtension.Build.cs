@@ -26,7 +26,8 @@ public class AIExtension : ModuleRules
 			"CoreUObject",
 			"Engine",
             "GameplayTasks",
-            "AIModule"
+            "AIModule",
+            "MovieSceneTracks"
 			// ... add other public dependencies that you statically link with here ...
 		});
 
