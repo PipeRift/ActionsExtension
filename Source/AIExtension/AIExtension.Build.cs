@@ -4,8 +4,8 @@ using UnrealBuildTool;
 
 public class AIExtension : ModuleRules
 {
-	public AIExtension(TargetInfo Target)
-	{
+	public AIExtension(ReadOnlyTargetRules Target) : base(Target)
+    {
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
