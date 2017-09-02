@@ -4,7 +4,7 @@ using UnrealBuildTool;
 
 public class AIExtensionEditor : ModuleRules
 {
-	public AIExtensionEditor(ReadOnlyTargetRules Target) : base(Target)
+	public AIExtensionEditor(ReadOnlyTargetRules TargetRules) : base(TargetRules)
     {
 		
 		PublicIncludePaths.AddRange(
@@ -54,6 +54,7 @@ public class AIExtensionEditor : ModuleRules
                 "DetailCustomizations",
                 "ContentBrowser",
                 "Settings",
+                "AIModule",
                 "AIExtension"
 				// ... add private dependencies that you statically link with here ...	
 			}
