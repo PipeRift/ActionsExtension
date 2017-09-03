@@ -14,15 +14,15 @@
 	"IsBetaVersion": true,
 	"Installed": false,
 	"Modules": [
-		{
-			"Name": "AIExtension",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "AIExtensionEditor",
-			"Type": "Editor",
-			"LoadingPhase": "PostEngineInit"
-		}
+    {
+      "Name": "AIExtension",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    },
+    {
+	    "Name": "AIExtensionEditor",
+	    "Type": "Editor",
+	    "LoadingPhase": "PostEngineInit"
+    }
 	]
 }

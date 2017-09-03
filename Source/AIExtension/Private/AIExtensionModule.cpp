@@ -1,7 +1,7 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 
 #include "AIExtensionPrivatePCH.h"
-#include "GameplayTagsManager.h"
+#include "AITags.h"
 
 // Settings
 #include "AIExtensionSettings.h"
@@ -10,18 +10,14 @@ DEFINE_LOG_CATEGORY(LogAIExtension)
 
 #define LOCTEXT_NAMESPACE "AIExtensionModule"
 
-FName FAIExtensionModule::FBehaviorTags::Combat   (TEXT("AI.Behavior.Combat"));
-FName FAIExtensionModule::FBehaviorTags::Alert    (TEXT("AI.Behavior.Alert"));
-FName FAIExtensionModule::FBehaviorTags::Suspicion(TEXT("AI.Behavior.Suspicion"));
-FName FAIExtensionModule::FBehaviorTags::Passive  (TEXT("AI.Behavior.Passive"));
 
 void FAIExtensionModule::StartupModule()
 {
     UE_LOG(LogAIExtension, Warning, TEXT("AIExtension: Log Started"));
 
     // This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-
-    LoadGameplayTags();
+    
+    UAITags::RegisterGameplayTags();
 
     RegisterSettings();
 }
@@ -77,16 +73,6 @@ void FAIExtensionModule::UnregisterSettings()
         SettingsModule->UnregisterSettings("Project", "Game", "AIExtension");
     }
 #endif
-}
-
-void FAIExtensionModule::LoadGameplayTags()
-{
-    UGameplayTagsManager& GameplayTags = UGameplayTagsManager::Get();
-
-    GameplayTags.AddNativeGameplayTag(FBehaviorTags::Passive);
-    GameplayTags.AddNativeGameplayTag(FBehaviorTags::Suspicion);
-    GameplayTags.AddNativeGameplayTag(FBehaviorTags::Alert);
-    GameplayTags.AddNativeGameplayTag(FBehaviorTags::Combat);
 }
 
 bool FAIExtensionModule::HandleSettingsSaved()

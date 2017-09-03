@@ -262,7 +262,7 @@ private:
     * HELPERS                              *
     ***************************************/
 
-    void SetDynamicSubBehavior(FName GameplayTag, UBehaviorTree* SubBehavior);
+    void SetCombatSubBehavior(ECombatState State, UBehaviorTree* SubBehavior);
 
 #if WITH_EDITOR
     virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
