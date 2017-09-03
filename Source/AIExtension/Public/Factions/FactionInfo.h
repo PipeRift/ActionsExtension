@@ -56,7 +56,7 @@ struct AIEXTENSION_API FFactionRelation
 /**
  * Struct containing information about a faction. Static use.
  */
-USTRUCT()
+USTRUCT(BlueprintType)
 struct AIEXTENSION_API FFactionInfo
 {
     GENERATED_USTRUCT_BODY()

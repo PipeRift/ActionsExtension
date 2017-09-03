@@ -30,7 +30,7 @@ void UEnvQueryGenerator_Context::GenerateItems(FEnvQueryInstance& QueryInstance)
         return;
     }
 
-    UWorld* World = GEngine->GetWorldFromContextObject(QueryOwner);
+    UWorld* World = GEngine->GetWorldFromContextObject(QueryOwner, EGetWorldErrorMode::ReturnNull);
     if (World == nullptr)
     {
         return;

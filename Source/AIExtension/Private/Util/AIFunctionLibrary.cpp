@@ -10,10 +10,10 @@ TSubclassOf<UNavArea> UAIFunctionLibrary::ProjectPointToNavArea(UObject* WorldCo
     UWorld* World = NULL;
 
     if (WorldContext != NULL)
-        World = GEngine->GetWorldFromContextObject(WorldContext);
+        World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull);
 
     if (World == NULL && Querier != NULL)
-        World = GEngine->GetWorldFromContextObject(Querier);
+        World = GEngine->GetWorldFromContextObject(Querier, EGetWorldErrorMode::ReturnNull);
 
     if (World != NULL && World->GetNavigationSystem() != NULL)
     {
