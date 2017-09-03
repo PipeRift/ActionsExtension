@@ -59,10 +59,10 @@ void AAIGeneric::Possess(APawn* InPawn)
 		}
 
 		BehaviorComp->StartTree(*BaseBehavior);
-        SetCombatSubBehavior(ECombatState::Combat,    CombatBehavior);
-        SetCombatSubBehavior(ECombatState::Alert,     AlertBehavior);
-        SetCombatSubBehavior(ECombatState::Suspicion, SuspicionBehavior);
-        SetCombatSubBehavior(ECombatState::Passive,   PassiveBehavior);
+        SetDynamicSubBehavior(FAIExtensionModule::FBehaviorTags::Combat,    CombatBehavior);
+        SetDynamicSubBehavior(FAIExtensionModule::FBehaviorTags::Alert,     AlertBehavior);
+        SetDynamicSubBehavior(FAIExtensionModule::FBehaviorTags::Suspicion, SuspicionBehavior);
+        SetDynamicSubBehavior(FAIExtensionModule::FBehaviorTags::Passive,   PassiveBehavior);
 	}
 
     GetWorldTimerManager().SetTimer(TimerHandle_TargetScan, this, &AAIGeneric::TryScanPotentialTarget, TargetScanRate);
@@ -317,11 +317,11 @@ void AAIGeneric::SetFaction(const FFaction & InFaction)
 }
 
 
-void AAIGeneric::SetCombatSubBehavior(ECombatState State, UBehaviorTree* SubBehavior)
+void AAIGeneric::SetDynamicSubBehavior(FName GameplayTag, UBehaviorTree* SubBehavior)
 {
     if (BehaviorComp && SubBehavior)
     {
-        BehaviorComp->SetDynamicSubtree(UAITags::FromCombatState(State), SubBehavior);
+        BehaviorComp->SetDynamicSubtree(FGameplayTag::RequestGameplayTag(GameplayTag), SubBehavior);
     }
 }
 

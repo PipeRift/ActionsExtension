@@ -44,6 +44,18 @@ private:
     void RegisterSettings();
     void UnregisterSettings();
 
+
+    void LoadGameplayTags();
+
     // Callbacks for when the settings were saved.
     bool HandleSettingsSaved();
+
+public:
+    struct FBehaviorTags
+    {
+        static FName Combat;
+        static FName Alert;
+        static FName Suspicion;
+        static FName Passive;
+    };
 };
