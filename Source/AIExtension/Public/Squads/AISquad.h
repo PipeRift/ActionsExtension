@@ -13,7 +13,7 @@ class AAIGeneric;
 /**
 *
 */
-UENUM(BlueprintType, meta = (TagParent = "AI.Behavior"))
+UENUM(BlueprintType)
 enum class ECombatState : uint8
 {
     Passive,
