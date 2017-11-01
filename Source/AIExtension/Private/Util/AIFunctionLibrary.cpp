@@ -47,14 +47,3 @@ TSubclassOf<UNavArea> UAIFunctionLibrary::ProjectPointToNavArea(UObject* WorldCo
 
     return NULL;
 }
-
-const TEnumAsByte<ETeamAttitude::Type> UAIFunctionLibrary::GetInterfaceAttitudeTowards(TScriptInterface<IFactionAgentInterface> A, TScriptInterface<IFactionAgentInterface> B)
-{
-    const AActor *AA = Cast<AActor>(A.GetObject());
-    const AActor *AB = Cast<AActor>(B.GetObject());
-
-    const FFaction FactionA = IFactionAgentInterface::Execute_GetFaction(AA);
-    const FFaction FactionB = IFactionAgentInterface::Execute_GetFaction(AB);
-
-    return GetAttitudeTowards(FactionA, FactionB);
-}
