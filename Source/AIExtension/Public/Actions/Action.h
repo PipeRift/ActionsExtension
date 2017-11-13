@@ -140,7 +140,7 @@ public:
 
     const bool IsValid() const {
         UObject const * const Outer = GetOuter();
-        return !IsPendingKill() && Outer->GetClass()->ImplementsInterface(UActionOwnerInterface::StaticClass());
+        return !IsPendingKill() && Outer->Implements<UActionOwnerInterface>();
     }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)

@@ -4,8 +4,7 @@
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 
-#include "GenericTeamAgentInterface.h"
-
+#include "Faction.h"
 #include "AISquad.h"
 #include "BTD_CompareState.h"
 
@@ -40,15 +39,25 @@ public:
     }
 
     UFUNCTION(BlueprintPure, Category = "Factions", meta = (CompactNodeTitle = "!="))
-        static FORCEINLINE bool NotEqual(const FFaction& A, const FFaction& B) {
+    static FORCEINLINE bool NotEqual(const FFaction& A, const FFaction& B) {
         return A != B;
     }
 
-    UFUNCTION(BlueprintPure, Category = "Factions", meta = (DisplayName = "Get Attitude Towards"))
-    static const TEnumAsByte<ETeamAttitude::Type> GetInterfaceAttitudeTowards(TScriptInterface<IFactionAgentInterface> A, TScriptInterface<IFactionAgentInterface> B);
+	UFUNCTION(BlueprintPure, Category = "Factions")
+	static FORCEINLINE FFaction GetFaction(AActor* Target)
+	{
+		return IFactionAgentInterface::Execute_GetFaction(Target);
+	}
+
+    UFUNCTION(BlueprintPure, Category = "Factions", meta = (DisplayName = "Get Attitude Towards", WorldContext = "A"))
+	static FORCEINLINE TEnumAsByte<ETeamAttitude::Type> GetAttitudeBetween(AActor* A, AActor* B)
+	{
+		return GetAttitudeTowards(GetFaction(A), GetFaction(B));
+	}
 
     UFUNCTION(BlueprintPure, Category = "Factions")
-    static FORCEINLINE TEnumAsByte<ETeamAttitude::Type> GetAttitudeTowards(const FFaction& A, const FFaction& B) {
+    static FORCEINLINE TEnumAsByte<ETeamAttitude::Type> GetAttitudeTowards(const FFaction& A, const FFaction& B)
+	{
         return A.GetAttitudeTowards(B);
     }
 

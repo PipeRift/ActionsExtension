@@ -154,8 +154,5 @@ AActor* UAction::GetTaskOwnerActor()
 
 UActionManagerComponent* UAction::GetTaskOwnerComponent()
 {
-    //Owner will always contain this interface.
-    checkf(IsValid(), TEXT("Owner should always have a ITaskOwnerInterface"));
-
     return GetParentInterface()->GetTaskOwnerComponent();
 }
