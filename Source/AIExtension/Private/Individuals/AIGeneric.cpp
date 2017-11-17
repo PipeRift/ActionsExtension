@@ -26,15 +26,18 @@ AAIGeneric::AAIGeneric(const FObjectInitializer& ObjectInitializer) : Super(Obje
  	BlackboardComp = ObjectInitializer.CreateDefaultSubobject<UBlackboardComponent>(this, TEXT("BlackBoard"));
 	BrainComponent = BehaviorComp = ObjectInitializer.CreateDefaultSubobject<UBehaviorTreeComponent>(this, TEXT("Behavior"));	
 
-    BaseBehavior = LoadObject<UBehaviorTree>(NULL, TEXT("/AIExtension/Base/Individuals/BT_Generic"));
+    //static ConstructorHelpers::FObjectFinder<UBehaviorTree> BaseBehaviorAsset(TEXT("/AIExtension/Base/Individuals/BT_Generic"));
+    //BaseBehavior = BaseBehaviorAsset.Object;
 
     State = ECombatState::Passive;
     Faction = FFaction::NoFaction;
     ReactionTime = 0.2f;
 
     bScanPotentialTargets = true;
-    ScanQuery = LoadObject<UEnvQuery>(NULL, TargetFilterAsset);
     TargetScanRate = 0.3f;
+
+    static ConstructorHelpers::FObjectFinder<UEnvQuery> ScanQueryAsset(TargetFilterAsset);
+    ScanQuery = ScanQueryAsset.Object;
 }
 
 void AAIGeneric::OnConstruction(const FTransform& Transform)
@@ -364,7 +367,8 @@ void AAIGeneric::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
                 FSlateNotificationManager::Get().AddNotification(Info);
 
                 //Set default
-                ScanQuery = LoadObject<UEnvQuery>(NULL, TargetFilterAsset);
+                static ConstructorHelpers::FObjectFinder<UEnvQuery> ScanQueryAsset(TargetFilterAsset);
+                ScanQuery = ScanQueryAsset.Object;
             }
         }
     }

@@ -4,12 +4,13 @@
 	"VersionName": "0.6",
 	"FriendlyName": "AI Extension",
 	"Description": "A plugin that adds blueprint oriented Artificial Intelligence features to Unreal Engine 4",
-	"Category": "Gameplay",
+	"Category": "Piperift",
 	"CreatedBy": "Piperift",
 	"CreatedByURL": "http://piperift.com/",
 	"DocsURL": "",
 	"MarketplaceURL": "",
 	"SupportURL": "info@piperift.com",
+	"EngineVersion": "4.17.0",
 	"CanContainContent": true,
 	"IsBetaVersion": true,
 	"Installed": false,
@@ -17,7 +18,7 @@
 		{
 			"Name": "AIExtension",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "PreDefault"
 		},
 		{
 			"Name": "AIExtensionEditor",

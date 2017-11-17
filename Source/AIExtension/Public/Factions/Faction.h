@@ -74,7 +74,7 @@ struct AIEXTENSION_API FFaction
 
     friend uint32 GetTypeHash(const FFaction& InRelation)
     {
-        return InRelation.IsNone() ? BIG_NUMBER : (uint32)InRelation.Id;
+        return InRelation.IsNone() ? MAX_uint32 : (uint32)InRelation.Id;
     }
 
     static const FFaction NoFaction;
