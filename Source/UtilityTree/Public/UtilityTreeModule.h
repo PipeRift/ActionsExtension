@@ -1,9 +1,11 @@
 // Copyright 2015-2017 Piperift. All Rights Reserved.
+
 #pragma once
 
-#include "Private/AIExtensionPrivatePCH.h"
-
-#include "AIModule.h"
+#include "CoreUObject.h"
+#include "ModuleManager.h"
+#include "Engine.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 #if WITH_EDITOR
 #include "ISettingsModule.h"
@@ -14,17 +16,15 @@
 #include "Developer/AssetTools/Public/AssetToolsModule.h"
 #endif //WITH_EDITOR
 
-DECLARE_LOG_CATEGORY_EXTERN(LogAIExtension, All, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogUtility, All, All);
 
-
-class FAIExtensionModule : public IModuleInterface
+class FUtilityTreeModule : public IModuleInterface
 {
-
 public:
 
-    // Get Jink Core module instance
-    FORCEINLINE static FAIExtensionModule& GetInstance() { 
-        return FModuleManager::LoadModuleChecked<FAIExtensionModule>("AIExtension");
+    // Get Narrative Extension module instance
+    FORCEINLINE static FUtilityTreeModule* GetInstance() { 
+        return &FModuleManager::LoadModuleChecked<FUtilityTreeModule>("UtilityTree");
     }
 
     /** IModuleInterface implementation */
@@ -46,25 +46,6 @@ private:
     void RegisterSettings();
     void UnregisterSettings();
 
-
-    void LoadGameplayTags();
-
     // Callbacks for when the settings were saved.
     bool HandleSettingsSaved();
-
-#if WITH_EDITOR
-public:
-	EAssetTypeCategories::Type GetAssetCategoryBit() const {
-		return IAIModule::Get().GetAIAssetCategoryBit();
-	}
-#endif
-
-public:
-    struct FBehaviorTags
-    {
-        static FName Combat;
-        static FName Alert;
-        static FName Suspicion;
-        static FName Passive;
-    };
 };

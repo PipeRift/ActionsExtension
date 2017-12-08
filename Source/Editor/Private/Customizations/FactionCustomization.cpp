@@ -16,12 +16,11 @@ bool FFactionCustomization::CanCustomizeHeader(TSharedRef<class IPropertyHandle>
     StructHandle = StructPropertyHandle;
     IdHandle = StructPropertyHandle->GetChildHandle("Id");
 
-    if (IdHandle->IsValidHandle()) {
-        if (FAIExtensionModule* Module = FAIExtensionModule::GetInstance())
-        {
-            //Bind On Settings Changed event
-            //Module->OnModifiedSettings().BindRaw(this, &FFactionCustomization::UpdateItems);
-        }
+    if (IdHandle->IsValidHandle())
+	{
+		//FAIExtensionModule& Module = FAIExtensionModule::GetInstance();
+		//Bind On Settings Changed event
+        //Module->OnModifiedSettings().BindRaw(this, &FFactionCustomization::UpdateItems);
         return true;
     }
     return false;
