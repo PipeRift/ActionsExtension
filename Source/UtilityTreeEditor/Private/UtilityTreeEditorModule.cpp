@@ -7,7 +7,7 @@
 
 #include "UtilityTreeEditorStyle.h"
 
-//#include "Asset/AssetTypeAction_UtilityTree.h"
+#include "Asset/AssetTypeAction_UtilityTreeBlueprint.h"
 
 //#include "QuestGraph/UtilityTreeEditor.h"
 
@@ -30,7 +30,7 @@ void FUtilityTreeEditorModule::StartupModule()
 
     // Register asset types
     IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
-    //RegisterAssetTypeAction(AssetTools, MakeShareable(new FAssetTypeAction_UtilityTree));
+    RegisterAssetTypeAction(AssetTools, MakeShareable(new FAssetTypeAction_UtilityTreeBlueprint));
 
 	// Integrate UtilityTree actions into existing editor context menus
 	if (!IsRunningCommandlet())
@@ -42,6 +42,17 @@ void FUtilityTreeEditorModule::StartupModule()
 void FUtilityTreeEditorModule::ShutdownModule()
 {
     UE_LOG(LogUtilityEd, Warning, TEXT("UtilityTreeEditor: Log Ended"));
+
+	// Unregister all the asset types
+	if (FModuleManager::Get().IsModuleLoaded("AssetTools"))
+	{
+		IAssetTools& AssetTools = FModuleManager::GetModuleChecked<FAssetToolsModule>("AssetTools").Get();
+		for (int32 Index = 0; Index < CreatedAssetTypeActions.Num(); ++Index)
+		{
+			AssetTools.UnregisterAssetTypeActions(CreatedAssetTypeActions[Index].ToSharedRef());
+		}
+	}
+	CreatedAssetTypeActions.Empty();
 
     // Cleanup all information for auto generated default event nodes by this module
     FKismetEditorUtilities::UnregisterAutoBlueprintNodeCreation(this);
@@ -92,20 +103,6 @@ void FUtilityTreeEditorModule::RegisterCustomPinFactory()
     TSharedPtr<T> PinFactory = MakeShareable(new T());
     FEdGraphUtilities::RegisterVisualPinFactory(PinFactory);
     CreatedPinFactories.Add(PinFactory);
-}
-
-TSharedRef<IUtilityTreeEditor> FUtilityTreeEditorModule::CreateUtilityTreeEditor(const EToolkitMode::Type Mode, const TSharedPtr< IToolkitHost >& InitToolkitHost, UUtilityTree* UtilityTree)
-{
-	/*if (!QGClassCache.IsValid())
-	{
-		QGClassCache = MakeShareable(new FGraphNodeClassHelper(UQGNode::StaticClass()));
-		FGraphNodeClassHelper::AddObservedBlueprintClasses(UQGNode_Logic::StaticClass());
-		QGClassCache->UpdateAvailableBlueprintClasses();
-	}*/
-
-	TSharedRef<FUtilityTreeEditor> NewQuestGroupEditor(new FUtilityTreeEditor());
-	NewQuestGroupEditor->InitUtilityTreeEditor(Mode, InitToolkitHost, UtilityTree);
-	return NewQuestGroupEditor;
 }
 
 #undef LOCTEXT_NAMESPACE

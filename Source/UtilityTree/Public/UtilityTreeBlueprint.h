@@ -50,73 +50,17 @@ class UTILITYTREE_API UUtilityTreeBlueprint : public UBlueprint
 {
 	GENERATED_UCLASS_BODY()
 
-	/**
-	 * Selecting this option will cause the compiler to emit warnings whenever a call into Blueprint
-	 * is made from the animation graph. This can help track down optimizations that need to be made.
-	 */
-	UPROPERTY(EditAnywhere, Category = Optimization)
-	bool bWarnAboutBlueprintUsage;
-
-
 #if WITH_EDITOR
-
-	virtual UClass* GetBlueprintClass() const override;
-
-	// Inspects the hierarchy and looks for an override for the requested node GUID
-	// @param NodeGuid - Guid of the node to search for
-	// @param bIgnoreSelf - Ignore this blueprint and only search parents, handy for finding parent overrides
-	FUTParentNodeAssetOverride* GetAssetOverrideForNode(FGuid NodeGuid, bool bIgnoreSelf = false) const ;
-
-	// Inspects the hierarchy and builds a list of all asset overrides for this blueprint
-	// @param OutOverrides - Array to fill with overrides
-	// @return bool - Whether any overrides were found
-	bool GetAssetOverrides(TArray<FUTParentNodeAssetOverride*>& OutOverrides);
 
 	// UBlueprint interface
 	virtual bool SupportedByDefaultBlueprintFactory() const override
 	{
 		return false;
 	}
-
-	virtual bool IsValidForBytecodeOnlyRecompile() const override { return false; }
-	virtual bool CanRecompileWhilePlayingInEditor() const override;
 	// End of UBlueprint interface
 
-	/** Returns the most base utility blueprint for a given blueprint (if it is inherited from another utility blueprint, returning null if only native / non-utility BP classes are it's parent) */
-	static UUtilityTreeBlueprint* FindRootUtilityBlueprint(UUtilityTreeBlueprint* DerivedBlueprint);
+	/** Returns the most base utility tree blueprint for a given blueprint (if it is inherited from another ability blueprint, returning null if only native / non-ability BP classes are it's parent) */
+	static UUtilityTreeBlueprint* FindRootUtilityTreeBlueprint(UUtilityTreeBlueprint* DerivedBlueprint);
 
-	DECLARE_MULTICAST_DELEGATE_TwoParams(FOnOverrideChangedMulticaster, FGuid, UUtilityTree*);
-
-	typedef FOnOverrideChangedMulticaster::FDelegate FOnOverrideChanged;
-
-	void RegisterOnOverrideChanged(const FOnOverrideChanged& Delegate)
-	{
-		OnOverrideChanged.Add(Delegate);
-	}
-
-	void UnregisterOnOverrideChanged(SWidget* Widget)
-	{
-		OnOverrideChanged.RemoveAll(Widget);
-	}
-
-	void NotifyOverrideChange(FUTParentNodeAssetOverride& Override)
-	{
-		OnOverrideChanged.Broadcast(Override.ParentNodeGuid, Override.NewAsset);
-	}
-
-	virtual void PostLoad() override;
-
-	virtual void Serialize(FArchive& Ar) override;
-
-protected:
-	// Broadcast when an override is changed, allowing derived blueprints to be updated
-	FOnOverrideChangedMulticaster OnOverrideChanged;
-#endif	// #if WITH_EDITOR
-
-#if WITH_EDITORONLY_DATA
-public:
-	// Array of overrides to asset containing nodes in the parent that have been overridden
-	UPROPERTY()
-	TArray<FUTParentNodeAssetOverride> ParentAssetOverrides;
 #endif
 };

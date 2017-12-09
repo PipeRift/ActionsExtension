@@ -1,13 +1,15 @@
 // Copyright 2015-2017 Piperift. All Rights Reserved.
 
-#include "UtilityTreeFactory.h"
+#include "UtilityTreeBlueprintFactory.h"
 
-#include "UtilityTree.h"
+#include "KismetEditorUtilities.h"
+
+#include "UtilityTreeBlueprint.h"
 
 #define LOCTEXT_NAMESPACE "UtilityTree"
 
 
-UUtilityTreeFactory::UUtilityTreeFactory(const FObjectInitializer& ObjectInitializer)
+UUtilityTreeBlueprintFactory::UUtilityTreeBlueprintFactory(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
     SupportedClass = UUtilityTree::StaticClass();
@@ -19,7 +21,7 @@ UUtilityTreeFactory::UUtilityTreeFactory(const FObjectInitializer& ObjectInitial
 	ParentClass = UUtilityTree::StaticClass();
 }
 
-UObject* UUtilityTreeFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
+UObject* UUtilityTreeBlueprintFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn, FName CallingContext)
 {
 	// Make sure we are trying to factory a Anim Blueprint, then create and init one
 	check(Class->IsChildOf(UUtilityTreeBlueprint::StaticClass()));
@@ -47,6 +49,11 @@ UObject* UUtilityTreeFactory::FactoryCreateNew(UClass* Class, UObject* InParent,
     UUtilityTree* UtilityTree = NewObject<UUtilityTree>(InParent, UUtilityTree::StaticClass(), Name, Flags);
 
     return UtilityTree;
+}
+
+UObject* UUtilityTreeBlueprintFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
+{
+	return FactoryCreateNew(Class, InParent, Name, Flags, Context, Warn, NAME_None);
 }
 
 #undef LOCTEXT_NAMESPACE

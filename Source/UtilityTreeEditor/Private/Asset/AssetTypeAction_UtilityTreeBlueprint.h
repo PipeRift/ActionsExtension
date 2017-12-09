@@ -2,9 +2,11 @@
 
 #pragma once
 
-#include "AssetTypeActions_Base.h"
+#include "CoreMinimal.h"
+#include "Toolkits/IToolkitHost.h"
+#include "AssetTypeActions/AssetTypeActions_Blueprint.h"
 
-class UTILITYTREEEDITOR_API FAssetTypeAction_UtilityTree : public FAssetTypeActions_Base
+class UTILITYTREEEDITOR_API FAssetTypeAction_UtilityTreeBlueprint : public FAssetTypeActions_Blueprint
 {
 public:
     // IAssetTypeActions interface
@@ -17,4 +19,10 @@ public:
     virtual void OpenAssetEditor(const TArray<UObject*>& InObjects, TSharedPtr<IToolkitHost> EditWithinLevelEditor) override;
     // End of IAssetTypeActions interface
 
+	// FAssetTypeActions_Blueprint interface
+	virtual UFactory* GetFactoryForBlueprintType(UBlueprint* InBlueprint) const override;
+
+private:
+	/** Returns true if the blueprint is data only */
+	bool ShouldUseDataOnlyEditor(const UBlueprint* Blueprint) const;
 };

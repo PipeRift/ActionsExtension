@@ -39,7 +39,7 @@ class UUtilityTree;
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable, Category = AIExtension)
 class UTILITYTREE_API UUtilityTree : public UObject
 {
 	GENERATED_BODY()
