@@ -60,10 +60,10 @@ EGraphType UUtilityTreeGraphSchema::GetGraphType(const UEdGraph* TestEdGraph) co
 void UUtilityTreeGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 {
 	// Create the result node
-	/*FGraphNodeCreator<UUTGraphNode_Root> NodeCreator(Graph);
+	FGraphNodeCreator<UUTGraphNode_Root> NodeCreator(Graph);
 	UUTGraphNode_Root* ResultSinkNode = NodeCreator.CreateNode();
 	NodeCreator.Finalize();
-	SetNodeMetaData(ResultSinkNode, FNodeMetadata::DefaultGraphNode);*/
+	SetNodeMetaData(ResultSinkNode, FNodeMetadata::DefaultGraphNode);
 }
 
 void UUtilityTreeGraphSchema::HandleGraphBeingDeleted(UEdGraph& GraphBeingRemoved) const

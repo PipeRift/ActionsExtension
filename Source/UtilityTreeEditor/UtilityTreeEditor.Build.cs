@@ -45,6 +45,7 @@ public class UtilityTreeEditor : ModuleRules
                 "Kismet",
                 "KismetCompiler",
                 "BlueprintGraph",
+                "GraphEditor",
                 "AIExtension",
                 "UtilityTree"
             }
