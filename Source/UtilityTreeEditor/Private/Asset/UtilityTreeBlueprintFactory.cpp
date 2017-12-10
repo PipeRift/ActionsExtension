@@ -3,8 +3,11 @@
 #include "UtilityTreeBlueprintFactory.h"
 
 #include "KismetEditorUtilities.h"
+#include "BlueprintEditorUtils.h"
 
 #include "UtilityTreeBlueprint.h"
+#include "UtilityTree/UtilityTreeGraph.h"
+#include "UtilityTree/UtilityTreeGraphSchema.h"
 
 #define LOCTEXT_NAMESPACE "UtilityTree"
 
@@ -42,6 +45,16 @@ UObject* UUtilityTreeBlueprintFactory::FactoryCreateNew(UClass* Class, UObject* 
 	else
 	{
 		UUtilityTreeBlueprint* NewBP = CastChecked<UUtilityTreeBlueprint>(FKismetEditorUtilities::CreateBlueprint(ParentClass, InParent, Name, BlueprintType, UUtilityTreeBlueprint::StaticClass(), UBlueprintGeneratedClass::StaticClass(), CallingContext));
+		
+		UUtilityTreeBlueprint* RootUTBP = UUtilityTreeBlueprint::FindRootUtilityTreeBlueprint(NewBP);
+		if (RootUTBP == NULL)
+		{
+			// Only allow an utility tree graph if there isn't one in a parent blueprint
+			UEdGraph* NewGraph = FBlueprintEditorUtils::CreateNewGraph(NewBP, TEXT("Utility Graph"), UUtilityTreeGraph::StaticClass(), UUtilityTreeGraphSchema::StaticClass());
+			FBlueprintEditorUtils::AddDomainSpecificGraph(NewBP, NewGraph);
+			NewBP->LastEditedDocuments.Add(NewGraph);
+			NewGraph->bAllowDeletion = false;
+		}
 
 		return NewBP;
 	}

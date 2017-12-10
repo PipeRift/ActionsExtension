@@ -63,4 +63,75 @@ void FUtilityTreeEditor::EnsureBlueprintIsUpToDate(UBlueprint* Blueprint)
 	}
 #endif
 }
+
+FUtilityTreeEditor::FUtilityTreeEditor()
+{
+	// todo: Do we need to register a callback for when properties are changed?
+}
+
+FUtilityTreeEditor::~FUtilityTreeEditor()
+{
+	FEditorDelegates::OnAssetPostImport.RemoveAll(this);
+	FReimportManager::Instance()->OnPostReimport().RemoveAll(this);
+}
+
+FName FUtilityTreeEditor::GetToolkitFName() const
+{
+	return FName("UtilityTreeEditor");
+}
+
+FText FUtilityTreeEditor::GetBaseToolkitName() const
+{
+	return LOCTEXT("UtilityTreeEditorAppLabel", "Utility Tree Editor");
+}
+
+FText FUtilityTreeEditor::GetToolkitName() const
+{
+	const TArray<UObject*>& EditingObjs = GetEditingObjects();
+
+	check(EditingObjs.Num() > 0);
+
+	FFormatNamedArguments Args;
+
+	const UObject* EditingObject = EditingObjs[0];
+
+	const bool bDirtyState = EditingObject->GetOutermost()->IsDirty();
+
+	Args.Add(TEXT("ObjectName"), FText::FromString(EditingObject->GetName()));
+	Args.Add(TEXT("DirtyState"), bDirtyState ? FText::FromString(TEXT("*")) : FText::GetEmpty());
+	return FText::Format(LOCTEXT("UtilityTreeToolkitName", "{ObjectName}{DirtyState}"), Args);
+}
+
+FText FUtilityTreeEditor::GetToolkitToolTipText() const
+{
+	const UObject* EditingObject = GetEditingObject();
+
+	check(EditingObject != NULL);
+
+	return FAssetEditorToolkit::GetToolTipTextForObject(EditingObject);
+}
+
+FString FUtilityTreeEditor::GetWorldCentricTabPrefix() const
+{
+	return TEXT("UtilityTreeEditor");
+}
+
+FLinearColor FUtilityTreeEditor::GetWorldCentricTabColorScale() const
+{
+	return FLinearColor::White;
+}
+
+UBlueprint* FUtilityTreeEditor::GetBlueprintObj() const
+{
+	const TArray<UObject*>& EditingObjs = GetEditingObjects();
+	for (int32 i = 0; i < EditingObjs.Num(); ++i)
+	{
+		if (EditingObjs[i]->IsA<UUtilityTreeBlueprint>())
+		{
+			return (UBlueprint*)EditingObjs[i];
+		}
+	}
+	return nullptr;
+}
+
 #undef LOCTEXT_NAMESPACE

@@ -38,4 +38,21 @@ private:
 	void EnsureBlueprintIsUpToDate(UBlueprint* Blueprint);
 
 public:
+	FUtilityTreeEditor();
+
+	virtual ~FUtilityTreeEditor();
+
+
+	// IToolkit interface
+	virtual FName GetToolkitFName() const override;
+	virtual FText GetBaseToolkitName() const override;
+	virtual FText GetToolkitName() const override;
+	virtual FText GetToolkitToolTipText() const override;
+	virtual FString GetWorldCentricTabPrefix() const override;
+	virtual FLinearColor GetWorldCentricTabColorScale() const override;
+	// End of IToolkit interface
+
+
+	/** Returns a pointer to the Blueprint object we are currently editing, as long as we are editing exactly one */
+	virtual UBlueprint* GetBlueprintObj() const override;
 };
