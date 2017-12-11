@@ -12,7 +12,7 @@
 #include "K2Node.h"
 #include "UTGraphNode_Base.generated.h"
 
-class FAnimBlueprintCompiler;
+class FUTBlueprintCompiler;
 class FUTGraphNodeDetails;
 class FBlueprintActionDatabaseRegistrar;
 class FCanvas;
@@ -279,7 +279,7 @@ class UTILITYTREEEDITOR_API UUTGraphNode_Base : public UK2Node
 	bool IsPinExposedAndLinked(const FString& InPinName, const EEdGraphPinDirection Direction = EGPD_MAX) const;
 
 protected:
-	//friend FUTBlueprintCompiler;
+	friend FUTBlueprintCompiler;
 	friend FUTGraphNodeDetails;
 
 	// Gets the animation FNode type represented by this ed graph node
