@@ -103,9 +103,9 @@ void FUTBlueprintCompiler::CreateClassVariablesFromBlueprint()
 	{	
 		for (UEdGraph* It : Blueprint->UbergraphPages)
 		{
-			TArray<UAnimGraphNode_SubInstance*> SubInstanceNodes;
+			TArray<UUTGraphNode_SubInstance*> SubInstanceNodes;
 			It->GetNodesOfClass(SubInstanceNodes);
-			for( UAnimGraphNode_SubInstance* SubInstance : SubInstanceNodes )
+			for( UUTGraphNode_SubInstance* SubInstance : SubInstanceNodes )
 			{
 				ProcessSubInstance(SubInstance, false);
 			}
@@ -115,9 +115,9 @@ void FUTBlueprintCompiler::CreateClassVariablesFromBlueprint()
 		{
 			for (UEdGraph* It : Blueprint->FunctionGraphs)
 			{
-				TArray<UAnimGraphNode_SubInstance*> SubInstanceNodes;
+				TArray<UUTGraphNode_SubInstance*> SubInstanceNodes;
 				It->GetNodesOfClass(SubInstanceNodes);
-				for( UAnimGraphNode_SubInstance* SubInstance : SubInstanceNodes )
+				for( UUTGraphNode_SubInstance* SubInstance : SubInstanceNodes )
 				{
 					ProcessSubInstance(SubInstance, false);
 				}
@@ -143,7 +143,7 @@ UK2Node_CallFunction* FUTBlueprintCompiler::SpawnCallAnimInstanceFunction(UEdGra
 	return FunctionCall;
 }
 
-void FUTBlueprintCompiler::CreateEvaluationHandlerStruct(UAnimGraphNode_Base* VisualAnimNode, FEvaluationHandlerRecord& Record)
+void FUTBlueprintCompiler::CreateEvaluationHandlerStruct(UUTGraphNode_Base* VisualAnimNode, FEvaluationHandlerRecord& Record)
 {
 	// Shouldn't create a handler if there is nothing to work with
 	check(Record.ServicedProperties.Num() > 0);
@@ -268,7 +268,7 @@ void FUTBlueprintCompiler::CreateEvaluationHandlerStruct(UAnimGraphNode_Base* Vi
 	AssignmentNode->ReconstructNode();
 }
 
-void FUTBlueprintCompiler::CreateEvaluationHandlerInstance(UAnimGraphNode_Base* VisualAnimNode, FEvaluationHandlerRecord& Record)
+void FUTBlueprintCompiler::CreateEvaluationHandlerInstance(UUTGraphNode_Base* VisualAnimNode, FEvaluationHandlerRecord& Record)
 {
 	// Shouldn't create a handler if there is nothing to work with
 	check(Record.ServicedProperties.Num() > 0);
@@ -355,7 +355,7 @@ void FUTBlueprintCompiler::CreateEvaluationHandlerInstance(UAnimGraphNode_Base* 
 	}
 }
 
-void FUTBlueprintCompiler::ProcessAnimationNode(UAnimGraphNode_Base* VisualAnimNode)
+void FUTBlueprintCompiler::ProcessUtilityTreeNode(UUTGraphNode_Base* VisualAnimNode)
 {
 	// Early out if this node has already been processed
 	if (AllocatedAnimNodes.Contains(VisualAnimNode))
@@ -405,7 +405,7 @@ void FUTBlueprintCompiler::ProcessAnimationNode(UAnimGraphNode_Base* VisualAnimN
 	AllocatedAnimNodeIndices.Add(VisualAnimNode, AllocatedIndex);
 	AllocatedPropertiesByIndex.Add(AllocatedIndex, NewProperty);
 
-	UAnimGraphNode_Base* TrueSourceObject = MessageLog.FindSourceObjectTypeChecked<UAnimGraphNode_Base>(VisualAnimNode);
+	UUTGraphNode_Base* TrueSourceObject = MessageLog.FindSourceObjectTypeChecked<UUTGraphNode_Base>(VisualAnimNode);
 	SourceNodeToProcessedNodeMap.Add(TrueSourceObject, VisualAnimNode);
 
 	// Register the slightly more permanent debug information
@@ -414,17 +414,12 @@ void FUTBlueprintCompiler::ProcessAnimationNode(UAnimGraphNode_Base* VisualAnimN
 	NewUtilityTreeBlueprintClass->GetDebugData().RegisterClassPropertyAssociation(TrueSourceObject, NewProperty);
 
 	// Node-specific compilation that requires compiler state info
-	if (UAnimGraphNode_StateMachineBase* StateMachineInstance = Cast<UAnimGraphNode_StateMachineBase>(VisualAnimNode))
+	if (UUTGraphNode_StateMachineBase* StateMachineInstance = Cast<UUTGraphNode_StateMachineBase>(VisualAnimNode))
 	{
 		// Compile the state machine
 		ProcessStateMachine(StateMachineInstance);
 	}
-	else if (UAnimGraphNode_UseCachedPose* UseCachedPose = Cast<UAnimGraphNode_UseCachedPose>(VisualAnimNode))
-	{
-		// Handle a save/use cached pose linkage
-		ProcessUseCachedPose(UseCachedPose);
-	}
-	else if(UAnimGraphNode_SubInstance* SubInstanceNode = Cast<UAnimGraphNode_SubInstance>(VisualAnimNode))
+	else if(UUTGraphNode_SubInstance* SubInstanceNode = Cast<UUTGraphNode_SubInstance>(VisualAnimNode))
 	{
 		ProcessSubInstance(SubInstanceNode, true);
 	}
@@ -456,7 +451,7 @@ void FUTBlueprintCompiler::ProcessAnimationNode(UAnimGraphNode_Base* VisualAnimN
 			int32 SourceArrayIndex = INDEX_NONE;
 
 			// We have special handling below if we're targeting a subinstance instead of our own instance properties
-			UAnimGraphNode_SubInstance* SubInstanceNode = Cast<UAnimGraphNode_SubInstance>(VisualAnimNode);
+			UUTGraphNode_SubInstance* SubInstanceNode = Cast<UUTGraphNode_SubInstance>(VisualAnimNode);
 
 			// Does this pin have an associated evaluation handler?
 			if(SubInstanceNode)
@@ -577,45 +572,7 @@ void FUTBlueprintCompiler::ProcessAnimationNode(UAnimGraphNode_Base* VisualAnimN
 	}
 }
 
-void FUTBlueprintCompiler::ProcessUseCachedPose(UAnimGraphNode_UseCachedPose* UseCachedPose)
-{
-	bool bSuccessful = false;
-
-	// if compiling only skeleton, we don't have to worry about linking save node
-	if (CompileOptions.CompileType == EKismetCompileType::SkeletonOnly)
-	{
-		return;
-	}
-
-	// Link to the saved cached pose
-	if(UseCachedPose->SaveCachedPoseNode.IsValid())
-	{
-		if (UAnimGraphNode_SaveCachedPose* AssociatedSaveNode = SaveCachedPoseNodes.FindRef(UseCachedPose->SaveCachedPoseNode->CacheName))
-		{
-			UStructProperty* LinkProperty = FindField<UStructProperty>(FAnimNode_UseCachedPose::StaticStruct(), TEXT("LinkToCachingNode"));
-			check(LinkProperty);
-
-			FPoseLinkMappingRecord LinkRecord = FPoseLinkMappingRecord::MakeFromMember(UseCachedPose, AssociatedSaveNode, LinkProperty);
-			if (LinkRecord.IsValid())
-			{
-				ValidPoseLinkList.Add(LinkRecord);
-			}
-			bSuccessful = true;
-
-			// Save CachePoseName for debug
-			FName CachePoseName = FName(*UseCachedPose->SaveCachedPoseNode->CacheName);
-			UseCachedPose->SaveCachedPoseNode->Node.CachePoseName = CachePoseName;
-			UseCachedPose->Node.CachePoseName = CachePoseName;
-		}
-	}
-	
-	if(!bSuccessful)
-	{
-		MessageLog.Error(*LOCTEXT("NoAssociatedSaveNode", "@@ does not have an associated Save Cached Pose node").ToString(), UseCachedPose);
-	}
-}
-
-void FUTBlueprintCompiler::ProcessSubInstance(UAnimGraphNode_SubInstance* SubInstance, bool bCheckForCycles)
+void FUTBlueprintCompiler::ProcessSubInstance(UUTGraphNode_SubInstance* SubInstance, bool bCheckForCycles)
 {
 	if(!SubInstance)
 	{
@@ -687,7 +644,7 @@ void FUTBlueprintCompiler::ProcessSubInstance(UAnimGraphNode_SubInstance* SubIns
 	}
 }
 
-void FUTBlueprintCompiler::GetDuplicatedSlotAndStateNames(UAnimGraphNode_SubInstance* InSubInstance, NameToCountMap& OutStateMachineNameToCountMap, NameToCountMap& OutSlotNameToCountMap)
+void FUTBlueprintCompiler::GetDuplicatedSlotAndStateNames(UUTGraphNode_SubInstance* InSubInstance, NameToCountMap& OutStateMachineNameToCountMap, NameToCountMap& OutSlotNameToCountMap)
 {
 	if(!InSubInstance)
 	{
@@ -704,28 +661,28 @@ void FUTBlueprintCompiler::GetDuplicatedSlotAndStateNames(UAnimGraphNode_SubInst
 
 		for(UEdGraph* Graph : AllGraphs)
 		{
-			TArray<UAnimGraphNode_StateMachine*> StateMachineNodes;
-			TArray<UAnimGraphNode_Slot*> SlotNodes;
-			TArray<UAnimGraphNode_SubInstance*> SubInstanceNodes;
+			TArray<UUTGraphNode_StateMachine*> StateMachineNodes;
+			TArray<UUTGraphNode_Slot*> SlotNodes;
+			TArray<UUTGraphNode_SubInstance*> SubInstanceNodes;
 
 			Graph->GetNodesOfClass(StateMachineNodes);
 			Graph->GetNodesOfClass(SlotNodes);
 			Graph->GetNodesOfClass(SubInstanceNodes);
 
-			for(UAnimGraphNode_StateMachine* StateMachineNode : StateMachineNodes)
+			for(UUTGraphNode_StateMachine* StateMachineNode : StateMachineNodes)
 			{
 				int32& Count = OutStateMachineNameToCountMap.FindOrAdd(FName(*StateMachineNode->GetStateMachineName()));
 				// Add one to count as we've encountered this name
 				Count++;
 			}
 
-			for(UAnimGraphNode_Slot* SlotNode : SlotNodes)
+			for(UUTGraphNode_Slot* SlotNode : SlotNodes)
 			{
 				int32& Count = OutSlotNameToCountMap.FindOrAdd(SlotNode->Node.SlotName);
 				Count++;
 			}
 
-			for(UAnimGraphNode_SubInstance* SubInstanceNode : SubInstanceNodes)
+			for(UUTGraphNode_SubInstance* SubInstanceNode : SubInstanceNodes)
 			{
 				GetDuplicatedSlotAndStateNames(SubInstanceNode, OutStateMachineNameToCountMap, OutSlotNameToCountMap);
 			}
@@ -733,14 +690,14 @@ void FUTBlueprintCompiler::GetDuplicatedSlotAndStateNames(UAnimGraphNode_SubInst
 	}
 }
 
-int32 FUTBlueprintCompiler::GetAllocationIndexOfNode(UAnimGraphNode_Base* VisualAnimNode)
+int32 FUTBlueprintCompiler::GetAllocationIndexOfNode(UUTGraphNode_Base* VisualAnimNode)
 {
 	ProcessAnimationNode(VisualAnimNode);
 	int32* pResult = AllocatedAnimNodeIndices.Find(VisualAnimNode);
 	return (pResult != NULL) ? *pResult : INDEX_NONE;
 }
 
-void FUTBlueprintCompiler::PruneIsolatedAnimationNodes(const TArray<UAnimGraphNode_Base*>& RootSet, TArray<UAnimGraphNode_Base*>& GraphNodes)
+void FUTBlueprintCompiler::PruneIsolatedUtilityTreeNodes(const TArray<UUTGraphNode_Base*>& RootSet, TArray<UUTGraphNode_Base*>& GraphNodes)
 {
 	struct FNodeVisitorDownPoseWires
 	{
@@ -782,13 +739,13 @@ void FUTBlueprintCompiler::PruneIsolatedAnimationNodes(const TArray<UAnimGraphNo
 
 	for (auto RootIt = RootSet.CreateConstIterator(); RootIt; ++RootIt)
 	{
-		UAnimGraphNode_Base* RootNode = *RootIt;
+		UUTGraphNode_Base* RootNode = *RootIt;
 		Visitor.TraverseNodes(RootNode);
 	}
 
 	for (int32 NodeIndex = 0; NodeIndex < GraphNodes.Num(); ++NodeIndex)
 	{
-		UAnimGraphNode_Base* Node = GraphNodes[NodeIndex];
+		UUTGraphNode_Base* Node = GraphNodes[NodeIndex];
 		if (!Visitor.VisitedNodes.Contains(Node) && !IsNodePure(Node))
 		{
 			Node->BreakAllNodeLinks();
@@ -798,163 +755,23 @@ void FUTBlueprintCompiler::PruneIsolatedAnimationNodes(const TArray<UAnimGraphNo
 	}
 }
 
-void FUTBlueprintCompiler::ProcessAnimationNodesGivenRoot(TArray<UAnimGraphNode_Base*>& AnimNodeList, const TArray<UAnimGraphNode_Base*>& RootSet)
+void FUTBlueprintCompiler::ProcessAnimationNodesGivenRoot(TArray<UUTGraphNode_Base*>& UTNodeList, const TArray<UUTGraphNode_Base*>& RootSet)
 {
 	// Now prune based on the root set
 	if (MessageLog.NumErrors == 0)
 	{
-		PruneIsolatedAnimationNodes(RootSet, AnimNodeList);
+		PruneIsolatedAnimationNodes(RootSet, UTNodeList);
 	}
 
 	// Process the remaining nodes
-	for (auto SourceNodeIt = AnimNodeList.CreateIterator(); SourceNodeIt; ++SourceNodeIt)
+	for (auto SourceNodeIt = UTNodeList.CreateIterator(); SourceNodeIt; ++SourceNodeIt)
 	{
-		UAnimGraphNode_Base* VisualAnimNode = *SourceNodeIt;
-		ProcessAnimationNode(VisualAnimNode);
+		UUTGraphNode_Base* VisualUTNode = *SourceNodeIt;
+		ProcessUtilityTreeNode(VisualUTNode);
 	}
 }
 
-TAutoConsoleVariable<int32> CVarAnimDebugCachePoseNodeUpdateOrder(TEXT("a.Compiler.CachePoseNodeUpdateOrderDebug.Enable"), 0, TEXT("Toggle debugging for CacheNodeUpdateOrder debug during AnimBP compilation"));
-
-void FUTBlueprintCompiler::BuildCachedPoseNodeUpdateOrder()
-{
-	TArray<UAnimGraphNode_Root*> RootNodes;
-	ConsolidatedEventGraph->GetNodesOfClass<UAnimGraphNode_Root>(RootNodes);
-
-	TArray<UAnimGraphNode_SaveCachedPose*> OrderedSavePoseNodes;
-
-	// State results are also "root" nodes, need to find the true root
-	UAnimGraphNode_Root* ActualRootNode = nullptr;
-	for(UAnimGraphNode_Root* PossibleRootNode : RootNodes)
-	{
-		if(PossibleRootNode->GetClass() == UAnimGraphNode_Root::StaticClass())
-		{
-			ActualRootNode = PossibleRootNode;
-			break;
-		}
-	}
-
-	const bool bEnableDebug = (CVarAnimDebugCachePoseNodeUpdateOrder.GetValueOnAnyThread() == 1);
-
-	// Should only have one root node
-	if(ActualRootNode)
-	{
-		TArray<UAnimGraphNode_Base*> VisitedRootNodes;
-	
-		UE_CLOG(bEnableDebug, LogAnimation, Display, TEXT("CachePoseNodeOrdering BEGIN")); 
-
-		CachePoseNodeOrdering_StartNewTraversal(ActualRootNode, OrderedSavePoseNodes, VisitedRootNodes);
-
-		UE_CLOG(bEnableDebug, LogAnimation, Display, TEXT("CachePoseNodeOrdering END"));
-	}
-
-	if (bEnableDebug)
-	{
-		UE_LOG(LogAnimation, Display, TEXT("Ordered Save Pose Node List:"));
-		for (UAnimGraphNode_SaveCachedPose* SavedPoseNode : OrderedSavePoseNodes)
-		{
-			UE_LOG(LogAnimation, Display, TEXT("\t%s"), *SavedPoseNode->Node.CachePoseName.ToString())
-		}
-		UE_LOG(LogAnimation, Display, TEXT("End List"));
-	}
-
-	for(UAnimGraphNode_SaveCachedPose* PoseNode : OrderedSavePoseNodes)
-	{
-		if(int32* NodeIndex = AllocatedAnimNodeIndices.Find(PoseNode))
-		{
-			NewUtilityTreeBlueprintClass->OrderedSavedPoseIndices.Add(*NodeIndex);
-		}
-		else
-		{
-			MessageLog.Error(TEXT("Failed to find index for a saved pose node while building ordered pose list."));
-		}
-	}
-}
-
-void FUTBlueprintCompiler::CachePoseNodeOrdering_StartNewTraversal(UAnimGraphNode_Base* InRootNode, TArray<UAnimGraphNode_SaveCachedPose*> &OrderedSavePoseNodes, TArray<UAnimGraphNode_Base*> VisitedRootNodes)
-{
-	check(InRootNode);
-	UAnimGraphNode_SaveCachedPose* RootCacheNode = Cast<UAnimGraphNode_SaveCachedPose>(InRootNode);
-	FString RootName = RootCacheNode ? RootCacheNode->CacheName : InRootNode->GetName();
-
-	const bool bEnableDebug = (CVarAnimDebugCachePoseNodeUpdateOrder.GetValueOnAnyThread() == 1);
-
-	UE_CLOG(bEnableDebug, LogAnimation, Display, TEXT("StartNewTraversal %s"), *RootName);
-
-	// Track which root nodes we've visited to prevent infinite recursion.
-	VisitedRootNodes.Add(InRootNode);
-
-	// Need a list of only what we find here to recurse, we can't do that with the total list
-	TArray<UAnimGraphNode_SaveCachedPose*> InternalOrderedNodes;
-
-	// Traverse whole graph from root collecting SaveCachePose nodes we've touched.
-	CachePoseNodeOrdering_TraverseInternal(InRootNode, InternalOrderedNodes);
-
-	// Process nodes that we've touched 
-	UE_CLOG(bEnableDebug, LogAnimation, Display, TEXT("Process Queue for %s"), *RootName);
-	for (UAnimGraphNode_SaveCachedPose* QueuedCacheNode : InternalOrderedNodes)
-	{
-		if (VisitedRootNodes.Contains(QueuedCacheNode))
-		{
-			UE_CLOG(bEnableDebug, LogAnimation, Display, TEXT("Process Queue SaveCachePose %s. ALREADY VISITED, INFINITE RECURSION DETECTED! SKIPPING"), *QueuedCacheNode->CacheName);
-			MessageLog.Error(*FString::Printf(TEXT("Infinite recursion detected with SaveCachePose %s and %s"), *RootName, *QueuedCacheNode->CacheName));
-			continue;
-		}
-		else
-		{
-			OrderedSavePoseNodes.Remove(QueuedCacheNode);
-			OrderedSavePoseNodes.Add(QueuedCacheNode);
-
-			CachePoseNodeOrdering_StartNewTraversal(QueuedCacheNode, OrderedSavePoseNodes, VisitedRootNodes);
-		}
-	}
-
-	UE_CLOG(bEnableDebug, LogAnimation, Display, TEXT("EndNewTraversal %s"), *RootName);
-}
-
-void FUTBlueprintCompiler::CachePoseNodeOrdering_TraverseInternal(UAnimGraphNode_Base* InAnimGraphNode, TArray<UAnimGraphNode_SaveCachedPose*> &OrderedSavePoseNodes)
-{
-	TArray<UAnimGraphNode_Base*> LinkedAnimNodes;
-	GetLinkedAnimNodes(InAnimGraphNode, LinkedAnimNodes);
-
-	const bool bEnableDebug = (CVarAnimDebugCachePoseNodeUpdateOrder.GetValueOnAnyThread() == 1);
-
-	for (UAnimGraphNode_Base* LinkedNode : LinkedAnimNodes)
-	{
-		UE_CLOG(bEnableDebug, LogAnimation, Display, TEXT("\t Processing %s"), *LinkedNode->GetName());
-		if (UAnimGraphNode_UseCachedPose* UsePoseNode = Cast<UAnimGraphNode_UseCachedPose>(LinkedNode))
-		{
-			if (UAnimGraphNode_SaveCachedPose* SaveNode = UsePoseNode->SaveCachedPoseNode.Get())
-			{
-				UE_CLOG(bEnableDebug, LogAnimation, Display, TEXT("\t Queueing SaveCachePose %s"), *SaveNode->CacheName);
-
-				// Requeue the node we found
-				OrderedSavePoseNodes.Remove(SaveNode);
-				OrderedSavePoseNodes.Add(SaveNode);
-			}
-		}
-		else if (UAnimGraphNode_StateMachine* StateMachineNode = Cast<UAnimGraphNode_StateMachine>(LinkedNode))
-		{
-			for (UEdGraph* StateGraph : StateMachineNode->EditorStateMachineGraph->SubGraphs)
-			{
-				TArray<UAnimGraphNode_StateResult*> ResultNodes;
-				StateGraph->GetNodesOfClass(ResultNodes);
-
-				// We should only get one here but doesn't hurt to loop here in case that changes
-				for (UAnimGraphNode_StateResult* ResultNode : ResultNodes)
-				{
-					CachePoseNodeOrdering_TraverseInternal(ResultNode, OrderedSavePoseNodes);
-				}
-			}
-		}
-		else
-		{
-			CachePoseNodeOrdering_TraverseInternal(LinkedNode, OrderedSavePoseNodes);
-		}
-	}
-}
-
-void FUTBlueprintCompiler::GetLinkedAnimNodes(UAnimGraphNode_Base* InGraphNode, TArray<UAnimGraphNode_Base*> &LinkedAnimNodes)
+void FUTBlueprintCompiler::GetLinkedUTNodes(UUTGraphNode_Base* InGraphNode, TArray<UUTGraphNode_Base*> &LinkedUTNodes)
 {
 	for(UEdGraphPin* Pin : InGraphNode->Pins)
 	{
@@ -965,14 +782,14 @@ void FUTBlueprintCompiler::GetLinkedAnimNodes(UAnimGraphNode_Base* InGraphNode, 
 			{
 				if(Struct->IsChildOf(FPoseLinkBase::StaticStruct()))
 				{
-					GetLinkedAnimNodes_TraversePin(Pin, LinkedAnimNodes);
+					GetLinkedUTNodes_TraversePin(Pin, LinkedUTNodes);
 				}
 			}
 		}
 	}
 }
 
-void FUTBlueprintCompiler::GetLinkedAnimNodes_TraversePin(UEdGraphPin* InPin, TArray<UAnimGraphNode_Base*>& LinkedAnimNodes)
+void FUTBlueprintCompiler::GetLinkedUTNodes_TraversePin(UEdGraphPin* InPin, TArray<UUTGraphNode_Base*>& LinkedUTNodes)
 {
 	if(!InPin)
 	{
@@ -990,24 +807,24 @@ void FUTBlueprintCompiler::GetLinkedAnimNodes_TraversePin(UEdGraphPin* InPin, TA
 
 		if(UK2Node_Knot* InnerKnot = Cast<UK2Node_Knot>(OwningNode))
 		{
-			GetLinkedAnimNodes_TraversePin(InnerKnot->GetInputPin(), LinkedAnimNodes);
+			GetLinkedUTNodes_TraversePin(InnerKnot->GetInputPin(), LinkedUTNodes);
 		}
-		else if(UAnimGraphNode_Base* AnimNode = Cast<UAnimGraphNode_Base>(OwningNode))
+		else if(UUTGraphNode_Base* UTNode = Cast<UUTGraphNode_Base>(OwningNode))
 		{
-			GetLinkedAnimNodes_ProcessAnimNode(AnimNode, LinkedAnimNodes);
+			GetLinkedUTNodes_ProcessUTNode(UTNode, LinkedUTNodes);
 		}
 	}
 }
 
-void FUTBlueprintCompiler::GetLinkedAnimNodes_ProcessAnimNode(UAnimGraphNode_Base* AnimNode, TArray<UAnimGraphNode_Base *> &LinkedAnimNodes)
+void FUTBlueprintCompiler::GetLinkedUTNodes_ProcessUTNode(UUTGraphNode_Base* UTNode, TArray<UUTGraphNode_Base *> &LinkedUTNodes)
 {
-	if(!AllocatedAnimNodes.Contains(AnimNode))
+	if(!AllocatedUTNodes.Contains(UTNode))
 	{
-		UAnimGraphNode_Base* TrueSourceNode = MessageLog.FindSourceObjectTypeChecked<UAnimGraphNode_Base>(AnimNode);
+		UUTGraphNode_Base* TrueSourceNode = MessageLog.FindSourceObjectTypeChecked<UUTGraphNode_Base>(AnimNode);
 
-		if(UAnimGraphNode_Base** AllocatedNode = SourceNodeToProcessedNodeMap.Find(TrueSourceNode))
+		if(UUTGraphNode_Base** AllocatedNode = SourceNodeToProcessedNodeMap.Find(TrueSourceNode))
 		{
-			LinkedAnimNodes.Add(*AllocatedNode);
+			LinkedUTNodes.Add(*AllocatedNode);
 		}
 		else
 		{
@@ -1034,8 +851,8 @@ void FUTBlueprintCompiler::ProcessAllAnimationNodes()
 	}
 
 	// Build the raw node list
-	TArray<UAnimGraphNode_Base*> AnimNodeList;
-	ConsolidatedEventGraph->GetNodesOfClass<UAnimGraphNode_Base>(/*out*/ AnimNodeList);
+	TArray<UUTGraphNode_Base*> AnimNodeList;
+	ConsolidatedEventGraph->GetNodesOfClass<UUTGraphNode_Base>(/*out*/ AnimNodeList);
 
 	TArray<UK2Node_TransitionRuleGetter*> Getters;
 	ConsolidatedEventGraph->GetNodesOfClass<UK2Node_TransitionRuleGetter>(/*out*/ Getters);
@@ -1045,21 +862,21 @@ void FUTBlueprintCompiler::ProcessAllAnimationNodes()
 	ConsolidatedEventGraph->GetNodesOfClass<UK2Node_AnimGetter>(RootGraphAnimGetters);
 
 	// Find the root node
-	UAnimGraphNode_Root* PrePhysicsRoot = NULL;
-	TArray<UAnimGraphNode_Base*> RootSet;
+	UUTGraphNode_Root* PrePhysicsRoot = NULL;
+	TArray<UUTGraphNode_Base*> RootSet;
 
 	AllocateNodeIndexCounter = 0;
 	NewUtilityTreeBlueprintClass->RootAnimNodeIndex = 0;//INDEX_NONE;
 
 	for (auto SourceNodeIt = AnimNodeList.CreateIterator(); SourceNodeIt; ++SourceNodeIt)
 	{
-		UAnimGraphNode_Base* SourceNode = *SourceNodeIt;
-		UAnimGraphNode_Base* TrueNode = MessageLog.FindSourceObjectTypeChecked<UAnimGraphNode_Base>(SourceNode);
+		UUTGraphNode_Base* SourceNode = *SourceNodeIt;
+		UUTGraphNode_Base* TrueNode = MessageLog.FindSourceObjectTypeChecked<UUTGraphNode_Base>(SourceNode);
 		TrueNode->BlueprintUsage = EBlueprintUsage::NoProperties;
 
-		if (UAnimGraphNode_Root* PossibleRoot = Cast<UAnimGraphNode_Root>(SourceNode))
+		if (UUTGraphNode_Root* PossibleRoot = Cast<UUTGraphNode_Root>(SourceNode))
 		{
-			if (UAnimGraphNode_Root* Root = ExactCast<UAnimGraphNode_Root>(PossibleRoot))
+			if (UUTGraphNode_Root* Root = ExactCast<UUTGraphNode_Root>(PossibleRoot))
 			{
 				if (PrePhysicsRoot != NULL)
 				{
@@ -1073,18 +890,12 @@ void FUTBlueprintCompiler::ProcessAllAnimationNodes()
 				}
 			}
 		}
-		else if (UAnimGraphNode_SaveCachedPose* SavePoseRoot = Cast<UAnimGraphNode_SaveCachedPose>(SourceNode))
-		{
-			//@TODO: Ideally we only add these if there is a UseCachedPose node referencing them, but those can be anywhere and are hard to grab
-			SaveCachedPoseNodes.Add(SavePoseRoot->CacheName, SavePoseRoot);
-			RootSet.Add(SavePoseRoot);
-		}
 	}
 
 	if (PrePhysicsRoot != NULL)
 	{
 		// Process the animation nodes
-		ProcessAnimationNodesGivenRoot(AnimNodeList, RootSet);
+		ProcessAnimationNodesGivenRoot(UTNodeList, RootSet);
 
 		// Process the getter nodes in the graph if there were any
 		for (auto GetterIt = Getters.CreateIterator(); GetterIt; ++GetterIt)
@@ -1110,22 +921,16 @@ void FUTBlueprintCompiler::ProcessAllAnimationNodes()
 	{
 		MessageLog.Error(*FString::Printf(*LOCTEXT("ExpectedAFunctionEntry_Error", "Expected an animation root, but did not find one").ToString()));
 	}
-
-	if(CompileOptions.CompileType != EKismetCompileType::SkeletonOnly)
-	{
-		// Build cached pose map
-		BuildCachedPoseNodeUpdateOrder();
-	}
 }
 
-int32 FUTBlueprintCompiler::ExpandGraphAndProcessNodes(UEdGraph* SourceGraph, UAnimGraphNode_Base* SourceRootNode, UAnimStateTransitionNode* TransitionNode, TArray<UEdGraphNode*>* ClonedNodes)
+int32 FUTBlueprintCompiler::ExpandGraphAndProcessNodes(UEdGraph* SourceGraph, UUTGraphNode_Base* SourceRootNode, UAnimStateTransitionNode* TransitionNode, TArray<UEdGraphNode*>* ClonedNodes)
 {
 	// Clone the nodes from the source graph
 	UEdGraph* ClonedGraph = FEdGraphUtilities::CloneGraph(SourceGraph, NULL, &MessageLog, true);
 
 	// Grab all the animation nodes and find the corresponding root node in the cloned set
-	UAnimGraphNode_Base* TargetRootNode = NULL;
-	TArray<UAnimGraphNode_Base*> AnimNodeList;
+	UUTGraphNode_Base* TargetRootNode = NULL;
+	TArray<UUTGraphNode_Base*> AnimNodeList;
 	TArray<UK2Node_TransitionRuleGetter*> Getters;
 	TArray<UK2Node_AnimGetter*> AnimGetterNodes;
 
@@ -1141,7 +946,7 @@ int32 FUTBlueprintCompiler::ExpandGraphAndProcessNodes(UEdGraph* SourceGraph, UA
 		{
 			AnimGetterNodes.Add(NewGetterNode);
 		}
-		else if (UAnimGraphNode_Base* TestNode = Cast<UAnimGraphNode_Base>(Node))
+		else if (UUTGraphNode_Base* TestNode = Cast<UUTGraphNode_Base>(Node))
 		{
 			AnimNodeList.Add(TestNode);
 
@@ -1166,7 +971,7 @@ int32 FUTBlueprintCompiler::ExpandGraphAndProcessNodes(UEdGraph* SourceGraph, UA
 
 	// Process any animation nodes
 	{
-		TArray<UAnimGraphNode_Base*> RootSet;
+		TArray<UUTGraphNode_Base*> RootSet;
 		RootSet.Add(TargetRootNode);
 		ProcessAnimationNodesGivenRoot(AnimNodeList, RootSet);
 	}
@@ -1187,7 +992,7 @@ int32 FUTBlueprintCompiler::ExpandGraphAndProcessNodes(UEdGraph* SourceGraph, UA
 	return GetAllocationIndexOfNode(TargetRootNode);	
 }
 
-void FUTBlueprintCompiler::ProcessStateMachine(UAnimGraphNode_StateMachineBase* StateMachineInstance)
+void FUTBlueprintCompiler::ProcessStateMachine(UUTGraphNode_StateMachineBase* StateMachineInstance)
 {
 	struct FMachineCreator
 	{
@@ -1196,10 +1001,10 @@ void FUTBlueprintCompiler::ProcessStateMachine(UAnimGraphNode_StateMachineBase* 
 		TMap<UAnimStateNodeBase*, int32> StateIndexTable;
 		TMap<UAnimStateTransitionNode*, int32> TransitionIndexTable;
 		UUtilityTreeBlueprintGeneratedClass* UtilityTreeBlueprintClass;
-		UAnimGraphNode_StateMachineBase* StateMachineInstance;
+		UUTGraphNode_StateMachineBase* StateMachineInstance;
 		FCompilerResultsLog& MessageLog;
 	public:
-		FMachineCreator(FCompilerResultsLog& InMessageLog, UAnimGraphNode_StateMachineBase* InStateMachineInstance, int32 InMachineIndex, UUtilityTreeBlueprintGeneratedClass* InNewClass)
+		FMachineCreator(FCompilerResultsLog& InMessageLog, UUTGraphNode_StateMachineBase* InStateMachineInstance, int32 InMachineIndex, UUtilityTreeBlueprintGeneratedClass* InNewClass)
 			: MachineIndex(InMachineIndex)
 			, UtilityTreeBlueprintClass(InNewClass)
 			, StateMachineInstance(InStateMachineInstance)
@@ -1207,7 +1012,7 @@ void FUTBlueprintCompiler::ProcessStateMachine(UAnimGraphNode_StateMachineBase* 
 		{
 			FStateMachineDebugData& MachineInfo = GetMachineSpecificDebugData();
 			MachineInfo.MachineIndex = MachineIndex;
-			MachineInfo.MachineInstanceNode = MessageLog.FindSourceObjectTypeChecked<UAnimGraphNode_StateMachineBase>(InStateMachineInstance);
+			MachineInfo.MachineInstanceNode = MessageLog.FindSourceObjectTypeChecked<UUTGraphNode_StateMachineBase>(InStateMachineInstance);
 
 			StateMachineInstance->GetNode().StateMachineIndexInClass = MachineIndex;
 
@@ -1307,7 +1112,7 @@ void FUTBlueprintCompiler::ProcessStateMachine(UAnimGraphNode_StateMachineBase* 
 		return;
 	}
 
-	TMap<UAnimGraphNode_TransitionResult*, int32> AlreadyMergedTransitionList;
+	TMap<UUTGraphNode_TransitionResult*, int32> AlreadyMergedTransitionList;
 
 	const int32 MachineIndex = NewUtilityTreeBlueprintClass->BakedStateMachines.Num();
 	new (NewUtilityTreeBlueprintClass->BakedStateMachines) FBakedAnimationStateMachine();
@@ -1394,7 +1199,7 @@ void FUTBlueprintCompiler::ProcessStateMachine(UAnimGraphNode_StateMachineBase* 
 				BakedState.bAlwaysResetOnEntry = StateNode->bAlwaysResetOnEntry;
 
 				// Process the inner graph of this state
-				if (UAnimGraphNode_StateResult* AnimGraphResultNode = CastChecked<UAnimationStateGraph>(StateNode->BoundGraph)->GetResultNode())
+				if (UUTGraphNode_StateResult* AnimGraphResultNode = CastChecked<UAnimationStateGraph>(StateNode->BoundGraph)->GetResultNode())
 				{
 					BakedState.StateRootNodeIndex = ExpandGraphAndProcessNodes(StateNode->BoundGraph, AnimGraphResultNode);
 
@@ -1403,7 +1208,7 @@ void FUTBlueprintCompiler::ProcessStateMachine(UAnimGraphNode_StateMachineBase* 
 					{
 						if ((TestPin->Direction == EGPD_Input) && (TestPin->LinkedTo.Num() == 1))
 						{
-							if (UAnimGraphNode_SequencePlayer* SequencePlayer = Cast<UAnimGraphNode_SequencePlayer>(TestPin->LinkedTo[0]->GetOwningNode()))
+							if (UUTGraphNode_SequencePlayer* SequencePlayer = Cast<UUTGraphNode_SequencePlayer>(TestPin->LinkedTo[0]->GetOwningNode()))
 							{
 								SimplePlayerStatesMap.Add(BakedState.StateRootNodeIndex, MessageLog.FindSourceObject(SequencePlayer));
 							}
@@ -1438,7 +1243,7 @@ void FUTBlueprintCompiler::ProcessStateMachine(UAnimGraphNode_StateMachineBase* 
 			
 			if (ConduitNode->BoundGraph != NULL)
 			{
-				if (UAnimGraphNode_TransitionResult* EntryRuleResultNode = CastChecked<UAnimationTransitionGraph>(ConduitNode->BoundGraph)->GetResultNode())
+				if (UUTGraphNode_TransitionResult* EntryRuleResultNode = CastChecked<UAnimationTransitionGraph>(ConduitNode->BoundGraph)->GetResultNode())
 				{
 					BakedState.EntryRuleNodeIndex = ExpandGraphAndProcessNodes(ConduitNode->BoundGraph, EntryRuleResultNode);
 				}
@@ -1461,7 +1266,7 @@ void FUTBlueprintCompiler::ProcessStateMachine(UAnimGraphNode_StateMachineBase* 
 
 		// Add indices to all player nodes
 		TArray<UEdGraph*> GraphsToCheck;
-		TArray<UAnimGraphNode_AssetPlayerBase*> AssetPlayerNodes;
+		TArray<UUTGraphNode_AssetPlayerBase*> AssetPlayerNodes;
 		GraphsToCheck.Add(StateNode->GetBoundGraph());
 		StateNode->GetBoundGraph()->GetAllChildrenGraphs(GraphsToCheck);
 
@@ -1470,7 +1275,7 @@ void FUTBlueprintCompiler::ProcessStateMachine(UAnimGraphNode_StateMachineBase* 
 			ChildGraph->GetNodesOfClass(AssetPlayerNodes);
 		}
 
-		for(UAnimGraphNode_AssetPlayerBase* Node : AssetPlayerNodes)
+		for(UUTGraphNode_AssetPlayerBase* Node : AssetPlayerNodes)
 		{
 			if(int32* IndexPtr = NewUtilityTreeBlueprintClass->UtilityTreeBlueprintDebugData.NodeGuidToIndexMap.Find(Node->NodeGuid))
 			{
@@ -1491,7 +1296,7 @@ void FUTBlueprintCompiler::ProcessStateMachine(UAnimGraphNode_StateMachineBase* 
 			Rule.bDesiredTransitionReturnValue = (TransitionNode->GetPreviousState() == StateNode);
 			Rule.TransitionIndex = TransitionIndex;
 			
-			if (UAnimGraphNode_TransitionResult* TransitionResultNode = CastChecked<UAnimationTransitionGraph>(TransitionNode->BoundGraph)->GetResultNode())
+			if (UUTGraphNode_TransitionResult* TransitionResultNode = CastChecked<UAnimationTransitionGraph>(TransitionNode->BoundGraph)->GetResultNode())
 			{
 				if (int32* pIndex = AlreadyMergedTransitionList.Find(TransitionResultNode))
 				{
@@ -1523,11 +1328,11 @@ void FUTBlueprintCompiler::ProcessStateMachine(UAnimGraphNode_StateMachineBase* 
 				}
 
 				// Find all the pose evaluators used in this transition, save handles to them because we need to populate some pose data before executing
-				TArray<UAnimGraphNode_TransitionPoseEvaluator*> TransitionPoseList;
+				TArray<UUTGraphNode_TransitionPoseEvaluator*> TransitionPoseList;
 				for (auto ClonedNodesIt = ClonedNodes.CreateIterator(); ClonedNodesIt; ++ClonedNodesIt)
 				{
 					UEdGraphNode* Node = *ClonedNodesIt;
-					if (UAnimGraphNode_TransitionPoseEvaluator* TypedNode = Cast<UAnimGraphNode_TransitionPoseEvaluator>(Node))
+					if (UUTGraphNode_TransitionPoseEvaluator* TypedNode = Cast<UUTGraphNode_TransitionPoseEvaluator>(Node))
 					{
 						TransitionPoseList.Add(TypedNode);
 					}
@@ -1537,7 +1342,7 @@ void FUTBlueprintCompiler::ProcessStateMachine(UAnimGraphNode_StateMachineBase* 
 
 				for (auto TransitionPoseListIt = TransitionPoseList.CreateIterator(); TransitionPoseListIt; ++TransitionPoseListIt)
 				{
-					UAnimGraphNode_TransitionPoseEvaluator* TransitionPoseNode = *TransitionPoseListIt;
+					UUTGraphNode_TransitionPoseEvaluator* TransitionPoseNode = *TransitionPoseListIt;
 					Rule.PoseEvaluatorLinks.Add( GetAllocationIndexOfNode(TransitionPoseNode) );
 				}
 			}
@@ -1600,8 +1405,8 @@ void FUTBlueprintCompiler::CopyTermDefaultsToDefaultObject(UObject* DefaultObjec
 	}
 
 	int32 LinkIndexCount = 0;
-	TMap<UAnimGraphNode_Base*, int32> LinkIndexMap;
-	TMap<UAnimGraphNode_Base*, uint8*> NodeBaseAddresses;
+	TMap<UUTGraphNode_Base*, int32> LinkIndexMap;
+	TMap<UUTGraphNode_Base*, uint8*> NodeBaseAddresses;
 
 	// Initialize animation nodes from their templates
 	for (TFieldIterator<UProperty> It(DefaultObject->GetClass(), EFieldIteratorFlags::ExcludeSuper); It; ++It)
@@ -1629,8 +1434,8 @@ void FUTBlueprintCompiler::CopyTermDefaultsToDefaultObject(UObject* DefaultObjec
 	{
 		FPoseLinkMappingRecord& Record = *PoseLinkIt;
 
-		UAnimGraphNode_Base* LinkingNode = Record.GetLinkingNode();
-		UAnimGraphNode_Base* LinkedNode = Record.GetLinkedNode();
+		UUTGraphNode_Base* LinkingNode = Record.GetLinkingNode();
+		UUTGraphNode_Base* LinkedNode = Record.GetLinkedNode();
 		
 		// @TODO this is quick solution for crash - if there were previous errors and some nodes were not added, they could still end here -
 		// this check avoids that and since there are already errors, compilation won't be successful.
@@ -1831,8 +1636,8 @@ void FUTBlueprintCompiler::PostCompile()
 
 	for (const FEffectiveConstantRecord& ConstantRecord : ValidAnimNodePinConstants)
 	{
-		UAnimGraphNode_Base* Node = CastChecked<UAnimGraphNode_Base>(ConstantRecord.LiteralSourcePin->GetOwningNode());
-		UAnimGraphNode_Base* TrueNode = MessageLog.FindSourceObjectTypeChecked<UAnimGraphNode_Base>(Node);
+		UUTGraphNode_Base* Node = CastChecked<UUTGraphNode_Base>(ConstantRecord.LiteralSourcePin->GetOwningNode());
+		UUTGraphNode_Base* TrueNode = MessageLog.FindSourceObjectTypeChecked<UUTGraphNode_Base>(Node);
 		TrueNode->BlueprintUsage = EBlueprintUsage::DoesNotUseBlueprint;
 	}
 
@@ -1843,8 +1648,8 @@ void FUTBlueprintCompiler::PostCompile()
 			const FAnimNodeSinglePropertyHandler& Handler = EvaluationHandler.ServicedProperties.CreateConstIterator()->Value;
 			check(Handler.CopyRecords.Num() > 0);
 			check(Handler.CopyRecords[0].DestPin != nullptr);
-			UAnimGraphNode_Base* Node = CastChecked<UAnimGraphNode_Base>(Handler.CopyRecords[0].DestPin->GetOwningNode());
-			UAnimGraphNode_Base* TrueNode = MessageLog.FindSourceObjectTypeChecked<UAnimGraphNode_Base>(Node);	
+			UUTGraphNode_Base* Node = CastChecked<UUTGraphNode_Base>(Handler.CopyRecords[0].DestPin->GetOwningNode());
+			UUTGraphNode_Base* TrueNode = MessageLog.FindSourceObjectTypeChecked<UUTGraphNode_Base>(Node);	
 
 			FExposedValueHandler* HandlerPtr = EvaluationHandler.EvaluationHandlerProperty->ContainerPtrToValuePtr<FExposedValueHandler>(EvaluationHandler.NodeVariableProperty->ContainerPtrToValuePtr<void>(DefaultAnimInstance));
 			TrueNode->BlueprintUsage = HandlerPtr->BoundFunction != NAME_None ? EBlueprintUsage::UsesBlueprint : EBlueprintUsage::DoesNotUseBlueprint;
@@ -1895,11 +1700,11 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 	UAnimationAsset* AnimAsset= NULL;
 	int32 PlayerNodeIndex = INDEX_NONE;
 
-	if (UAnimGraphNode_Base* SourcePlayerNode = Getter->AssociatedAnimAssetPlayerNode)
+	if (UUTGraphNode_Base* SourcePlayerNode = Getter->AssociatedAnimAssetPlayerNode)
 	{
 		// This check should never fail as the source state is always processed first before handling it's rules
-		UAnimGraphNode_Base* TrueSourceNode = MessageLog.FindSourceObjectTypeChecked<UAnimGraphNode_Base>(SourcePlayerNode);
-		UAnimGraphNode_Base* UndertypedPlayerNode = SourceNodeToProcessedNodeMap.FindRef(TrueSourceNode);
+		UUTGraphNode_Base* TrueSourceNode = MessageLog.FindSourceObjectTypeChecked<UUTGraphNode_Base>(SourcePlayerNode);
+		UUTGraphNode_Base* UndertypedPlayerNode = SourceNodeToProcessedNodeMap.FindRef(TrueSourceNode);
 
 		if (UndertypedPlayerNode == NULL)
 		{
@@ -2074,7 +1879,7 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 							const int32 StateIndex = *pStateIndex;
 							
 							// This check should never fail as all animation nodes should be processed before getters are
-							UAnimGraphNode_Base* CompiledMachineInstanceNode = SourceNodeToProcessedNodeMap.FindChecked(DebugData->MachineInstanceNode.Get());
+							UUTGraphNode_Base* CompiledMachineInstanceNode = SourceNodeToProcessedNodeMap.FindChecked(DebugData->MachineInstanceNode.Get());
 							const int32 MachinePropertyIndex = AllocatedAnimNodeIndices.FindChecked(CompiledMachineInstanceNode);
 							int32 TransitionPropertyIndex = INDEX_NONE;
 
@@ -2116,7 +1921,7 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 							//const int32 MachineIndex = DebugData->MachineIndex;
 
 							// This check should never fail as all animation nodes should be processed before getters are
-							UAnimGraphNode_Base* CompiledMachineInstanceNode = SourceNodeToProcessedNodeMap.FindChecked(DebugData->MachineInstanceNode.Get());
+							UUTGraphNode_Base* CompiledMachineInstanceNode = SourceNodeToProcessedNodeMap.FindChecked(DebugData->MachineInstanceNode.Get());
 							const int32 MachinePropertyIndex = AllocatedAnimNodeIndices.FindChecked(CompiledMachineInstanceNode);
 
 							GetterHelper = SpawnCallAnimInstanceFunction(Getter, TEXT("GetInstanceStateWeight"));
@@ -2142,7 +1947,7 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 				if (FStateMachineDebugData* DebugData = NewUtilityTreeBlueprintClass->GetUtilityTreeBlueprintDebugData().StateMachineDebugData.Find(SourceStateNode->GetGraph()))
 				{
 					// This check should never fail as all animation nodes should be processed before getters are
-					UAnimGraphNode_Base* CompiledMachineInstanceNode = SourceNodeToProcessedNodeMap.FindChecked(DebugData->MachineInstanceNode.Get());
+					UUTGraphNode_Base* CompiledMachineInstanceNode = SourceNodeToProcessedNodeMap.FindChecked(DebugData->MachineInstanceNode.Get());
 					const int32 MachinePropertyIndex = AllocatedAnimNodeIndices.FindChecked(CompiledMachineInstanceNode);
 
 					GetterHelper = SpawnCallAnimInstanceFunction(Getter, TEXT("GetInstanceCurrentStateElapsedTime"));
@@ -2170,7 +1975,7 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 							//const int32 MachineIndex = DebugData->MachineIndex;
 
 							// This check should never fail as all animation nodes should be processed before getters are
-							UAnimGraphNode_Base* CompiledMachineInstanceNode = SourceNodeToProcessedNodeMap.FindChecked(DebugData->MachineInstanceNode.Get());
+							UUTGraphNode_Base* CompiledMachineInstanceNode = SourceNodeToProcessedNodeMap.FindChecked(DebugData->MachineInstanceNode.Get());
 							const int32 MachinePropertyIndex = AllocatedAnimNodeIndices.FindChecked(CompiledMachineInstanceNode);
 
 							GetterHelper = SpawnCallAnimInstanceFunction(Getter, TEXT("GetInstanceStateWeight"));
@@ -2381,13 +2186,13 @@ void FUTBlueprintCompiler::AutoWireAnimGetter(class UK2Node_AnimGetter* Getter, 
 	int32 ReferencedNodeIndex = INDEX_NONE;
 	int32 SubNodeIndex = INDEX_NONE;
 	
-	UAnimGraphNode_Base* ProcessedNodeCheck = NULL;
+	UUTGraphNode_Base* ProcessedNodeCheck = NULL;
 
-	if(UAnimGraphNode_Base* SourceNode = Getter->SourceNode)
+	if(UUTGraphNode_Base* SourceNode = Getter->SourceNode)
 	{
-		UAnimGraphNode_Base* ActualSourceNode = MessageLog.FindSourceObjectTypeChecked<UAnimGraphNode_Base>(SourceNode);
+		UUTGraphNode_Base* ActualSourceNode = MessageLog.FindSourceObjectTypeChecked<UUTGraphNode_Base>(SourceNode);
 		
-		if(UAnimGraphNode_Base* ProcessedSourceNode = SourceNodeToProcessedNodeMap.FindRef(ActualSourceNode))
+		if(UUTGraphNode_Base* ProcessedSourceNode = SourceNodeToProcessedNodeMap.FindRef(ActualSourceNode))
 		{
 			ProcessedNodeCheck = ProcessedSourceNode;
 

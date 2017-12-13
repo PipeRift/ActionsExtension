@@ -4,26 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "KismetCompiler.h"
-#include "Animation/AnimNodeBase.h"
-#include "AnimGraphNode_Base.h"
+//#include "UtilityTree/UTNodeBase.h"
+#include "UtilityTree/UTGraphNode_Base.h"
 
-class UAnimationGraphSchema;
-class UAnimGraphNode_SaveCachedPose;
-class UAnimGraphNode_StateMachineBase;
-class UAnimGraphNode_StateResult;
-class UAnimGraphNode_SubInstance;
-class UAnimGraphNode_UseCachedPose;
-class UAnimStateTransitionNode;
+class UUtilityTreeGraphSchema;
 class UK2Node_CallFunction;
 
 //
 // Forward declarations.
 //
-class UAnimGraphNode_SaveCachedPose;
-class UAnimGraphNode_UseCachedPose;
-class UAnimGraphNode_SubInput;
-class UAnimGraphNode_SubInstance;
-
 class UStructProperty;
 class UBlueprintGeneratedClass;
 struct FPoseLinkMappingRecord;
@@ -31,7 +20,7 @@ struct FPoseLinkMappingRecord;
 //////////////////////////////////////////////////////////////////////////
 // FUTBlueprintCompiler
 
-class KISMETCOMPILER_API FUTBlueprintCompiler : public FKismetCompilerContext
+class UTILITYTREEEDITOR_API FUTBlueprintCompiler : public FKismetCompilerContext
 {
 protected:
 	typedef FKismetCompilerContext Super;
@@ -226,41 +215,23 @@ protected:
 		bool CheckForMemberOnlyAccess(FPropertyCopyRecord& CopyRecord, UEdGraphPin* DestPin);
 	};
 
-	// State machines may get processed before their inner graphs, so their node index needs to be patched up later
-	// This structure records pending fixups.
-	struct FStateRootNodeIndexFixup
-	{
-	public:
-		int32 MachineIndex;
-		int32 StateIndex;
-		UAnimGraphNode_StateResult* ResultNode;
-
-	public:
-		FStateRootNodeIndexFixup(int32 InMachineIndex, int32 InStateIndex, UAnimGraphNode_StateResult* InResultNode)
-			: MachineIndex(InMachineIndex)
-			, StateIndex(InStateIndex)
-			, ResultNode(InResultNode)
-		{
-		}
-	};
-
 protected:
 	UUTBlueprintGeneratedClass* NewUtilityTreeBlueprintClass;
 	UUtilityTreeBlueprint* UtilityTreeBlueprint;
 
-	UUtilityTreeGraphSchema* AnimSchema;
+	UUtilityTreeGraphSchema* Schema;
 
 	// Map of allocated v3 nodes that are members of the class
-	TMap<class UAnimGraphNode_Base*, UProperty*> AllocatedAnimNodes;
-	TMap<UProperty*, class UAnimGraphNode_Base*> AllocatedNodePropertiesToNodes;
+	TMap<class UUTGraphNode_Base*, UProperty*> AllocatedUTNodes;
+	TMap<UProperty*, class UUTGraphNode_Base*> AllocatedNodePropertiesToNodes;
 	TMap<int32, UProperty*> AllocatedPropertiesByIndex;
 
 	// Map of true source objects (user edited ones) to the cloned ones that are actually compiled
-	TMap<class UAnimGraphNode_Base*, UAnimGraphNode_Base*> SourceNodeToProcessedNodeMap;
+	TMap<class UUTGraphNode_Base*, UUTGraphNode_Base*> SourceNodeToProcessedNodeMap;
 
-	// Index of the nodes (must match up with the runtime discovery process of nodes, which runs thru the property chain)
+	// Index of the nodes (must match up with the runtime discovery process of nodes, which runs through the property chain)
 	int32 AllocateNodeIndexCounter;
-	TMap<class UAnimGraphNode_Base*, int32> AllocatedAnimNodeIndices;
+	TMap<class UUTGraphNode_Base*, int32> AllocatedUTNodeIndices;
 
 	// Map from pose link LinkID address
 	//@TODO: Bad structure for a list of these
@@ -270,10 +241,7 @@ protected:
 	TArray<FEvaluationHandlerRecord> ValidEvaluationHandlerList;
 
 	// List of animation node literals (values exposed as pins but never wired up) that need to be pushed into the CDO
-	TArray<FEffectiveConstantRecord> ValidAnimNodePinConstants;
-
-	// Map of cache name to encountered save cached pose nodes
-	TMap<FString, UAnimGraphNode_SaveCachedPose*> SaveCachedPoseNodes;
+	TArray<FEffectiveConstantRecord> ValidUTNodePinConstants;
 
 	// List of getter node's we've found so the auto-wire can be deferred till after state machine compilation
 	TArray<class UK2Node_AnimGetter*> FoundGetterNodes;
@@ -289,27 +257,21 @@ private:
 	UK2Node_CallFunction* SpawnCallAnimInstanceFunction(UEdGraphNode* SourceNode, FName FunctionName);
 
 	// Creates an evaluation handler for an FExposedValue property in an animation node
-	void CreateEvaluationHandlerStruct(UAnimGraphNode_Base* VisualAnimNode, FEvaluationHandlerRecord& Record);
-	void CreateEvaluationHandlerInstance(UAnimGraphNode_Base* VisualAnimNode, FEvaluationHandlerRecord& Record);
+	void CreateEvaluationHandlerStruct(UUTGraphNode_Base* VisualUTNode, FEvaluationHandlerRecord& Record);
+	void CreateEvaluationHandlerInstance(UUTGraphNode_Base* VisualUTNode, FEvaluationHandlerRecord& Record);
 
 	// Prunes any nodes that aren't reachable via a pose link
-	void PruneIsolatedAnimationNodes(const TArray<UAnimGraphNode_Base*>& RootSet, TArray<UAnimGraphNode_Base*>& GraphNodes);
+	void PruneIsolatedUtilityTreeNodes(const TArray<UUTGraphNode_Base*>& RootSet, TArray<UUTGraphNode_Base*>& GraphNodes);
 
 	// Compiles one animation node
-	void ProcessAnimationNode(UAnimGraphNode_Base* VisualAnimNode);
-
-	// Compiles one state machine
-	void ProcessStateMachine(UAnimGraphNode_StateMachineBase* StateMachineInstance);
-
-	// Compiles one use cached pose instance
-	void ProcessUseCachedPose(UAnimGraphNode_UseCachedPose* UseCachedPose);
+	void ProcessUtilityTreeNode(UUTGraphNode_Base* VisualUTNode);
 
 	// Compiles one sub instance node
-	void ProcessSubInstance(UAnimGraphNode_SubInstance* SubInstance, bool bCheckForCycles);
+	void ProcessSubInstance(UUTGraphNode_SubInstance* SubInstance, bool bCheckForCycles);
 
 	// Traverses subinstance links looking for slot names and state machine names, returning their count in a name map
 	typedef TMap<FName, int32> NameToCountMap;
-	void GetDuplicatedSlotAndStateNames(UAnimGraphNode_SubInstance* InSubInstance, NameToCountMap& OutStateMachineNameToCountMap, NameToCountMap& OutSlotNameToCountMap);
+	void GetDuplicatedSlotAndStateNames(UUTGraphNode_SubInstance* InSubInstance, NameToCountMap& OutStateMachineNameToCountMap, NameToCountMap& OutSlotNameToCountMap);
 
 	// Compiles an entire animation graph
 	void ProcessAllAnimationNodes();
@@ -318,21 +280,21 @@ private:
 	void ProcessTransitionGetter(class UK2Node_TransitionRuleGetter* Getter, UAnimStateTransitionNode* TransitionNode);
 
 	//
-	void ProcessAnimationNodesGivenRoot(TArray<UAnimGraphNode_Base*>& AnimNodeList, const TArray<UAnimGraphNode_Base*>& RootSet);
+	void ProcessAnimationNodesGivenRoot(TArray<UUTGraphNode_Base*>& UTNodeList, const TArray<UUTGraphNode_Base*>& RootSet);
 
 	// Builds the update order list for saved pose nodes in this blueprint
 	void BuildCachedPoseNodeUpdateOrder();
 
 	// Traverses a graph to collect save pose nodes starting at InRootNode, then processes each node
-	void CachePoseNodeOrdering_StartNewTraversal(UAnimGraphNode_Base* InRootNode, TArray<UAnimGraphNode_SaveCachedPose*> &OrderedSavePoseNodes, TArray<UAnimGraphNode_Base*> VisitedRootNodes);
+	void CachePoseNodeOrdering_StartNewTraversal(UUTGraphNode_Base* InRootNode, TArray<UUTGraphNode_SaveCachedPose*> &OrderedSavePoseNodes, TArray<UUTGraphNode_Base*> VisitedRootNodes);
 
 	// Traverses a graph to collect save pose nodes starting at InAnimGraphNode, does NOT process saved pose nodes afterwards
-	void CachePoseNodeOrdering_TraverseInternal(UAnimGraphNode_Base* InAnimGraphNode, TArray<UAnimGraphNode_SaveCachedPose*> &OrderedSavePoseNodes);
+	void CachePoseNodeOrdering_TraverseInternal(UUTGraphNode_Base* InAnimGraphNode, TArray<UUTGraphNode_SaveCachedPose*> &OrderedSavePoseNodes);
 
 	// Gets all anim graph nodes that are piped into the provided node (traverses input pins)
-	void GetLinkedAnimNodes(UAnimGraphNode_Base* InGraphNode, TArray<UAnimGraphNode_Base*>& LinkedAnimNodes);
-	void GetLinkedAnimNodes_TraversePin(UEdGraphPin* InPin, TArray<UAnimGraphNode_Base*>& LinkedAnimNodes);
-	void GetLinkedAnimNodes_ProcessAnimNode(UAnimGraphNode_Base* AnimNode, TArray<UAnimGraphNode_Base*>& LinkedAnimNodes);
+	void GetLinkedAnimNodes(UUTGraphNode_Base* InGraphNode, TArray<UUTGraphNode_Base*>& LinkedAnimNodes);
+	void GetLinkedAnimNodes_TraversePin(UEdGraphPin* InPin, TArray<UUTGraphNode_Base*>& LinkedAnimNodes);
+	void GetLinkedAnimNodes_ProcessAnimNode(UUTGraphNode_Base* AnimNode, TArray<UUTGraphNode_Base*>& LinkedAnimNodes);
 
 	// Automatically fill in parameters for the specified Getter node
 	void AutoWireAnimGetter(class UK2Node_AnimGetter* Getter, UAnimStateTransitionNode* InTransitionNode);
@@ -343,12 +305,12 @@ private:
 	//   Processes any animation nodes
 	//   Returns the index of the processed cloned version of SourceRootNode
 	//	 If supplied, will also return an array of all cloned nodes
-	int32 ExpandGraphAndProcessNodes(UEdGraph* SourceGraph, UAnimGraphNode_Base* SourceRootNode, UAnimStateTransitionNode* TransitionNode = NULL, TArray<UEdGraphNode*>* ClonedNodes = NULL);
+	int32 ExpandGraphAndProcessNodes(UEdGraph* SourceGraph, UUTGraphNode_Base* SourceRootNode, UAnimStateTransitionNode* TransitionNode = NULL, TArray<UEdGraphNode*>* ClonedNodes = NULL);
 
 	// Dumps compiler diagnostic information
 	void DumpAnimDebugData();
 
 	// Returns the allocation index of the specified node, processing it if it was pending
-	int32 GetAllocationIndexOfNode(UAnimGraphNode_Base* VisualAnimNode);
+	int32 GetAllocationIndexOfNode(UUTGraphNode_Base* VisualAnimNode);
 };
 
