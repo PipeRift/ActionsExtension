@@ -14,13 +14,13 @@
 #include "K2Node_VariableGet.h"
 #include "K2Node_VariableSet.h"
 
-#include "K2Node_TransitionRuleGetter.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Kismet/KismetArrayLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetReinstanceUtilities.h"
 
+#include "UtilityTree/UtilityTreeBlueprint.h"
 #include "UtilityTree/UtilityTreeGraphSchema.h"
 #include "UtilityTree/UTGraphNode_Root.h"
 
@@ -36,7 +36,7 @@ bool FUTBlueprintCompiler::FEffectiveConstantRecord::Apply(UObject* Object)
 	uint8* StructPtr = nullptr;
 	uint8* PropertyPtr = nullptr;
 	
-	if(NodeVariableProperty->Struct == FAnimNode_SubInstance::StaticStruct())
+	if(NodeVariableProperty->Struct == FUTNode_SubInstance::StaticStruct())
 	{
 		PropertyPtr = ConstantProperty->ContainerPtrToValuePtr<uint8>(Object);
 	}
@@ -196,7 +196,7 @@ void FUTBlueprintCompiler::CreateEvaluationHandlerStruct(UUTGraphNode_Base* Visu
 		FName PropertyName(*PropertyNameStr);
 
 		// Does it get serviced by this handler?
-		if (FAnimNodeSinglePropertyHandler* SourceInfo = Record.ServicedProperties.Find(PropertyName))
+		if (FUTNodeSinglePropertyHandler* SourceInfo = Record.ServicedProperties.Find(PropertyName))
 		{
 			if (TargetPin->PinType.IsArray())
 			{
@@ -302,9 +302,9 @@ void FUTBlueprintCompiler::CreateEvaluationHandlerInstance(UUTGraphNode_Base* Vi
 	UEdGraphPin* ExecChain = Schema->FindExecutionPin(*EntryNode, EGPD_Output);
 
 	// Need to create a variable set call for each serviced property in the handler
-	for(TPair<FName, FAnimNodeSinglePropertyHandler>& PropHandlerPair : Record.ServicedProperties)
+	for(TPair<FName, FUTNodeSinglePropertyHandler>& PropHandlerPair : Record.ServicedProperties)
 	{
-		FAnimNodeSinglePropertyHandler& PropHandler = PropHandlerPair.Value;
+		FUTNodeSinglePropertyHandler& PropHandler = PropHandlerPair.Value;
 		FName PropertyName = PropHandlerPair.Key;
 
 		// Should be true, we only want to deal with instance targets in here
@@ -414,15 +414,11 @@ void FUTBlueprintCompiler::ProcessUtilityTreeNode(UUTGraphNode_Base* VisualAnimN
 	NewUtilityTreeBlueprintClass->GetDebugData().RegisterClassPropertyAssociation(TrueSourceObject, NewProperty);
 
 	// Node-specific compilation that requires compiler state info
-	if (UUTGraphNode_StateMachineBase* StateMachineInstance = Cast<UUTGraphNode_StateMachineBase>(VisualAnimNode))
+	/*if (UUTGraphNode_StateMachineBase* StateMachineInstance = Cast<UUTGraphNode_StateMachineBase>(VisualAnimNode))
 	{
 		// Compile the state machine
 		ProcessStateMachine(StateMachineInstance);
-	}
-	else if(UUTGraphNode_SubInstance* SubInstanceNode = Cast<UUTGraphNode_SubInstance>(VisualAnimNode))
-	{
-		ProcessSubInstance(SubInstanceNode, true);
-	}
+	}*/
 
 	// Record pose pins for later patchup and gather pins that have an associated evaluation handler
 	TMap<FName, FEvaluationHandlerRecord> StructEvalHandlers;
@@ -450,27 +446,15 @@ void FUTBlueprintCompiler::ProcessUtilityTreeNode(UUTGraphNode_Base* VisualAnimN
 			UProperty* SourcePinProperty = nullptr;
 			int32 SourceArrayIndex = INDEX_NONE;
 
-			// We have special handling below if we're targeting a subinstance instead of our own instance properties
-			UUTGraphNode_SubInstance* SubInstanceNode = Cast<UUTGraphNode_SubInstance>(VisualAnimNode);
+			VisualAnimNode->GetPinAssociatedProperty(NodeType, SourcePin, /*out*/ SourcePinProperty, /*out*/ SourceArrayIndex);
 
-			// Does this pin have an associated evaluation handler?
-			if(SubInstanceNode)
-			{
-				// Subinstance nodes use instance properties not node properties as they aren't UObjects
-				// and we can't store non-native properties there
-				SubInstanceNode->GetInstancePinProperty(NewUtilityTreeBlueprintClass, SourcePin, SourcePinProperty);
-			}
-			else
-			{
-				VisualAnimNode->GetPinAssociatedProperty(NodeType, SourcePin, /*out*/ SourcePinProperty, /*out*/ SourceArrayIndex);
-			}
 			
 			if (SourcePinProperty != NULL)
 			{
 				if (SourcePin->LinkedTo.Num() == 0)
 				{
 					// Literal that can be pushed into the CDO instead of re-evaluated every frame
-					new (ValidAnimNodePinConstants) FEffectiveConstantRecord(NewProperty, SourcePin, SourcePinProperty, SourceArrayIndex);
+					new (ValidUTNodePinConstants) FEffectiveConstantRecord(NewProperty, SourcePin, SourcePinProperty, SourceArrayIndex);
 					bConsumed = true;
 				}
 				else
@@ -486,17 +470,6 @@ void FUTBlueprintCompiler::ProcessUtilityTreeNode(UUTGraphNode_Base* VisualAnimN
 					FEvaluationHandlerRecord& EvalHandler = StructEvalHandlers.FindOrAdd(EvaluationHandlerName);
 
 					EvalHandler.RegisterPin(SourcePin, SourcePinProperty, SourceArrayIndex);
-
-					if(SubInstanceNode)
-					{
-						EvalHandler.bServicesInstanceProperties = true;
-
-						FAnimNodeSinglePropertyHandler* SinglePropHandler = EvalHandler.ServicedProperties.Find(SourcePinProperty->GetFName());
-						check(SinglePropHandler); // Should have been added in RegisterPin
-
-						// Flag that the target property is actually on the instance class and not the node
-						SinglePropHandler->bInstanceIsTarget = true;
-					}
 
 					bConsumed = true;
 				}
@@ -572,128 +545,10 @@ void FUTBlueprintCompiler::ProcessUtilityTreeNode(UUTGraphNode_Base* VisualAnimN
 	}
 }
 
-void FUTBlueprintCompiler::ProcessSubInstance(UUTGraphNode_SubInstance* SubInstance, bool bCheckForCycles)
+int32 FUTBlueprintCompiler::GetAllocationIndexOfNode(UUTGraphNode_Base* VisualUTNode)
 {
-	if(!SubInstance)
-	{
-		return;
-	}
-
-	for(UEdGraphPin* Pin : SubInstance->Pins)
-	{
-		if (Pin->bOrphanedPin || Pin->PinName == TEXT("InPose") || Pin->PinName == TEXT("Pose"))
-		{
-			continue;
-		}
-
-		// Add prefix to avoid collisions
-		FString PrefixedName = SubInstance->GetPinTargetVariableName(Pin);
-
-		// Create a property on the new class to hold the pin data
-		UProperty* NewProperty = FKismetCompilerUtilities::CreatePropertyOnScope(NewUtilityTreeBlueprintClass, FName(*PrefixedName), Pin->PinType, NewUtilityTreeBlueprintClass, 0, GetSchema(), MessageLog);
-		if(NewProperty)
-		{
-			NewProperty->SetMetaData(TEXT("Category"), TEXT("SubInstance"));
-			FKismetCompilerUtilities::LinkAddedProperty(NewUtilityTreeBlueprintClass, NewProperty);
-
-			// Add mappings to the node
-			if(!bGenerateSubInstanceVariables)
-			{
-				FAnimNode_SubInstance& RuntimeNode = SubInstance->Node;
-				
-				if(UProperty* FoundProperty = FindField<UProperty>(*RuntimeNode.InstanceClass, *Pin->PinName))
-				{
-					RuntimeNode.SourcePropertyNames.Add(NewProperty->GetFName());
-			
-					// Find the property on the internal instance
-					RuntimeNode.DestPropertyNames.Add(FoundProperty->GetFName());
-				}
-			}
-		}
-	}
-	
-	if(bCheckForCycles)
-	{
-		// Check for duplicated slot and state machine names to warn the user about how these 
-		// are boxed
-		NameToCountMap SlotNameToCountMap;
-		NameToCountMap StateMachineNameToCountMap;
-
-		GetDuplicatedSlotAndStateNames(SubInstance, StateMachineNameToCountMap, SlotNameToCountMap);
-
-
-		for(TPair<FName, int32>& Pair : SlotNameToCountMap)
-		{
-			if(Pair.Value > 1)
-			{
-				// Duplicated slot node
-				FString CompilerMessage = FString::Printf(TEXT("Slot name \"%s\" found across multiple instances. Slots are not visible outside of instances so duplicates or subinstances may not perform as expected."), *Pair.Key.ToString());
-				MessageLog.Warning(*CompilerMessage);
-			}
-		}
-
-		for(TPair<FName, int32>& Pair : StateMachineNameToCountMap)
-		{
-			if(Pair.Value > 1)
-			{
-				// Duplicated slot node
-				FString CompilerMessage = FString::Printf(TEXT("State machine \"%s\" found across multiple instances. States are not visible outside of instances so duplicates or subinstances may not perform as expected."), *Pair.Key.ToString());
-				MessageLog.Warning(*CompilerMessage);
-			}
-		}
-	}
-}
-
-void FUTBlueprintCompiler::GetDuplicatedSlotAndStateNames(UUTGraphNode_SubInstance* InSubInstance, NameToCountMap& OutStateMachineNameToCountMap, NameToCountMap& OutSlotNameToCountMap)
-{
-	if(!InSubInstance)
-	{
-		// Nothing to inspect
-		return;
-	}
-
-	if(UClass* InstanceClass = *InSubInstance->Node.InstanceClass)
-	{
-		UBlueprint* ClassBP = UBlueprint::GetBlueprintFromClass(InstanceClass);
-
-		TArray<UEdGraph*> AllGraphs;
-		ClassBP->GetAllGraphs(AllGraphs);
-
-		for(UEdGraph* Graph : AllGraphs)
-		{
-			TArray<UUTGraphNode_StateMachine*> StateMachineNodes;
-			TArray<UUTGraphNode_Slot*> SlotNodes;
-			TArray<UUTGraphNode_SubInstance*> SubInstanceNodes;
-
-			Graph->GetNodesOfClass(StateMachineNodes);
-			Graph->GetNodesOfClass(SlotNodes);
-			Graph->GetNodesOfClass(SubInstanceNodes);
-
-			for(UUTGraphNode_StateMachine* StateMachineNode : StateMachineNodes)
-			{
-				int32& Count = OutStateMachineNameToCountMap.FindOrAdd(FName(*StateMachineNode->GetStateMachineName()));
-				// Add one to count as we've encountered this name
-				Count++;
-			}
-
-			for(UUTGraphNode_Slot* SlotNode : SlotNodes)
-			{
-				int32& Count = OutSlotNameToCountMap.FindOrAdd(SlotNode->Node.SlotName);
-				Count++;
-			}
-
-			for(UUTGraphNode_SubInstance* SubInstanceNode : SubInstanceNodes)
-			{
-				GetDuplicatedSlotAndStateNames(SubInstanceNode, OutStateMachineNameToCountMap, OutSlotNameToCountMap);
-			}
-		}
-	}
-}
-
-int32 FUTBlueprintCompiler::GetAllocationIndexOfNode(UUTGraphNode_Base* VisualAnimNode)
-{
-	ProcessAnimationNode(VisualAnimNode);
-	int32* pResult = AllocatedAnimNodeIndices.Find(VisualAnimNode);
+	ProcessUtilityTreeNode(VisualUTNode);
+	int32* pResult = AllocatedUTNodeIndices.Find(VisualUTNode);
 	return (pResult != NULL) ? *pResult : INDEX_NONE;
 }
 
@@ -702,11 +557,11 @@ void FUTBlueprintCompiler::PruneIsolatedUtilityTreeNodes(const TArray<UUTGraphNo
 	struct FNodeVisitorDownPoseWires
 	{
 		TSet<UEdGraphNode*> VisitedNodes;
-		const UAnimationGraphSchema* Schema;
+		const UUtilityTreeGraphSchema* Schema;
 
 		FNodeVisitorDownPoseWires()
 		{
-			Schema = GetDefault<UAnimationGraphSchema>();
+			Schema = GetDefault<UUtilityTreeGraphSchema>();
 		}
 
 		void TraverseNodes(UEdGraphNode* Node)
@@ -755,7 +610,7 @@ void FUTBlueprintCompiler::PruneIsolatedUtilityTreeNodes(const TArray<UUTGraphNo
 	}
 }
 
-void FUTBlueprintCompiler::ProcessAnimationNodesGivenRoot(TArray<UUTGraphNode_Base*>& UTNodeList, const TArray<UUTGraphNode_Base*>& RootSet)
+void FUTBlueprintCompiler::ProcessUTNodesGivenRoot(TArray<UUTGraphNode_Base*>& UTNodeList, const TArray<UUTGraphNode_Base*>& RootSet)
 {
 	// Now prune based on the root set
 	if (MessageLog.NumErrors == 0)
@@ -838,7 +693,7 @@ void FUTBlueprintCompiler::GetLinkedUTNodes_ProcessUTNode(UUTGraphNode_Base* UTN
 	}
 }
 
-void FUTBlueprintCompiler::ProcessAllAnimationNodes()
+void FUTBlueprintCompiler::ProcessAllUtilityTreeNodes()
 {
 	// Validate the graph
 	ValidateGraphIsWellFormed(ConsolidatedEventGraph);
@@ -895,7 +750,7 @@ void FUTBlueprintCompiler::ProcessAllAnimationNodes()
 	if (PrePhysicsRoot != NULL)
 	{
 		// Process the animation nodes
-		ProcessAnimationNodesGivenRoot(UTNodeList, RootSet);
+		ProcessUTNodesGivenRoot(UTNodeList, RootSet);
 
 		// Process the getter nodes in the graph if there were any
 		for (auto GetterIt = Getters.CreateIterator(); GetterIt; ++GetterIt)
@@ -904,15 +759,15 @@ void FUTBlueprintCompiler::ProcessAllAnimationNodes()
 		}
 
 		// Wire root getters
-		for(UK2Node_AnimGetter* RootGraphGetter : RootGraphAnimGetters)
+		for(UK2Node_UTGetter* RootGraphGetter : RootGraphAnimGetters)
 		{
-			AutoWireAnimGetter(RootGraphGetter, nullptr);
+			AutoWireUTGetter(RootGraphGetter, nullptr);
 		}
 
 		// Wire nested getters
-		for(UK2Node_AnimGetter* Getter : FoundGetterNodes)
+		for(UK2Node_UTGetter* Getter : FoundGetterNodes)
 		{
-			AutoWireAnimGetter(Getter, nullptr);
+			AutoWireUTGetter(Getter, nullptr);
 		}
 
 		NewUtilityTreeBlueprintClass->RootAnimNodeIndex = GetAllocationIndexOfNode(PrePhysicsRoot);
@@ -932,7 +787,7 @@ int32 FUTBlueprintCompiler::ExpandGraphAndProcessNodes(UEdGraph* SourceGraph, UU
 	UUTGraphNode_Base* TargetRootNode = NULL;
 	TArray<UUTGraphNode_Base*> AnimNodeList;
 	TArray<UK2Node_TransitionRuleGetter*> Getters;
-	TArray<UK2Node_AnimGetter*> AnimGetterNodes;
+	TArray<UK2Node_UTGetter*> AnimGetterNodes;
 
 	for (auto NodeIt = ClonedGraph->Nodes.CreateIterator(); NodeIt; ++NodeIt)
 	{
@@ -973,7 +828,7 @@ int32 FUTBlueprintCompiler::ExpandGraphAndProcessNodes(UEdGraph* SourceGraph, UU
 	{
 		TArray<UUTGraphNode_Base*> RootSet;
 		RootSet.Add(TargetRootNode);
-		ProcessAnimationNodesGivenRoot(AnimNodeList, RootSet);
+		ProcessUTNodesGivenRoot(AnimNodeList, RootSet);
 	}
 
 	// Process the getter nodes in the graph if there were any
@@ -1373,7 +1228,7 @@ void FUTBlueprintCompiler::CopyTermDefaultsToDefaultObject(UObject* DefaultObjec
 
 			if (UStructProperty* RootStructProp = Cast<UStructProperty>(RootProp))
 			{
-				if (RootStructProp->Struct->IsChildOf(FAnimNode_Base::StaticStruct()))
+				if (RootStructProp->Struct->IsChildOf(FUTNode_Base::StaticStruct()))
 				{
 					UStructProperty* ChildStructProp = FindField<UStructProperty>(NewUtilityTreeBlueprintClass, *RootStructProp->GetName());
 					check(ChildStructProp);
@@ -1393,7 +1248,7 @@ void FUTBlueprintCompiler::CopyTermDefaultsToDefaultObject(UObject* DefaultObjec
 		{
 			if (Override->NewAsset)
 			{
-				FAnimNode_Base* BaseNode = NewUtilityTreeBlueprintClass->GetPropertyInstance<FAnimNode_Base>(DefaultObject, Override->ParentNodeGuid, EPropertySearchMode::Hierarchy);
+				FUTNode_Base* BaseNode = NewUtilityTreeBlueprintClass->GetPropertyInstance<FUTNode_Base>(DefaultObject, Override->ParentNodeGuid, EPropertySearchMode::Hierarchy);
 				if (BaseNode)
 				{
 					BaseNode->OverrideAsset(Override->NewAsset);
@@ -1524,8 +1379,8 @@ void FUTBlueprintCompiler::MergeUbergraphPagesIn(UEdGraph* Ubergraph)
 			}
 		}
 
-		// Compile the animation graph
-		ProcessAllAnimationNodes();
+		// Compile the utility tree graph
+		ProcessAllUTNodes();
 	}
 }
 
@@ -1645,7 +1500,7 @@ void FUTBlueprintCompiler::PostCompile()
 	{
 		if(EvaluationHandler.ServicedProperties.Num() > 0)
 		{
-			const FAnimNodeSinglePropertyHandler& Handler = EvaluationHandler.ServicedProperties.CreateConstIterator()->Value;
+			const FUTNodeSinglePropertyHandler& Handler = EvaluationHandler.ServicedProperties.CreateConstIterator()->Value;
 			check(Handler.CopyRecords.Num() > 0);
 			check(Handler.CopyRecords[0].DestPin != nullptr);
 			UUTGraphNode_Base* Node = CastChecked<UUTGraphNode_Base>(Handler.CopyRecords[0].DestPin->GetOwningNode());
@@ -1675,9 +1530,9 @@ void FUTBlueprintCompiler::PostCompile()
 	const USkeleton* CurrentSkeleton = UtilityTreeBlueprint->TargetSkeleton;
 	for (UStructProperty* Property : TFieldRange<UStructProperty>(UTBlueprintGeneratedClass, EFieldIteratorFlags::IncludeSuper))
 	{
-		if (Property->Struct->IsChildOf(FAnimNode_Base::StaticStruct()))
+		if (Property->Struct->IsChildOf(FUTNode_Base::StaticStruct()))
 		{
-			FAnimNode_Base* AnimNode = Property->ContainerPtrToValuePtr<FAnimNode_Base>(DefaultUTInstance);
+			FUTNode_Base* AnimNode = Property->ContainerPtrToValuePtr<FUTNode_Base>(DefaultUTInstance);
 			AnimNode->PostCompile(CurrentSkeleton);
 		}
 	}
@@ -1697,7 +1552,7 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 	UEdGraphPin* OutputPin = Getter->GetOutputPin();
 
 	UEdGraphPin* SourceTimePin = NULL;
-	UAnimationAsset* AnimAsset= NULL;
+	UUtilityTree* UtilityTree = NULL;
 	int32 PlayerNodeIndex = INDEX_NONE;
 
 	if (UUTGraphNode_Base* SourcePlayerNode = Getter->AssociatedAnimAssetPlayerNode)
@@ -1731,7 +1586,7 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 		const TCHAR* TimePropertyName = NULL;
 		if (UndertypedPlayerNode->DoesSupportTimeForTransitionGetter())
 		{
-			AnimAsset = UndertypedPlayerNode->GetAnimationAsset();
+			UtilityTree = UndertypedPlayerNode->GetUtilityTree();
 			TimePropertyInStructType = UndertypedPlayerNode->GetTimePropertyStruct();
 			TimePropertyName = UndertypedPlayerNode->GetTimePropertyName();
 		}
@@ -1775,7 +1630,7 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 	switch (Getter->GetterType)
 	{
 	case ETransitionGetter::AnimationAsset_GetCurrentTime:
-		if ((AnimAsset != NULL) && (SourceTimePin != NULL))
+		if ((UtilityTree != NULL) && (SourceTimePin != NULL))
 		{
 			GetterHelper = SpawnCallAnimInstanceFunction(Getter, TEXT("GetInstanceAssetPlayerTime"));
 			GetterHelper->FindPinChecked(TEXT("AssetPlayerIndex"))->DefaultValue = FString::FromInt(PlayerNodeIndex);
@@ -1793,7 +1648,7 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 		}
 		break;
 	case ETransitionGetter::AnimationAsset_GetLength:
-		if (AnimAsset != NULL)
+		if (UtilityTree != NULL)
 		{
 			GetterHelper = SpawnCallAnimInstanceFunction(Getter, TEXT("GetInstanceAssetPlayerLength"));
 			GetterHelper->FindPinChecked(TEXT("AssetPlayerIndex"))->DefaultValue = FString::FromInt(PlayerNodeIndex);
@@ -1811,7 +1666,7 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 		}
 		break;
 	case ETransitionGetter::AnimationAsset_GetCurrentTimeFraction:
-		if ((AnimAsset != NULL) && (SourceTimePin != NULL))
+		if ((UtilityTree  != NULL) && (SourceTimePin != NULL))
 		{
 			GetterHelper = SpawnCallAnimInstanceFunction(Getter, TEXT("GetInstanceAssetPlayerTimeFraction"));
 			GetterHelper->FindPinChecked(TEXT("AssetPlayerIndex"))->DefaultValue = FString::FromInt(PlayerNodeIndex);
@@ -1829,7 +1684,7 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 		}
 		break;
 	case ETransitionGetter::AnimationAsset_GetTimeFromEnd:
-		if ((AnimAsset != NULL) && (SourceTimePin != NULL))
+		if ((UtilityTree != NULL) && (SourceTimePin != NULL))
 		{
 			GetterHelper = SpawnCallAnimInstanceFunction(Getter, TEXT("GetInstanceAssetPlayerTimeFromEnd"));
 			GetterHelper->FindPinChecked(TEXT("AssetPlayerIndex"))->DefaultValue = FString::FromInt(PlayerNodeIndex);
@@ -1847,7 +1702,7 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 		}
 		break;
 	case ETransitionGetter::AnimationAsset_GetTimeFromEndFraction:
-		if ((AnimAsset != NULL) && (SourceTimePin != NULL))
+		if ((UtilityTree != NULL) && (SourceTimePin != NULL))
 		{
 			GetterHelper = SpawnCallAnimInstanceFunction(Getter, TEXT("GetInstanceAssetPlayerTimeFromEndFraction"));
 			GetterHelper->FindPinChecked(TEXT("AssetPlayerIndex"))->DefaultValue = FString::FromInt(PlayerNodeIndex);
@@ -1878,7 +1733,7 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 						{
 							const int32 StateIndex = *pStateIndex;
 							
-							// This check should never fail as all animation nodes should be processed before getters are
+							// This check should never fail as all Utility Tree nodes should be processed before getters are
 							UUTGraphNode_Base* CompiledMachineInstanceNode = SourceNodeToProcessedNodeMap.FindChecked(DebugData->MachineInstanceNode.Get());
 							const int32 MachinePropertyIndex = AllocatedAnimNodeIndices.FindChecked(CompiledMachineInstanceNode);
 							int32 TransitionPropertyIndex = INDEX_NONE;
@@ -1920,7 +1775,7 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 							const int32 StateIndex = *pStateIndex;
 							//const int32 MachineIndex = DebugData->MachineIndex;
 
-							// This check should never fail as all animation nodes should be processed before getters are
+							// This check should never fail as all Utility Tree nodes should be processed before getters are
 							UUTGraphNode_Base* CompiledMachineInstanceNode = SourceNodeToProcessedNodeMap.FindChecked(DebugData->MachineInstanceNode.Get());
 							const int32 MachinePropertyIndex = AllocatedAnimNodeIndices.FindChecked(CompiledMachineInstanceNode);
 
@@ -1946,11 +1801,11 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 			{
 				if (FStateMachineDebugData* DebugData = NewUtilityTreeBlueprintClass->GetUtilityTreeBlueprintDebugData().StateMachineDebugData.Find(SourceStateNode->GetGraph()))
 				{
-					// This check should never fail as all animation nodes should be processed before getters are
+					// This check should never fail as all Utility Tree nodes should be processed before getters are
 					UUTGraphNode_Base* CompiledMachineInstanceNode = SourceNodeToProcessedNodeMap.FindChecked(DebugData->MachineInstanceNode.Get());
-					const int32 MachinePropertyIndex = AllocatedAnimNodeIndices.FindChecked(CompiledMachineInstanceNode);
+					const int32 MachinePropertyIndex = AllocatedUTNodeIndices.FindChecked(CompiledMachineInstanceNode);
 
-					GetterHelper = SpawnCallAnimInstanceFunction(Getter, TEXT("GetInstanceCurrentStateElapsedTime"));
+					GetterHelper = SpawnCallUTInstanceFunction(Getter, TEXT("GetInstanceCurrentStateElapsedTime"));
 					GetterHelper->FindPinChecked(TEXT("MachineIndex"))->DefaultValue = FString::FromInt(MachinePropertyIndex);
 				}
 			}
@@ -1964,7 +1819,7 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 	case ETransitionGetter::CurrentState_GetBlendWeight:
 		{
 			check(TransitionNode);
-			if (UAnimStateNode* SourceStateNode = MessageLog.FindSourceObjectTypeChecked<UAnimStateNode>(TransitionNode->GetPreviousState()))
+			if (UUTStateNode* SourceStateNode = MessageLog.FindSourceObjectTypeChecked<UAnimStateNode>(TransitionNode->GetPreviousState()))
 			{
 				{
 					if (FStateMachineDebugData* DebugData = NewUtilityTreeBlueprintClass->GetUtilityTreeBlueprintDebugData().StateMachineDebugData.Find(SourceStateNode->GetGraph()))
@@ -1974,11 +1829,11 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 							const int32 StateIndex = *pStateIndex;
 							//const int32 MachineIndex = DebugData->MachineIndex;
 
-							// This check should never fail as all animation nodes should be processed before getters are
+							// This check should never fail as all Utility Tree nodes should be processed before getters are
 							UUTGraphNode_Base* CompiledMachineInstanceNode = SourceNodeToProcessedNodeMap.FindChecked(DebugData->MachineInstanceNode.Get());
-							const int32 MachinePropertyIndex = AllocatedAnimNodeIndices.FindChecked(CompiledMachineInstanceNode);
+							const int32 MachinePropertyIndex = AllocatedUTNodeIndices.FindChecked(CompiledMachineInstanceNode);
 
-							GetterHelper = SpawnCallAnimInstanceFunction(Getter, TEXT("GetInstanceStateWeight"));
+							GetterHelper = SpawnCallUTInstanceFunction(Getter, TEXT("GetInstanceStateWeight"));
 							GetterHelper->FindPinChecked(TEXT("MachineIndex"))->DefaultValue = FString::FromInt(MachinePropertyIndex);
 							GetterHelper->FindPinChecked(TEXT("StateIndex"))->DefaultValue = FString::FromInt(StateIndex);
 						}
@@ -2012,34 +1867,6 @@ void FUTBlueprintCompiler::ProcessTransitionGetter(UK2Node_TransitionRuleGetter*
 	Getter->BreakAllNodeLinks();
 }
 
-int32 FUTBlueprintCompiler::FindOrAddNotify(FAnimNotifyEvent& Notify)
-{
-	if ((Notify.NotifyName == NAME_None) && (Notify.Notify == NULL) && (Notify.NotifyStateClass == NULL))
-	{
-		// Non event, don't add it
-		return INDEX_NONE;
-	}
-
-	int32 NewIndex = INDEX_NONE;
-	for (int32 NotifyIdx = 0; NotifyIdx < NewUtilityTreeBlueprintClass->AnimNotifies.Num(); NotifyIdx++)
-	{
-		if( (NewUtilityTreeBlueprintClass->AnimNotifies[NotifyIdx].NotifyName == Notify.NotifyName) 
-			&& (NewUtilityTreeBlueprintClass->AnimNotifies[NotifyIdx].Notify == Notify.Notify) 
-			&& (NewUtilityTreeBlueprintClass->AnimNotifies[NotifyIdx].NotifyStateClass == Notify.NotifyStateClass) 
-			)
-		{
-			NewIndex = NotifyIdx;
-			break;
-		}
-	}
-
-	if (NewIndex == INDEX_NONE)
-	{
-		NewIndex = NewUtilityTreeBlueprintClass->AnimNotifies.Add(Notify);
-	}
-	return NewIndex;
-}
-
 void FUTBlueprintCompiler::PostCompileDiagnostics()
 {
 	FKismetCompilerContext::PostCompileDiagnostics();
@@ -2068,29 +1895,29 @@ void FUTBlueprintCompiler::PostCompileDiagnostics()
 	if (!bIsDerivedUtilityTreeBlueprint)
 	{
 		// Run thru all nodes and make sure they like the final results
-		for (auto NodeIt = AllocatedAnimNodeIndices.CreateConstIterator(); NodeIt; ++NodeIt)
+		for (auto NodeIt = AllocatedUTNodeIndices.CreateConstIterator(); NodeIt; ++NodeIt)
 		{
 			if (UUTGraphNode_Base* Node = NodeIt.Key())
 			{
-				Node->ValidateAnimNodePostCompile(MessageLog, NewUtilityTreeBlueprintClass, NodeIt.Value());
+				Node->ValidateUTNodePostCompile(MessageLog, NewUtilityTreeBlueprintClass, NodeIt.Value());
 			}
 		}
 
 		//
-		bool bDisplayAnimDebug = false;
+		bool bDisplayUTDebug = false;
 		if (!Blueprint->bIsRegeneratingOnLoad)
 		{
-			GConfig->GetBool(TEXT("Kismet"), TEXT("CompileDisplaysUtilityTreeBlueprintBackend"), /*out*/ bDisplayAnimDebug, GEngineIni);
+			GConfig->GetBool(TEXT("Kismet"), TEXT("CompileDisplaysUtilityTreeBlueprintBackend"), /*out*/ bDisplayUTDebug, GEngineIni);
 
-			if (bDisplayAnimDebug)
+			if (bDisplayUTDebug)
 			{
-				DumpAnimDebugData();
+				DumpUTDebugData();
 			}
 		}
 	}
 }
 
-void FUTBlueprintCompiler::DumpAnimDebugData()
+void FUTBlueprintCompiler::DumpUTDebugData()
 {
 	// List all compiled-down nodes and their sources
 	if (NewUtilityTreeBlueprintClass->RootAnimNodeProperty == NULL)
@@ -2180,7 +2007,7 @@ void FUTBlueprintCompiler::DumpAnimDebugData()
 	}
 }
 
-void FUTBlueprintCompiler::AutoWireAnimGetter(class UK2Node_AnimGetter* Getter, UAnimStateTransitionNode* InTransitionNode)
+void FUTBlueprintCompiler::AutoWireUTGetter(class UK2Node_UTGetter* Getter, UUTStateTransitionNode* InTransitionNode)
 {
 	UEdGraphPin* ReferencedNodeTimePin = nullptr;
 	int32 ReferencedNodeIndex = INDEX_NONE;
@@ -2270,10 +2097,10 @@ void FUTBlueprintCompiler::FEvaluationHandlerRecord::PatchFunctionNameAndCopyRec
 
 	if (IsFastPath())
 	{
-		for (const TPair<FName, FAnimNodeSinglePropertyHandler>& ServicedPropPair : ServicedProperties)
+		for (const TPair<FName, FUTNodeSinglePropertyHandler>& ServicedPropPair : ServicedProperties)
 		{
 			const FName& PropertyName = ServicedPropPair.Key;
-			const FAnimNodeSinglePropertyHandler& PropertyHandler = ServicedPropPair.Value;
+			const FUTNodeSinglePropertyHandler& PropertyHandler = ServicedPropPair.Value;
 
 			for (const FPropertyCopyRecord& PropertyCopyRecord : PropertyHandler.CopyRecords)
 			{
@@ -2356,7 +2183,7 @@ static UEdGraphNode* FollowKnots(UEdGraphPin* FromPin, UEdGraphPin*& ToPin)
 
 void FUTBlueprintCompiler::FEvaluationHandlerRecord::RegisterPin(UEdGraphPin* DestPin, UProperty* AssociatedProperty, int32 AssociatedPropertyArrayIndex)
 {
-	FAnimNodeSinglePropertyHandler& Handler = ServicedProperties.FindOrAdd(AssociatedProperty->GetFName());
+	FUTNodeSinglePropertyHandler& Handler = ServicedProperties.FindOrAdd(AssociatedProperty->GetFName());
 	Handler.CopyRecords.Emplace(DestPin, AssociatedProperty, AssociatedPropertyArrayIndex);
 }
 
@@ -2364,7 +2191,7 @@ void FUTBlueprintCompiler::FEvaluationHandlerRecord::BuildFastPathCopyRecords()
 {
 	if (GetDefault<UEngine>()->bOptimizeUtilityTreeBlueprintMemberVariableAccess)
 	{
-		for (TPair<FName, FAnimNodeSinglePropertyHandler>& ServicedPropPair : ServicedProperties)
+		for (TPair<FName, FUTNodeSinglePropertyHandler>& ServicedPropPair : ServicedProperties)
 		{
 			for (FPropertyCopyRecord& CopyRecord : ServicedPropPair.Value.CopyRecords)
 			{
@@ -2577,7 +2404,7 @@ bool FUTBlueprintCompiler::FEvaluationHandlerRecord::CheckForMemberOnlyAccess(FP
 
 void FUTBlueprintCompiler::FEvaluationHandlerRecord::ValidateFastPath(UClass* InCompiledClass)
 {
-	for (TPair<FName, FAnimNodeSinglePropertyHandler>& ServicedPropPair : ServicedProperties)
+	for (TPair<FName, FUTNodeSinglePropertyHandler>& ServicedPropPair : ServicedProperties)
 	{
 		for (FPropertyCopyRecord& CopyRecord : ServicedPropPair.Value.CopyRecords)
 		{

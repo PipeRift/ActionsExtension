@@ -17,6 +17,9 @@ class UStructProperty;
 class UBlueprintGeneratedClass;
 struct FPoseLinkMappingRecord;
 
+class UUtilityTreeBlueprint;
+
+
 //////////////////////////////////////////////////////////////////////////
 // FUTBlueprintCompiler
 
@@ -95,7 +98,7 @@ protected:
 	};
 
 	// Wireup record for a single anim node property (which might be an array)
-	struct FAnimNodeSinglePropertyHandler
+	struct FUTNodeSinglePropertyHandler
 	{
 		/** Copy records */
 		TArray<FPropertyCopyRecord> CopyRecords;
@@ -103,7 +106,7 @@ protected:
 		// If the anim instance is the container target instead of the node.
 		bool bInstanceIsTarget;
 
-		FAnimNodeSinglePropertyHandler()
+		FUTNodeSinglePropertyHandler()
 			: bInstanceIsTarget(false)
 		{
 		}
@@ -158,7 +161,7 @@ protected:
 		bool bServicesInstanceProperties;
 
 		// Set of properties serviced by this handler (Map from property name to the record for that property)
-		TMap<FName, FAnimNodeSinglePropertyHandler> ServicedProperties;
+		TMap<FName, FUTNodeSinglePropertyHandler> ServicedProperties;
 
 		// The resulting function name
 		FName HandlerFunctionName;
@@ -174,10 +177,10 @@ protected:
 
 		bool IsFastPath() const
 		{
-			for(TMap<FName, FAnimNodeSinglePropertyHandler>::TConstIterator It(ServicedProperties); It; ++It)
+			for(TMap<FName, FUTNodeSinglePropertyHandler>::TConstIterator It(ServicedProperties); It; ++It)
 			{
-				const FAnimNodeSinglePropertyHandler& AnimNodeSinglePropertyHandler = It.Value();
-				for (const FPropertyCopyRecord& CopyRecord : AnimNodeSinglePropertyHandler.CopyRecords)
+				const FUTNodeSinglePropertyHandler& UTNodeSinglePropertyHandler = It.Value();
+				for (const FPropertyCopyRecord& CopyRecord : UTNodeSinglePropertyHandler.CopyRecords)
 				{
 					if (!CopyRecord.IsFastPath())
 					{
@@ -240,23 +243,23 @@ protected:
 	// List of successfully created evaluation handlers
 	TArray<FEvaluationHandlerRecord> ValidEvaluationHandlerList;
 
-	// List of animation node literals (values exposed as pins but never wired up) that need to be pushed into the CDO
+	// List of utility tree node literals (values exposed as pins but never wired up) that need to be pushed into the CDO
 	TArray<FEffectiveConstantRecord> ValidUTNodePinConstants;
 
 	// List of getter node's we've found so the auto-wire can be deferred till after state machine compilation
-	TArray<class UK2Node_AnimGetter*> FoundGetterNodes;
+	TArray<class UK2Node_UTGetter*> FoundGetterNodes;
 
 	// Set of used handler function names
 	TSet<FName> HandlerFunctionNames;
 
 	// True if any parent class is also generated from an animation blueprint
 	bool bIsDerivedUtilityTreeBlueprint;
+
 private:
-	int32 FindOrAddNotify(FAnimNotifyEvent& Notify);
 
-	UK2Node_CallFunction* SpawnCallAnimInstanceFunction(UEdGraphNode* SourceNode, FName FunctionName);
+	UK2Node_CallFunction* SpawnCallUTInstanceFunction(UEdGraphNode* SourceNode, FName FunctionName);
 
-	// Creates an evaluation handler for an FExposedValue property in an animation node
+	// Creates an evaluation handler for an FExposedValue property in an utility tree node
 	void CreateEvaluationHandlerStruct(UUTGraphNode_Base* VisualUTNode, FEvaluationHandlerRecord& Record);
 	void CreateEvaluationHandlerInstance(UUTGraphNode_Base* VisualUTNode, FEvaluationHandlerRecord& Record);
 
@@ -266,38 +269,19 @@ private:
 	// Compiles one animation node
 	void ProcessUtilityTreeNode(UUTGraphNode_Base* VisualUTNode);
 
-	// Compiles one sub instance node
-	void ProcessSubInstance(UUTGraphNode_SubInstance* SubInstance, bool bCheckForCycles);
-
-	// Traverses subinstance links looking for slot names and state machine names, returning their count in a name map
-	typedef TMap<FName, int32> NameToCountMap;
-	void GetDuplicatedSlotAndStateNames(UUTGraphNode_SubInstance* InSubInstance, NameToCountMap& OutStateMachineNameToCountMap, NameToCountMap& OutSlotNameToCountMap);
-
 	// Compiles an entire animation graph
-	void ProcessAllAnimationNodes();
+	void ProcessAllUtilityTreeNodes();
 
-	// Convert transition getters into a function call/etc...
-	void ProcessTransitionGetter(class UK2Node_TransitionRuleGetter* Getter, UAnimStateTransitionNode* TransitionNode);
+	
+	void ProcessUTNodesGivenRoot(TArray<UUTGraphNode_Base*>& UTNodeList, const TArray<UUTGraphNode_Base*>& RootSet);
 
-	//
-	void ProcessAnimationNodesGivenRoot(TArray<UUTGraphNode_Base*>& UTNodeList, const TArray<UUTGraphNode_Base*>& RootSet);
-
-	// Builds the update order list for saved pose nodes in this blueprint
-	void BuildCachedPoseNodeUpdateOrder();
-
-	// Traverses a graph to collect save pose nodes starting at InRootNode, then processes each node
-	void CachePoseNodeOrdering_StartNewTraversal(UUTGraphNode_Base* InRootNode, TArray<UUTGraphNode_SaveCachedPose*> &OrderedSavePoseNodes, TArray<UUTGraphNode_Base*> VisitedRootNodes);
-
-	// Traverses a graph to collect save pose nodes starting at InAnimGraphNode, does NOT process saved pose nodes afterwards
-	void CachePoseNodeOrdering_TraverseInternal(UUTGraphNode_Base* InAnimGraphNode, TArray<UUTGraphNode_SaveCachedPose*> &OrderedSavePoseNodes);
-
-	// Gets all anim graph nodes that are piped into the provided node (traverses input pins)
-	void GetLinkedAnimNodes(UUTGraphNode_Base* InGraphNode, TArray<UUTGraphNode_Base*>& LinkedAnimNodes);
-	void GetLinkedAnimNodes_TraversePin(UEdGraphPin* InPin, TArray<UUTGraphNode_Base*>& LinkedAnimNodes);
-	void GetLinkedAnimNodes_ProcessAnimNode(UUTGraphNode_Base* AnimNode, TArray<UUTGraphNode_Base*>& LinkedAnimNodes);
+	// Gets all utility tree graph nodes that are piped into the provided node (traverses input pins)
+	void GetLinkedUTNodes(UUTGraphNode_Base* InGraphNode, TArray<UUTGraphNode_Base*>& LinkedUTNodes);
+	void GetLinkedUTNodes_TraversePin(UEdGraphPin* InPin, TArray<UUTGraphNode_Base*>& LinkedUTNodes);
+	void GetLinkedUTNodes_ProcessUTNode(UUTGraphNode_Base* UTNode, TArray<UUTGraphNode_Base*>& LinkedUTNodes);
 
 	// Automatically fill in parameters for the specified Getter node
-	void AutoWireAnimGetter(class UK2Node_AnimGetter* Getter, UAnimStateTransitionNode* InTransitionNode);
+	void AutoWireUTGetter(class UK2Node_UTGetter* Getter, UUTStateTransitionNode* InTransitionNode);
 
 	// This function does the following steps:
 	//   Clones the nodes in the specified source graph
@@ -308,7 +292,7 @@ private:
 	int32 ExpandGraphAndProcessNodes(UEdGraph* SourceGraph, UUTGraphNode_Base* SourceRootNode, UAnimStateTransitionNode* TransitionNode = NULL, TArray<UEdGraphNode*>* ClonedNodes = NULL);
 
 	// Dumps compiler diagnostic information
-	void DumpAnimDebugData();
+	void DumpUTDebugData();
 
 	// Returns the allocation index of the specified node, processing it if it was pending
 	int32 GetAllocationIndexOfNode(UUTGraphNode_Base* VisualAnimNode);
