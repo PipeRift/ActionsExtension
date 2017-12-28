@@ -287,9 +287,9 @@ void UUTGraphNode_Base::OnNodeSelected(bool bInIsSelected, FEditorModeTools& InM
 {
 }
 
-EAnimAssetHandlerType UUTGraphNode_Base::SupportsAssetClass(const UClass* AssetClass) const
+EUTAssetHandlerType UUTGraphNode_Base::SupportsAssetClass(const UClass* AssetClass) const
 {
-	return EAnimAssetHandlerType::NotSupported;
+	return EUTAssetHandlerType::NotSupported;
 }
 
 

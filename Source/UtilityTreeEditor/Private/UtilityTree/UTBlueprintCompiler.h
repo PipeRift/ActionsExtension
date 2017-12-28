@@ -1,9 +1,10 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+// Copyright 2015-2017 Piperift. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "KismetCompiler.h"
+#include "UTBlueprintGeneratedClass.h"
 //#include "UtilityTree/UTNodeBase.h"
 #include "UtilityTree/UTGraphNode_Base.h"
 
@@ -43,10 +44,8 @@ protected:
 	virtual void SpawnNewClass(const FString& NewClassName) override;
 	virtual void OnNewClassSet(UBlueprintGeneratedClass* ClassToUse) override;
 	virtual void CopyTermDefaultsToDefaultObject(UObject* DefaultObject) override;
-	virtual void PostCompileDiagnostics() override;
 	virtual void EnsureProperGeneratedClass(UClass*& TargetClass) override;
 	virtual void CleanAndSanitizeClass(UBlueprintGeneratedClass* ClassToClean, UObject*& InOldCDO) override;
-	virtual void FinishCompilingClass(UClass* Class) override;
 	// End of FKismetCompilerContext interface
 
 protected:
@@ -219,10 +218,10 @@ protected:
 	};
 
 protected:
-	UUTBlueprintGeneratedClass* NewUtilityTreeBlueprintClass;
+	UUTBlueprintGeneratedClass* NewUTBlueprintClass;
 	UUtilityTreeBlueprint* UtilityTreeBlueprint;
 
-	UUtilityTreeGraphSchema* Schema;
+	UUtilityTreeGraphSchema* UTSchema;
 
 	// Map of allocated v3 nodes that are members of the class
 	TMap<class UUTGraphNode_Base*, UProperty*> AllocatedUTNodes;
@@ -257,7 +256,7 @@ protected:
 
 private:
 
-	UK2Node_CallFunction* SpawnCallUTInstanceFunction(UEdGraphNode* SourceNode, FName FunctionName);
+	UK2Node_CallFunction* SpawnCallUtilityTreeFunction(UEdGraphNode* SourceNode, FName FunctionName);
 
 	// Creates an evaluation handler for an FExposedValue property in an utility tree node
 	void CreateEvaluationHandlerStruct(UUTGraphNode_Base* VisualUTNode, FEvaluationHandlerRecord& Record);
@@ -281,20 +280,12 @@ private:
 	void GetLinkedUTNodes_ProcessUTNode(UUTGraphNode_Base* UTNode, TArray<UUTGraphNode_Base*>& LinkedUTNodes);
 
 	// Automatically fill in parameters for the specified Getter node
-	void AutoWireUTGetter(class UK2Node_UTGetter* Getter, UUTStateTransitionNode* InTransitionNode);
-
-	// This function does the following steps:
-	//   Clones the nodes in the specified source graph
-	//   Merges them into the ConsolidatedEventGraph
-	//   Processes any animation nodes
-	//   Returns the index of the processed cloned version of SourceRootNode
-	//	 If supplied, will also return an array of all cloned nodes
-	int32 ExpandGraphAndProcessNodes(UEdGraph* SourceGraph, UUTGraphNode_Base* SourceRootNode, UAnimStateTransitionNode* TransitionNode = NULL, TArray<UEdGraphNode*>* ClonedNodes = NULL);
+	//void AutoWireUTGetter(class UK2Node_UTGetter* Getter, UUTStateTransitionNode* InTransitionNode);
 
 	// Dumps compiler diagnostic information
 	void DumpUTDebugData();
 
 	// Returns the allocation index of the specified node, processing it if it was pending
-	int32 GetAllocationIndexOfNode(UUTGraphNode_Base* VisualAnimNode);
+	int32 GetAllocationIndexOfNode(UUTGraphNode_Base* VisualUTNode);
 };
 

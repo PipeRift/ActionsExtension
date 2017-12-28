@@ -30,7 +30,7 @@ void FUtilityTreeEditorModule::StartupModule()
 
 	// Register widget blueprint compiler we do this no matter what.
 	IKismetCompilerInterface& KismetCompilerModule = FModuleManager::LoadModuleChecked<IKismetCompilerInterface>("KismetCompiler");
-	KismetCompilerModule.GetCompilers().Add(&UTBlueprintCompiler);
+	KismetCompilerModule.GetCompilers().Add(this);
 
     // Register asset types
     IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
@@ -59,7 +59,7 @@ void FUtilityTreeEditorModule::ShutdownModule()
 	CreatedAssetTypeActions.Empty();
 
 	IKismetCompilerInterface& KismetCompilerModule = FModuleManager::LoadModuleChecked<IKismetCompilerInterface>("KismetCompiler");
-	KismetCompilerModule->GetCompilers().Remove(&UTBlueprintCompiler);
+	KismetCompilerModule.GetCompilers().Remove(this);
 
     // Cleanup all information for auto generated default event nodes by this module
     FKismetEditorUtilities::UnregisterAutoBlueprintNodeCreation(this);
@@ -114,4 +114,4 @@ void FUtilityTreeEditorModule::RegisterCustomPinFactory()
 
 #undef LOCTEXT_NAMESPACE
 
-IMPLEMENT_GAME_MODULE(FUtilityTreeEditorModule, UtilityTreeEditor);
+IMPLEMENT_MODULE(FUtilityTreeEditorModule, UtilityTreeEditor);

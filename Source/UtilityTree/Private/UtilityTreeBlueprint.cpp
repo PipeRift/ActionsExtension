@@ -11,7 +11,63 @@ UUtilityTreeBlueprint::UUtilityTreeBlueprint(const FObjectInitializer& ObjectIni
 {
 }
 
+
 #if WITH_EDITOR
+FUTParentNodeAssetOverride* UUtilityTreeBlueprint::GetAssetOverrideForNode(FGuid NodeGuid, bool bIgnoreSelf) const
+{
+	TArray<UBlueprint*> Hierarchy;
+	GetBlueprintHierarchyFromClass(GetUTBlueprintGeneratedClass(), Hierarchy);
+
+	for (int32 Idx = bIgnoreSelf ? 1 : 0; Idx < Hierarchy.Num(); ++Idx)
+	{
+		if (UUtilityTreeBlueprint* UTBlueprint = Cast<UUtilityTreeBlueprint>(Hierarchy[Idx]))
+		{
+			FUTParentNodeAssetOverride* Override = UTBlueprint->ParentAssetOverrides.FindByPredicate([NodeGuid](const FUTParentNodeAssetOverride& Other)
+			{
+				return Other.ParentNodeGuid == NodeGuid;
+			});
+
+			if (Override)
+			{
+				return Override;
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+bool UUtilityTreeBlueprint::GetAssetOverrides(TArray<FUTParentNodeAssetOverride*>& OutOverrides)
+{
+	TArray<UBlueprint*> Hierarchy;
+	GetBlueprintHierarchyFromClass(GetUTBlueprintGeneratedClass(), Hierarchy);
+
+	for (UBlueprint* Blueprint : Hierarchy)
+	{
+		if (UUtilityTreeBlueprint* UTBlueprint = Cast<UUtilityTreeBlueprint>(Blueprint))
+		{
+			for (FUTParentNodeAssetOverride& Override : UTBlueprint->ParentAssetOverrides)
+			{
+				bool OverrideExists = OutOverrides.ContainsByPredicate([Override](const FUTParentNodeAssetOverride* Other)
+				{
+					return Override.ParentNodeGuid == Other->ParentNodeGuid;
+				});
+
+				if (!OverrideExists)
+				{
+					OutOverrides.Add(&Override);
+				}
+			}
+		}
+	}
+
+	return OutOverrides.Num() > 0;
+}
+
+class UUTBlueprintGeneratedClass* UUtilityTreeBlueprint::GetUTBlueprintGeneratedClass() const
+{
+	return Cast<UUTBlueprintGeneratedClass>(*GeneratedClass);
+}
 
 UUtilityTreeBlueprint* UUtilityTreeBlueprint::FindRootUtilityTreeBlueprint(UUtilityTreeBlueprint* DerivedBlueprint)
 {

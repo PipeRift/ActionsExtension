@@ -1,4 +1,4 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+// Copyright 2015-2017 Piperift. All Rights Reserved.
 
 #pragma once
 
@@ -15,13 +15,20 @@ class UUTGraphNode_Base;
 class UUtilityTree;
 class UEdGraph;
 
+struct FUTNodePoseWatch
+{
+	TSharedPtr<FCompactHeapPose>	PoseInfo;
+	FColor							PoseDrawColour;
+	int32							NodeID;
+};
+
 // This structure represents debugging information for a frame snapshot
 USTRUCT()
-struct FUtilityTreeFrameSnapshot
+struct FUTFrameSnapshot
 {
 	GENERATED_USTRUCT_BODY()
 
-	FUtilityTreeFrameSnapshot()
+	FUTFrameSnapshot()
 #if WITH_EDITORONLY_DATA
 		: TimeStamp(0.0)
 #endif
@@ -37,18 +44,18 @@ public:
 
 public:
 	void InitializeFromInstance(UUtilityTree* Instance);
-	ENGINE_API void CopyToInstance(UUtilityTree* Instance);
+	UTILITYTREE_API void CopyToInstance(UUtilityTree* Instance);
 #endif
 };
 
 // This structure represents animation-related debugging information for an entire UtilityTreeBlueprint
 // (general debug information for the event graph, etc... is still contained in a FBlueprintDebugData structure)
 USTRUCT()
-struct ENGINE_API FUtilityTreeBlueprintDebugData
+struct UTILITYTREE_API FUTBlueprintDebugData
 {
 	GENERATED_USTRUCT_BODY()
 
-	FUtilityTreeBlueprintDebugData()
+	FUTBlueprintDebugData()
 #if WITH_EDITORONLY_DATA
 		: SnapshotBuffer(NULL)
 		, SnapshotIndex(INDEX_NONE)
@@ -58,26 +65,18 @@ struct ENGINE_API FUtilityTreeBlueprintDebugData
 
 #if WITH_EDITORONLY_DATA
 public:
-	// Map from state machine graphs to their corresponding debug data
-	TMap<TWeakObjectPtr<UEdGraph>, FStateMachineDebugData> StateMachineDebugData;
 
 	// Map from state graphs to their node
 	TMap<TWeakObjectPtr<UEdGraph>, TWeakObjectPtr<class UAnimStateNode> > StateGraphToNodeMap;
 
-	// Map from transition graphs to their node
-	TMap<TWeakObjectPtr<UEdGraph>, TWeakObjectPtr<class UAnimStateTransitionNode> > TransitionGraphToNodeMap;
-
-	// Map from custom transition blend graphs to their node
-	TMap<TWeakObjectPtr<UEdGraph>, TWeakObjectPtr<class UAnimStateTransitionNode> > TransitionBlendGraphToNodeMap;
-
 	// Map from animation node to their property index
-	TMap<TWeakObjectPtr<class UAnimGraphNode_Base>, int32> NodePropertyToIndexMap;
+	TMap<TWeakObjectPtr<class UUTGraphNode_Base>, int32> NodePropertyToIndexMap;
 
 	// Map from animation node GUID to property index
 	TMap<FGuid, int32> NodeGuidToIndexMap;
 
 	// History of snapshots of animation data
-	TSimpleRingBuffer<FAnimationFrameSnapshot>* SnapshotBuffer;
+	TSimpleRingBuffer<FUTFrameSnapshot>* SnapshotBuffer;
 
 	// Node visit structure
 	struct FNodeVisit
@@ -98,13 +97,13 @@ public:
 	TArray<FNodeVisit> UpdatedNodesThisFrame;
 
 	// Active pose watches to track
-	TArray<FAnimNodePoseWatch> AnimNodePoseWatch;
+	TArray<FUTNodePoseWatch> UTNodePoseWatch;
 
 	// Index of snapshot
 	int32 SnapshotIndex;
 public:
 
-	~FUtilityTreeBlueprintDebugData()
+	~FUTBlueprintDebugData()
 	{
 		if (SnapshotBuffer != NULL)
 		{
@@ -116,11 +115,11 @@ public:
 
 
 	bool IsReplayingSnapshot() const { return SnapshotIndex != INDEX_NONE; }
-	void TakeSnapshot(UAnimInstance* Instance);
+	void TakeSnapshot(UUtilityTree* Instance);
 	float GetSnapshotLengthInSeconds();
 	int32 GetSnapshotLengthInFrames();
-	void SetSnapshotIndexByTime(UAnimInstance* Instance, double TargetTime);
-	void SetSnapshotIndex(UAnimInstance* Instance, int32 NewIndex);
+	void SetSnapshotIndexByTime(UUtilityTree* Instance, double TargetTime);
+	void SetSnapshotIndex(UUtilityTree* Instance, int32 NewIndex);
 	void ResetSnapshotBuffer();
 
 	void ResetNodeVisitSites();
@@ -151,7 +150,7 @@ class UTILITYTREE_API UUTBlueprintGeneratedClass : public UBlueprintGeneratedCla
 
 	// The index of the root node in the animation tree
 	UPROPERTY()
-	int32 RootAnimNodeIndex;
+	int32 RootUTNodeIndex;
 
 	// Indices for each of the saved pose nodes that require updating, in the order they need to get updates.
 	UPROPERTY()
@@ -163,13 +162,11 @@ class UTILITYTREE_API UUTBlueprintGeneratedClass : public UBlueprintGeneratedCla
 
 public:
 
-	virtual int32 GetRootUTNodeIndex() const override { return RootAnimNodeIndex; }
+	virtual int32 GetRootUTNodeIndex() const { return RootUTNodeIndex; }
 
-	virtual UStructProperty* GetRootUTNodeProperty() const override { return RootUTNodeProperty; }
+	virtual UStructProperty* GetRootUTNodeProperty() const { return RootUTNodeProperty; }
 
-	virtual const TArray<UStructProperty*>& GetUTNodeProperties() const override { return UTNodeProperties; }
-
-	virtual const TArray<int32>& GetOrderedSavedPoseNodeIndices() const override { return OrderedSavedPoseIndices; }
+	virtual const TArray<UStructProperty*>& GetUTNodeProperties() const { return UTNodeProperties; }
 
 public:
 #if WITH_EDITORONLY_DATA
@@ -291,13 +288,13 @@ public:
 };
 
 template<typename NodeType>
-NodeType* GetNodeFromPropertyIndex(UObject* AnimInstanceObject, const IAnimClassInterface* UtilityTreeBlueprintClass, int32 PropertyIndex)
+NodeType* GetNodeFromPropertyIndex(UObject* UtilityTreeObject, const UUTBlueprintGeneratedClass* UtilityTreeBlueprintClass, int32 PropertyIndex)
 {
 	if (PropertyIndex != INDEX_NONE)
 	{
-		UStructProperty* NodeProperty = UtilityTreeBlueprintClass->GetAnimNodeProperties()[UtilityTreeBlueprintClass->GetAnimNodeProperties().Num() - 1 - PropertyIndex]; //@TODO: Crazysauce
+		UStructProperty* NodeProperty = UtilityTreeBlueprintClass->GetUTNodeProperties()[UtilityTreeBlueprintClass->GetUTNodeProperties().Num() - 1 - PropertyIndex];
 		check(NodeProperty->Struct == NodeType::StaticStruct());
-		return NodeProperty->ContainerPtrToValuePtr<NodeType>(AnimInstanceObject);
+		return NodeProperty->ContainerPtrToValuePtr<NodeType>(UtilityTreeObject);
 	}
 
 	return NULL;
