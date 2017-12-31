@@ -12,6 +12,8 @@
 #include "HAL/PlatformApplicationMisc.h"
 #endif
 
+#include "SKismetInspector.h"
+
 #include "ScopedTransaction.h"
 #include "GraphEditor.h"
 #include "GraphEditorActions.h"
@@ -41,36 +43,17 @@ void FUtilityTreeEditor::InitUtilityTreeEditor(const EToolkitMode::Type Mode, co
 {
 	InitBlueprintEditor(Mode, InitToolkitHost, InBlueprints, bShouldOpenInDefaultsMode);
 
-	for (auto Blueprint : InBlueprints)
-	{
-		EnsureBlueprintIsUpToDate(Blueprint);
-	}
-}
-
-void FUtilityTreeEditor::EnsureBlueprintIsUpToDate(UBlueprint* Blueprint)
-{
-#if WITH_EDITORONLY_DATA
-	int32 Count = Blueprint->UbergraphPages.Num();
-	for (auto Graph : Blueprint->UbergraphPages)
-	{
-		// remove the default event graph, if it exists, from existing Gameplay Ability Blueprints
-		if (Graph->GetName() == "EventGraph" && Graph->Nodes.Num() == 0)
-		{
-			//check(!Graph->Schema->GetClass()->IsChildOf(UUtilityTreeGraphSchema::StaticClass()));
-			//FBlueprintEditorUtils::RemoveGraph(Blueprint, Graph);
-			break;
-		}
-	}
-#endif
 }
 
 FUtilityTreeEditor::FUtilityTreeEditor()
 {
-	// todo: Do we need to register a callback for when properties are changed?
+	GEditor->OnBlueprintPreCompile().AddRaw(this, &FUtilityTreeEditor::OnBlueprintPreCompile);
 }
 
 FUtilityTreeEditor::~FUtilityTreeEditor()
 {
+	GEditor->OnBlueprintPreCompile().RemoveAll(this);
+
 	FEditorDelegates::OnAssetPostImport.RemoveAll(this);
 	FReimportManager::Instance()->OnPostReimport().RemoveAll(this);
 }
@@ -121,6 +104,11 @@ FLinearColor FUtilityTreeEditor::GetWorldCentricTabColorScale() const
 	return FLinearColor::White;
 }
 
+UUtilityTreeBlueprint* FUtilityTreeEditor::GetUtilityTreeBlueprint() const
+{
+	return Cast<UUtilityTreeBlueprint>(GetBlueprintObj());
+}
+
 UBlueprint* FUtilityTreeEditor::GetBlueprintObj() const
 {
 	const TArray<UObject*>& EditingObjs = GetEditingObjects();
@@ -133,5 +121,145 @@ UBlueprint* FUtilityTreeEditor::GetBlueprintObj() const
 	}
 	return nullptr;
 }
+
+void FUtilityTreeEditor::SetDetailObjects(const TArray<UObject*>& InObjects)
+{
+	Inspector->ShowDetailsForObjects(InObjects);
+}
+
+void FUtilityTreeEditor::SetDetailObject(UObject* Obj)
+{
+	TArray<UObject*> Objects;
+	if (Obj)
+	{
+		Objects.Add(Obj);
+	}
+	SetDetailObjects(Objects);
+}
+
+void FUtilityTreeEditor::CreateDefaultCommands()
+{
+	if (GetBlueprintObj())
+	{
+		FBlueprintEditor::CreateDefaultCommands();
+	}
+	else
+	{
+		ToolkitCommands->MapAction(FGenericCommands::Get().Undo,
+			FExecuteAction::CreateSP(this, &FUtilityTreeEditor::UndoAction));
+		ToolkitCommands->MapAction(FGenericCommands::Get().Redo,
+			FExecuteAction::CreateSP(this, &FUtilityTreeEditor::RedoAction));
+	}
+}
+
+void FUtilityTreeEditor::OnCreateGraphEditorCommands(TSharedPtr<FUICommandList> GraphEditorCommandsList)
+{
+	//GraphEditorCommandsList->MapAction(FAIGraphCommands::Get().ToggleAIWatch,
+		//FExecuteAction::CreateSP(this, &FUtilityTreeEditor::OnToggleAIWatch));
+}
+
+void FUtilityTreeEditor::Compile()
+{
+	// Grab the currently debugged object, so we can re-set it below
+	UUtilityTree* CurrentDebugObject = nullptr;
+	if (UBlueprint* Blueprint = GetBlueprintObj())
+	{
+		CurrentDebugObject = Cast<UUtilityTree>(Blueprint->GetObjectBeingDebugged());
+		if (CurrentDebugObject)
+		{
+			// Force close any asset editors that are using the AnimScriptInstance (such as the Property Matrix), the class will be garbage collected
+			FAssetEditorManager::Get().CloseOtherEditors(CurrentDebugObject, nullptr);
+		}
+	}
+
+	// Compile the blueprint
+	FBlueprintEditor::Compile();
+
+	if (CurrentDebugObject != nullptr)
+	{
+		GetBlueprintObj()->SetObjectBeingDebugged(CurrentDebugObject);
+	}
+
+	// reset the selected skeletal control node
+	SelectedAIGraphNode.Reset();
+
+	// if the user manipulated Pin values directly from the node, then should copy updated values to the internal node to retain data consistency
+	OnPostCompile();
+}
+
+/** Called when graph editor focus is changed */
+void FUtilityTreeEditor::OnGraphEditorFocused(const TSharedRef<class SGraphEditor>& InGraphEditor)
+{
+	// in the future, depending on which graph editor is this will act different
+	FBlueprintEditor::OnGraphEditorFocused(InGraphEditor);
+
+	// install callback to allow us to propagate pin default changes live to the preview
+	//UAIGraph* AIGraph = Cast<UAIGraph>(InGraphEditor->GetCurrentGraph());
+	//if (AIGraph)
+	//{
+		//OnPinDefaultValueChangedHandle = AIGraph->OnPinDefaultValueChanged.Add(FOnPinDefaultValueChanged::FDelegate::CreateSP(this, &FUtilityTreeEditor::HandlePinDefaultValueChanged));
+	//}
+}
+
+void FUtilityTreeEditor::OnGraphEditorBackgrounded(const TSharedRef<SGraphEditor>& InGraphEditor)
+{
+	FBlueprintEditor::OnGraphEditorBackgrounded(InGraphEditor);
+
+	/*UAIGraph* AIGraph = Cast<UAIGraph>(InGraphEditor->GetCurrentGraph());
+	if (AIGraph)
+	{
+		AIGraph->OnPinDefaultValueChanged.Remove(OnPinDefaultValueChangedHandle);
+	}*/
+}
+
+void FUtilityTreeEditor::PostUndo(bool bSuccess)
+{
+	DocumentManager->CleanInvalidTabs();
+	DocumentManager->RefreshAllTabs();
+
+	FBlueprintEditor::PostUndo(bSuccess);
+
+	// If we undid a node creation that caused us to clean up a tab/graph we need to refresh the UI state
+	RefreshEditors();
+
+	// PostUndo broadcast
+	OnPostUndo.Broadcast();
+
+	OnPostCompile();
+}
+
+void FUtilityTreeEditor::PostRedo(bool bSuccess)
+{
+	DocumentManager->RefreshAllTabs();
+
+	FBlueprintEditor::PostRedo(bSuccess);
+
+	// PostUndo broadcast, OnPostRedo
+	OnPostUndo.Broadcast();
+
+	// calls PostCompile to copy proper values between AI nodes
+	OnPostCompile();
+}
+
+void FUtilityTreeEditor::NotifyPostChange(const FPropertyChangedEvent& PropertyChangedEvent, UProperty* PropertyThatChanged)
+{
+	FBlueprintEditor::NotifyPostChange(PropertyChangedEvent, PropertyThatChanged);
+}
+
+void FUtilityTreeEditor::UndoAction()
+{
+	GEditor->UndoTransaction();
+}
+
+void FUtilityTreeEditor::RedoAction()
+{
+	GEditor->RedoTransaction();
+}
+
+void FUtilityTreeEditor::OnBlueprintPreCompile(UBlueprint* BlueprintToCompile)
+{}
+
+void FUtilityTreeEditor::OnPostCompile()
+{}
 
 #undef LOCTEXT_NAMESPACE
