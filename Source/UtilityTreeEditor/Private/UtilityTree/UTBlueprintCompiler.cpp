@@ -22,7 +22,7 @@
 
 #include "UtilityTreeBlueprint.h"
 #include "UtilityTree/UtilityTreeGraphSchema.h"
-#include "UtilityTree/UTGraphNode_Root.h"
+#include "UtilityTree/AIGraphNode_Root.h"
 
 //#include "UtilityTreeBlueprintPostCompileValidation.h" 
 
@@ -108,7 +108,7 @@ UK2Node_CallFunction* FUTBlueprintCompiler::SpawnCallUtilityTreeFunction(UEdGrap
 	return FunctionCall;
 }
 
-void FUTBlueprintCompiler::CreateEvaluationHandlerStruct(UUTGraphNode_Base* VisualUTNode, FEvaluationHandlerRecord& Record)
+void FUTBlueprintCompiler::CreateEvaluationHandlerStruct(UAIGraphNode_Base* VisualUTNode, FEvaluationHandlerRecord& Record)
 {
 	// Shouldn't create a handler if there is nothing to work with
 	check(Record.ServicedProperties.Num() > 0);
@@ -233,7 +233,7 @@ void FUTBlueprintCompiler::CreateEvaluationHandlerStruct(UUTGraphNode_Base* Visu
 	AssignmentNode->ReconstructNode();
 }
 
-void FUTBlueprintCompiler::CreateEvaluationHandlerInstance(UUTGraphNode_Base* VisualUTNode, FEvaluationHandlerRecord& Record)
+void FUTBlueprintCompiler::CreateEvaluationHandlerInstance(UAIGraphNode_Base* VisualUTNode, FEvaluationHandlerRecord& Record)
 {
 	// Shouldn't create a handler if there is nothing to work with
 	check(Record.ServicedProperties.Num() > 0);
@@ -320,7 +320,7 @@ void FUTBlueprintCompiler::CreateEvaluationHandlerInstance(UUTGraphNode_Base* Vi
 	}
 }
 
-void FUTBlueprintCompiler::ProcessUtilityTreeNode(UUTGraphNode_Base* VisualUTNode)
+void FUTBlueprintCompiler::ProcessUtilityTreeNode(UAIGraphNode_Base* VisualUTNode)
 {
 	// Early out if this node has already been processed
 	if (AllocatedUTNodes.Contains(VisualUTNode))
@@ -370,7 +370,7 @@ void FUTBlueprintCompiler::ProcessUtilityTreeNode(UUTGraphNode_Base* VisualUTNod
 	AllocatedUTNodeIndices.Add(VisualUTNode, AllocatedIndex);
 	AllocatedPropertiesByIndex.Add(AllocatedIndex, NewProperty);
 
-	UUTGraphNode_Base* TrueSourceObject = MessageLog.FindSourceObjectTypeChecked<UUTGraphNode_Base>(VisualUTNode);
+	UAIGraphNode_Base* TrueSourceObject = MessageLog.FindSourceObjectTypeChecked<UAIGraphNode_Base>(VisualUTNode);
 	SourceNodeToProcessedNodeMap.Add(TrueSourceObject, VisualUTNode);
 
 	// Register the slightly more permanent debug information
@@ -397,7 +397,7 @@ void FUTBlueprintCompiler::ProcessUtilityTreeNode(UUTGraphNode_Base* VisualUTNod
 		if ((SourcePin->Direction == EGPD_Input) && (UTGraphDefaultSchema->IsPosePin(SourcePin->PinType)))
 		{
 			// Input pose pin, going to need to be linked up
-			FPoseLinkMappingRecord LinkRecord = VisualUTNode->GetLinkIDLocation(NodeType, SourcePin);
+			FAILinkMappingRecord LinkRecord = VisualUTNode->GetLinkIDLocation(NodeType, SourcePin);
 			if (LinkRecord.IsValid())
 			{
 				ValidPoseLinkList.Add(LinkRecord);
@@ -510,14 +510,14 @@ void FUTBlueprintCompiler::ProcessUtilityTreeNode(UUTGraphNode_Base* VisualUTNod
 	}
 }
 
-int32 FUTBlueprintCompiler::GetAllocationIndexOfNode(UUTGraphNode_Base* VisualUTNode)
+int32 FUTBlueprintCompiler::GetAllocationIndexOfNode(UAIGraphNode_Base* VisualUTNode)
 {
 	ProcessUtilityTreeNode(VisualUTNode);
 	int32* pResult = AllocatedUTNodeIndices.Find(VisualUTNode);
 	return (pResult != NULL) ? *pResult : INDEX_NONE;
 }
 
-void FUTBlueprintCompiler::PruneIsolatedUtilityTreeNodes(const TArray<UUTGraphNode_Base*>& RootSet, TArray<UUTGraphNode_Base*>& GraphNodes)
+void FUTBlueprintCompiler::PruneIsolatedUtilityTreeNodes(const TArray<UAIGraphNode_Base*>& RootSet, TArray<UAIGraphNode_Base*>& GraphNodes)
 {
 	struct FNodeVisitorDownPoseWires
 	{
@@ -559,13 +559,13 @@ void FUTBlueprintCompiler::PruneIsolatedUtilityTreeNodes(const TArray<UUTGraphNo
 
 	for (auto RootIt = RootSet.CreateConstIterator(); RootIt; ++RootIt)
 	{
-		UUTGraphNode_Base* RootNode = *RootIt;
+		UAIGraphNode_Base* RootNode = *RootIt;
 		Visitor.TraverseNodes(RootNode);
 	}
 
 	for (int32 NodeIndex = 0; NodeIndex < GraphNodes.Num(); ++NodeIndex)
 	{
-		UUTGraphNode_Base* Node = GraphNodes[NodeIndex];
+		UAIGraphNode_Base* Node = GraphNodes[NodeIndex];
 		if (!Visitor.VisitedNodes.Contains(Node) && !IsNodePure(Node))
 		{
 			Node->BreakAllNodeLinks();
@@ -575,7 +575,7 @@ void FUTBlueprintCompiler::PruneIsolatedUtilityTreeNodes(const TArray<UUTGraphNo
 	}
 }
 
-void FUTBlueprintCompiler::ProcessUTNodesGivenRoot(TArray<UUTGraphNode_Base*>& UTNodeList, const TArray<UUTGraphNode_Base*>& RootSet)
+void FUTBlueprintCompiler::ProcessUTNodesGivenRoot(TArray<UAIGraphNode_Base*>& UTNodeList, const TArray<UAIGraphNode_Base*>& RootSet)
 {
 	// Now prune based on the root set
 	if (MessageLog.NumErrors == 0)
@@ -586,12 +586,12 @@ void FUTBlueprintCompiler::ProcessUTNodesGivenRoot(TArray<UUTGraphNode_Base*>& U
 	// Process the remaining nodes
 	for (auto SourceNodeIt = UTNodeList.CreateIterator(); SourceNodeIt; ++SourceNodeIt)
 	{
-		UUTGraphNode_Base* VisualUTNode = *SourceNodeIt;
+		UAIGraphNode_Base* VisualUTNode = *SourceNodeIt;
 		ProcessUtilityTreeNode(VisualUTNode);
 	}
 }
 
-void FUTBlueprintCompiler::GetLinkedUTNodes(UUTGraphNode_Base* InGraphNode, TArray<UUTGraphNode_Base*> &LinkedUTNodes)
+void FUTBlueprintCompiler::GetLinkedUTNodes(UAIGraphNode_Base* InGraphNode, TArray<UAIGraphNode_Base*> &LinkedUTNodes)
 {
 	for(UEdGraphPin* Pin : InGraphNode->Pins)
 	{
@@ -600,7 +600,7 @@ void FUTBlueprintCompiler::GetLinkedUTNodes(UUTGraphNode_Base* InGraphNode, TArr
 		{
 			if(UScriptStruct* Struct = Cast<UScriptStruct>(Pin->PinType.PinSubCategoryObject.Get()))
 			{
-				if(Struct->IsChildOf(FPoseLinkBase::StaticStruct()))
+				if(Struct->IsChildOf(FAILinkBase::StaticStruct()))
 				{
 					GetLinkedUTNodes_TraversePin(Pin, LinkedUTNodes);
 				}
@@ -609,7 +609,7 @@ void FUTBlueprintCompiler::GetLinkedUTNodes(UUTGraphNode_Base* InGraphNode, TArr
 	}
 }
 
-void FUTBlueprintCompiler::GetLinkedUTNodes_TraversePin(UEdGraphPin* InPin, TArray<UUTGraphNode_Base*>& LinkedUTNodes)
+void FUTBlueprintCompiler::GetLinkedUTNodes_TraversePin(UEdGraphPin* InPin, TArray<UAIGraphNode_Base*>& LinkedUTNodes)
 {
 	if(!InPin)
 	{
@@ -629,20 +629,20 @@ void FUTBlueprintCompiler::GetLinkedUTNodes_TraversePin(UEdGraphPin* InPin, TArr
 		{
 			GetLinkedUTNodes_TraversePin(InnerKnot->GetInputPin(), LinkedUTNodes);
 		}
-		else if(UUTGraphNode_Base* UTNode = Cast<UUTGraphNode_Base>(OwningNode))
+		else if(UAIGraphNode_Base* UTNode = Cast<UAIGraphNode_Base>(OwningNode))
 		{
 			GetLinkedUTNodes_ProcessUTNode(UTNode, LinkedUTNodes);
 		}
 	}
 }
 
-void FUTBlueprintCompiler::GetLinkedUTNodes_ProcessUTNode(UUTGraphNode_Base* UTNode, TArray<UUTGraphNode_Base *> &LinkedUTNodes)
+void FUTBlueprintCompiler::GetLinkedUTNodes_ProcessUTNode(UAIGraphNode_Base* UTNode, TArray<UAIGraphNode_Base *> &LinkedUTNodes)
 {
 	if(!AllocatedUTNodes.Contains(UTNode))
 	{
-		UUTGraphNode_Base* TrueSourceNode = MessageLog.FindSourceObjectTypeChecked<UUTGraphNode_Base>(UTNode);
+		UAIGraphNode_Base* TrueSourceNode = MessageLog.FindSourceObjectTypeChecked<UAIGraphNode_Base>(UTNode);
 
-		if(UUTGraphNode_Base** AllocatedNode = SourceNodeToProcessedNodeMap.Find(TrueSourceNode))
+		if(UAIGraphNode_Base** AllocatedNode = SourceNodeToProcessedNodeMap.Find(TrueSourceNode))
 		{
 			LinkedUTNodes.Add(*AllocatedNode);
 		}
@@ -665,8 +665,8 @@ void FUTBlueprintCompiler::ProcessAllUtilityTreeNodes()
 
 
 	// Build the raw node list
-	TArray<UUTGraphNode_Base*> UTNodeList;
-	ConsolidatedEventGraph->GetNodesOfClass<UUTGraphNode_Base>(/*out*/ UTNodeList);
+	TArray<UAIGraphNode_Base*> UTNodeList;
+	ConsolidatedEventGraph->GetNodesOfClass<UAIGraphNode_Base>(/*out*/ UTNodeList);
 
 	//TArray<UK2Node_TransitionRuleGetter*> Getters;
 	//ConsolidatedEventGraph->GetNodesOfClass<UK2Node_TransitionRuleGetter>(/*out*/ Getters);
@@ -676,21 +676,21 @@ void FUTBlueprintCompiler::ProcessAllUtilityTreeNodes()
 	//ConsolidatedEventGraph->GetNodesOfClass<UK2Node_UTGetter>(RootGraphAnimGetters);
 
 	// Find the root node
-	UUTGraphNode_Root* PrePhysicsRoot = NULL;
-	TArray<UUTGraphNode_Base*> RootSet;
+	UAIGraphNode_Root* PrePhysicsRoot = NULL;
+	TArray<UAIGraphNode_Base*> RootSet;
 
 	AllocateNodeIndexCounter = 0;
 	NewUTBlueprintClass->RootUTNodeIndex = 0;//INDEX_NONE;
 
 	for (auto SourceNodeIt = UTNodeList.CreateIterator(); SourceNodeIt; ++SourceNodeIt)
 	{
-		UUTGraphNode_Base* SourceNode = *SourceNodeIt;
-		UUTGraphNode_Base* TrueNode = MessageLog.FindSourceObjectTypeChecked<UUTGraphNode_Base>(SourceNode);
+		UAIGraphNode_Base* SourceNode = *SourceNodeIt;
+		UAIGraphNode_Base* TrueNode = MessageLog.FindSourceObjectTypeChecked<UAIGraphNode_Base>(SourceNode);
 		TrueNode->BlueprintUsage = EUTBlueprintUsage::NoProperties;
 
-		if (UUTGraphNode_Root* PossibleRoot = Cast<UUTGraphNode_Root>(SourceNode))
+		if (UAIGraphNode_Root* PossibleRoot = Cast<UAIGraphNode_Root>(SourceNode))
 		{
-			if (UUTGraphNode_Root* Root = ExactCast<UUTGraphNode_Root>(PossibleRoot))
+			if (UAIGraphNode_Root* Root = ExactCast<UAIGraphNode_Root>(PossibleRoot))
 			{
 				if (PrePhysicsRoot != NULL)
 				{
@@ -758,7 +758,7 @@ void FUTBlueprintCompiler::CopyTermDefaultsToDefaultObject(UObject* DefaultObjec
 
 			if (UStructProperty* RootStructProp = Cast<UStructProperty>(RootProp))
 			{
-				/*if (RootStructProp->Struct->IsChildOf(FUTNode_Base::StaticStruct()))
+				if (RootStructProp->Struct->IsChildOf(FAINode_Base::StaticStruct()))
 				{
 					UStructProperty* ChildStructProp = FindField<UStructProperty>(NewUTBlueprintClass, *RootStructProp->GetName());
 					check(ChildStructProp);
@@ -766,7 +766,7 @@ void FUTBlueprintCompiler::CopyTermDefaultsToDefaultObject(UObject* DefaultObjec
 					uint8* DestPtr = ChildStructProp->ContainerPtrToValuePtr<uint8>(DefaultObject);
 					check(SourcePtr && DestPtr);
 					RootStructProp->CopyCompleteValue(DestPtr, SourcePtr);
-				}*/
+				}
 			}
 		}
 
@@ -776,29 +776,29 @@ void FUTBlueprintCompiler::CopyTermDefaultsToDefaultObject(UObject* DefaultObjec
 		UtilityTreeBlueprint->GetAssetOverrides(AssetOverrides);
 		for (FUTParentNodeAssetOverride* Override : AssetOverrides)
 		{
-			/*if (Override->NewAsset)
+			if (Override->NewAsset)
 			{
-				FUTNode_Base* BaseNode = NewUTBlueprintClass->GetPropertyInstance<FUTNode_Base>(DefaultObject, Override->ParentNodeGuid, EPropertySearchMode::Hierarchy);
+				FAINode_Base* BaseNode = NewUTBlueprintClass->GetPropertyInstance<FAINode_Base>(DefaultObject, Override->ParentNodeGuid, EPropertySearchMode::Hierarchy);
 				if (BaseNode)
 				{
-					BaseNode->OverrideAsset(Override->NewAsset);
+					//BaseNode->OverrideAsset(Override->NewAsset);
 				}
-			}*/
+			}
 		}
 
 		return;
 	}
 
 	int32 LinkIndexCount = 0;
-	TMap<UUTGraphNode_Base*, int32> LinkIndexMap;
-	TMap<UUTGraphNode_Base*, uint8*> NodeBaseAddresses;
+	TMap<UAIGraphNode_Base*, int32> LinkIndexMap;
+	TMap<UAIGraphNode_Base*, uint8*> NodeBaseAddresses;
 
 	// Initialize animation nodes from their templates
 	for (TFieldIterator<UProperty> It(DefaultObject->GetClass(), EFieldIteratorFlags::ExcludeSuper); It; ++It)
 	{
 		UProperty* TargetProperty = *It;
 
-		if (UUTGraphNode_Base* VisualUTNode = AllocatedNodePropertiesToNodes.FindRef(TargetProperty))
+		if (UAIGraphNode_Base* VisualUTNode = AllocatedNodePropertiesToNodes.FindRef(TargetProperty))
 		{
 			const UStructProperty* SourceNodeProperty = VisualUTNode->GetFNodeProperty();
 			check(SourceNodeProperty != NULL);
@@ -817,10 +817,10 @@ void FUTBlueprintCompiler::CopyTermDefaultsToDefaultObject(UObject* DefaultObjec
 	// And wire up node links
 	for (auto PoseLinkIt = ValidPoseLinkList.CreateIterator(); PoseLinkIt; ++PoseLinkIt)
 	{
-		FPoseLinkMappingRecord& Record = *PoseLinkIt;
+		FAILinkMappingRecord& Record = *PoseLinkIt;
 
-		UUTGraphNode_Base* LinkingNode = Record.GetLinkingNode();
-		UUTGraphNode_Base* LinkedNode = Record.GetLinkedNode();
+		UAIGraphNode_Base* LinkingNode = Record.GetLinkingNode();
+		UAIGraphNode_Base* LinkedNode = Record.GetLinkedNode();
 		
 		// @TODO this is quick solution for crash - if there were previous errors and some nodes were not added, they could still end here -
 		// this check avoids that and since there are already errors, compilation won't be successful.
@@ -1002,8 +1002,8 @@ void FUTBlueprintCompiler::PostCompile()
 
 	for (const FEffectiveConstantRecord& ConstantRecord : ValidUTNodePinConstants)
 	{
-		UUTGraphNode_Base* Node = CastChecked<UUTGraphNode_Base>(ConstantRecord.LiteralSourcePin->GetOwningNode());
-		UUTGraphNode_Base* TrueNode = MessageLog.FindSourceObjectTypeChecked<UUTGraphNode_Base>(Node);
+		UAIGraphNode_Base* Node = CastChecked<UAIGraphNode_Base>(ConstantRecord.LiteralSourcePin->GetOwningNode());
+		UAIGraphNode_Base* TrueNode = MessageLog.FindSourceObjectTypeChecked<UAIGraphNode_Base>(Node);
 		TrueNode->BlueprintUsage = EUTBlueprintUsage::DoesNotUseBlueprint;
 	}
 
@@ -1014,8 +1014,8 @@ void FUTBlueprintCompiler::PostCompile()
 			const FUTNodeSinglePropertyHandler& Handler = EvaluationHandler.ServicedProperties.CreateConstIterator()->Value;
 			check(Handler.CopyRecords.Num() > 0);
 			check(Handler.CopyRecords[0].DestPin != nullptr);
-			UUTGraphNode_Base* Node = CastChecked<UUTGraphNode_Base>(Handler.CopyRecords[0].DestPin->GetOwningNode());
-			UUTGraphNode_Base* TrueNode = MessageLog.FindSourceObjectTypeChecked<UUTGraphNode_Base>(Node);	
+			UAIGraphNode_Base* Node = CastChecked<UAIGraphNode_Base>(Handler.CopyRecords[0].DestPin->GetOwningNode());
+			UAIGraphNode_Base* TrueNode = MessageLog.FindSourceObjectTypeChecked<UAIGraphNode_Base>(Node);	
 
 			FExposedValueHandler* HandlerPtr = EvaluationHandler.EvaluationHandlerProperty->ContainerPtrToValuePtr<FExposedValueHandler>(EvaluationHandler.NodeVariableProperty->ContainerPtrToValuePtr<void>(DefaultUtilityTree));
 			TrueNode->BlueprintUsage = HandlerPtr->BoundFunction != NAME_None ? EUTBlueprintUsage::UsesBlueprint : EUTBlueprintUsage::DoesNotUseBlueprint;
@@ -1076,10 +1076,10 @@ void FUTBlueprintCompiler::DumpUTDebugData()
 			UProperty* ChildProp = *PropIt;
 			if (UStructProperty* ChildStructProp = Cast<UStructProperty>(ChildProp))
 			{
-				if (ChildStructProp->Struct->IsChildOf(FPoseLinkBase::StaticStruct()))
+				if (ChildStructProp->Struct->IsChildOf(FAILinkBase::StaticStruct()))
 				{
 					uint8* ChildPropertyPtr =  ChildStructProp->ContainerPtrToValuePtr<uint8>(NodeProperty->ContainerPtrToValuePtr<uint8>(CDOBase));
-					FPoseLinkBase* ChildPoseLink = (FPoseLinkBase*)ChildPropertyPtr;
+					FAILinkBase* ChildPoseLink = (FAILinkBase*)ChildPropertyPtr;
 
 					if (ChildPoseLink->LinkID != INDEX_NONE)
 					{

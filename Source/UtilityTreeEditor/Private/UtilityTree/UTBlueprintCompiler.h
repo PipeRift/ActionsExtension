@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "KismetCompiler.h"
 #include "UTBlueprintGeneratedClass.h"
-//#include "UtilityTree/UTNodeBase.h"
-#include "UtilityTree/UTGraphNode_Base.h"
+#include "Nodes/AINodeBase.h"
+#include "UtilityTree/AIGraphNode_Base.h"
 
 class UUtilityTreeGraphSchema;
 class UK2Node_CallFunction;
@@ -16,7 +16,7 @@ class UK2Node_CallFunction;
 //
 class UStructProperty;
 class UBlueprintGeneratedClass;
-struct FPoseLinkMappingRecord;
+struct FAILinkMappingRecord;
 
 class UUtilityTreeBlueprint;
 
@@ -224,20 +224,20 @@ protected:
 	UUtilityTreeGraphSchema* UTSchema;
 
 	// Map of allocated v3 nodes that are members of the class
-	TMap<class UUTGraphNode_Base*, UProperty*> AllocatedUTNodes;
-	TMap<UProperty*, class UUTGraphNode_Base*> AllocatedNodePropertiesToNodes;
+	TMap<class UAIGraphNode_Base*, UProperty*> AllocatedUTNodes;
+	TMap<UProperty*, class UAIGraphNode_Base*> AllocatedNodePropertiesToNodes;
 	TMap<int32, UProperty*> AllocatedPropertiesByIndex;
 
 	// Map of true source objects (user edited ones) to the cloned ones that are actually compiled
-	TMap<class UUTGraphNode_Base*, UUTGraphNode_Base*> SourceNodeToProcessedNodeMap;
+	TMap<class UAIGraphNode_Base*, UAIGraphNode_Base*> SourceNodeToProcessedNodeMap;
 
 	// Index of the nodes (must match up with the runtime discovery process of nodes, which runs through the property chain)
 	int32 AllocateNodeIndexCounter;
-	TMap<class UUTGraphNode_Base*, int32> AllocatedUTNodeIndices;
+	TMap<class UAIGraphNode_Base*, int32> AllocatedUTNodeIndices;
 
 	// Map from pose link LinkID address
 	//@TODO: Bad structure for a list of these
-	TArray<FPoseLinkMappingRecord> ValidPoseLinkList;
+	TArray<FAILinkMappingRecord> ValidPoseLinkList;
 
 	// List of successfully created evaluation handlers
 	TArray<FEvaluationHandlerRecord> ValidEvaluationHandlerList;
@@ -259,25 +259,25 @@ private:
 	UK2Node_CallFunction* SpawnCallUtilityTreeFunction(UEdGraphNode* SourceNode, FName FunctionName);
 
 	// Creates an evaluation handler for an FExposedValue property in an utility tree node
-	void CreateEvaluationHandlerStruct(UUTGraphNode_Base* VisualUTNode, FEvaluationHandlerRecord& Record);
-	void CreateEvaluationHandlerInstance(UUTGraphNode_Base* VisualUTNode, FEvaluationHandlerRecord& Record);
+	void CreateEvaluationHandlerStruct(UAIGraphNode_Base* VisualUTNode, FEvaluationHandlerRecord& Record);
+	void CreateEvaluationHandlerInstance(UAIGraphNode_Base* VisualUTNode, FEvaluationHandlerRecord& Record);
 
 	// Prunes any nodes that aren't reachable via a pose link
-	void PruneIsolatedUtilityTreeNodes(const TArray<UUTGraphNode_Base*>& RootSet, TArray<UUTGraphNode_Base*>& GraphNodes);
+	void PruneIsolatedUtilityTreeNodes(const TArray<UAIGraphNode_Base*>& RootSet, TArray<UAIGraphNode_Base*>& GraphNodes);
 
 	// Compiles one animation node
-	void ProcessUtilityTreeNode(UUTGraphNode_Base* VisualUTNode);
+	void ProcessUtilityTreeNode(UAIGraphNode_Base* VisualUTNode);
 
 	// Compiles an entire animation graph
 	void ProcessAllUtilityTreeNodes();
 
 	
-	void ProcessUTNodesGivenRoot(TArray<UUTGraphNode_Base*>& UTNodeList, const TArray<UUTGraphNode_Base*>& RootSet);
+	void ProcessUTNodesGivenRoot(TArray<UAIGraphNode_Base*>& UTNodeList, const TArray<UAIGraphNode_Base*>& RootSet);
 
 	// Gets all utility tree graph nodes that are piped into the provided node (traverses input pins)
-	void GetLinkedUTNodes(UUTGraphNode_Base* InGraphNode, TArray<UUTGraphNode_Base*>& LinkedUTNodes);
-	void GetLinkedUTNodes_TraversePin(UEdGraphPin* InPin, TArray<UUTGraphNode_Base*>& LinkedUTNodes);
-	void GetLinkedUTNodes_ProcessUTNode(UUTGraphNode_Base* UTNode, TArray<UUTGraphNode_Base*>& LinkedUTNodes);
+	void GetLinkedUTNodes(UAIGraphNode_Base* InGraphNode, TArray<UAIGraphNode_Base*>& LinkedUTNodes);
+	void GetLinkedUTNodes_TraversePin(UEdGraphPin* InPin, TArray<UAIGraphNode_Base*>& LinkedUTNodes);
+	void GetLinkedUTNodes_ProcessUTNode(UAIGraphNode_Base* UTNode, TArray<UAIGraphNode_Base*>& LinkedUTNodes);
 
 	// Automatically fill in parameters for the specified Getter node
 	//void AutoWireUTGetter(class UK2Node_UTGetter* Getter, UUTStateTransitionNode* InTransitionNode);
@@ -286,6 +286,6 @@ private:
 	void DumpUTDebugData();
 
 	// Returns the allocation index of the specified node, processing it if it was pending
-	int32 GetAllocationIndexOfNode(UUTGraphNode_Base* VisualUTNode);
+	int32 GetAllocationIndexOfNode(UAIGraphNode_Base* VisualUTNode);
 };
 

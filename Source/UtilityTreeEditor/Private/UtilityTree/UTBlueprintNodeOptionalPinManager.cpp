@@ -8,7 +8,7 @@
 #include "UtilityTree/UTGraphNode_Base.h"
 
 
-FUTBlueprintNodeOptionalPinManager::FUTBlueprintNodeOptionalPinManager(class UUTGraphNode_Base* Node, TArray<UEdGraphPin*>* InOldPins)
+FUTBlueprintNodeOptionalPinManager::FUTBlueprintNodeOptionalPinManager(class UAIGraphNode_Base* Node, TArray<UEdGraphPin*>* InOldPins)
 	: BaseNode(Node)
 	, OldPins(InOldPins)
 {
@@ -29,7 +29,7 @@ void FUTBlueprintNodeOptionalPinManager::GetRecordDefaults(UProperty* TestProper
 	// Determine if this is a pose or array of poses
 	UArrayProperty* ArrayProp = Cast<UArrayProperty>(TestProperty);
 	UStructProperty* StructProp = Cast<UStructProperty>((ArrayProp != NULL) ? ArrayProp->Inner : TestProperty);
-	//const bool bIsPoseInput = (StructProp != NULL) && (StructProp->Struct->IsChildOf(FPoseLinkBase::StaticStruct()));
+	//const bool bIsPoseInput = (StructProp != NULL) && (StructProp->Struct->IsChildOf(FAILinkBase::StaticStruct()));
 
 	//@TODO: Error if they specified two or more of these flags
 	const bool bAlwaysShow = TestProperty->HasMetaData(Schema->NAME_AlwaysAsPin);// || bIsPoseInput;

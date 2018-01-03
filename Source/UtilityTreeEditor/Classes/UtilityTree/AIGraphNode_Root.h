@@ -4,19 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
-#include "UTGraphNode_Base.h"
-//#include "UtilityTree/UTNode_Root.h"
-#include "UTGraphNode_Root.generated.h"
+#include "AIGraphNode_Base.h"
+//#include "Nodes/AINode_Root.h"
+#include "AIGraphNode_Root.generated.h"
 
 class FBlueprintActionDatabaseRegistrar;
 
 UCLASS(MinimalAPI)
-class UUTGraphNode_Root : public UUTGraphNode_Base
+class UAIGraphNode_Root : public UAIGraphNode_Base
 {
 	GENERATED_UCLASS_BODY()
 
 	//UPROPERTY(EditAnywhere, Category=Settings)
-	//FUTNode_Root Node;
+	//FAINode_Root Node;
 
 	//~ Begin UEdGraphNode Interface.
 	virtual FLinearColor GetNodeTitleColor() const override;

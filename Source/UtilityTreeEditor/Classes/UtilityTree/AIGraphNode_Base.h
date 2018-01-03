@@ -5,12 +5,12 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 #include "UObject/UnrealType.h"
-#include "Animation/AnimBlueprint.h"
-#include "Animation/AnimBlueprintGeneratedClass.h"
-#include "Animation/AnimNodeBase.h"
+#include "UtilityTreeBlueprint.h"
+#include "UTBlueprintGeneratedClass.h"
+#include "Nodes/AINodeBase.h"
 #include "Editor.h"
 #include "K2Node.h"
-#include "UTGraphNode_Base.generated.h"
+#include "AIGraphNode_Base.generated.h"
 
 class FUTBlueprintCompiler;
 class FUTGraphNodeDetails;
@@ -19,18 +19,18 @@ class FCanvas;
 class FCompilerResultsLog;
 class FPrimitiveDrawInterface;
 class IDetailLayoutBuilder;
-class UUTGraphNode_Base;
+class UAIGraphNode_Base;
 class UEdGraphSchema;
 class USkeletalMeshComponent;
 
-struct FPoseLinkMappingRecord
+struct FAILinkMappingRecord
 {
 public:
-	static FPoseLinkMappingRecord MakeFromArrayEntry(UUTGraphNode_Base* LinkingNode, UUTGraphNode_Base* LinkedNode, UArrayProperty* ArrayProperty, int32 ArrayIndex)
+	static FAILinkMappingRecord MakeFromArrayEntry(UAIGraphNode_Base* LinkingNode, UAIGraphNode_Base* LinkedNode, UArrayProperty* ArrayProperty, int32 ArrayIndex)
 	{
-		checkSlow(CastChecked<UStructProperty>(ArrayProperty->Inner)->Struct->IsChildOf(FPoseLinkBase::StaticStruct()));
+		checkSlow(CastChecked<UStructProperty>(ArrayProperty->Inner)->Struct->IsChildOf(FAILinkBase::StaticStruct()));
 
-		FPoseLinkMappingRecord Result;
+		FAILinkMappingRecord Result;
 		Result.LinkingNode = LinkingNode;
 		Result.LinkedNode = LinkedNode;
 		Result.ChildProperty = ArrayProperty;
@@ -39,11 +39,11 @@ public:
 		return Result;
 	}
 
-	static FPoseLinkMappingRecord MakeFromMember(UUTGraphNode_Base* LinkingNode, UUTGraphNode_Base* LinkedNode, UStructProperty* MemberProperty)
+	static FAILinkMappingRecord MakeFromMember(UAIGraphNode_Base* LinkingNode, UAIGraphNode_Base* LinkedNode, UStructProperty* MemberProperty)
 	{
-		checkSlow(MemberProperty->Struct->IsChildOf(FPoseLinkBase::StaticStruct()));
+		checkSlow(MemberProperty->Struct->IsChildOf(FAILinkBase::StaticStruct()));
 
-		FPoseLinkMappingRecord Result;
+		FAILinkMappingRecord Result;
 		Result.LinkingNode = LinkingNode;
 		Result.LinkedNode = LinkedNode;
 		Result.ChildProperty = MemberProperty;
@@ -52,9 +52,9 @@ public:
 		return Result;
 	}
 
-	static FPoseLinkMappingRecord MakeInvalid()
+	static FAILinkMappingRecord MakeInvalid()
 	{
-		FPoseLinkMappingRecord Result;
+		FAILinkMappingRecord Result;
 		return Result;
 	}
 
@@ -63,19 +63,19 @@ public:
 		return LinkedNode != nullptr;
 	}
 
-	UUTGraphNode_Base* GetLinkedNode() const
+	UAIGraphNode_Base* GetLinkedNode() const
 	{
 		return LinkedNode;
 	}
 
-	UUTGraphNode_Base* GetLinkingNode() const
+	UAIGraphNode_Base* GetLinkingNode() const
 	{
 		return LinkingNode;
 	}
 
 	UTILITYTREEEDITOR_API void PatchLinkIndex(uint8* DestinationPtr, int32 LinkID, int32 SourceLinkID) const;
 protected:
-	FPoseLinkMappingRecord()
+	FAILinkMappingRecord()
 		: LinkedNode(nullptr)
 		, LinkingNode(nullptr)
 		, ChildProperty(nullptr)
@@ -85,12 +85,12 @@ protected:
 
 protected:
 	// Linked node for this pose link, can be nullptr
-	UUTGraphNode_Base* LinkedNode;
+	UAIGraphNode_Base* LinkedNode;
 
 	// Linking node for this pose link, can be nullptr
-	UUTGraphNode_Base* LinkingNode;
+	UAIGraphNode_Base* LinkingNode;
 
-	// Will either be an array property containing FPoseLinkBase derived structs, indexed by ChildPropertyIndex, or a FPoseLinkBase derived struct property 
+	// Will either be an array property containing FAILinkBase derived structs, indexed by ChildPropertyIndex, or a FAILinkBase derived struct property 
 	UProperty* ChildProperty;
 
 	// Index when ChildProperty is an array
@@ -114,13 +114,12 @@ enum class EUTAssetHandlerType : uint8
 };
 
 /**
-  * This is the base class for any utility tree graph nodes that generate or consume an animation pose in
-  * the animation blend graph.
+  * This is the base class for any utility tree graph nodes.
   *
-  * Any concrete implementations will be paired with a runtime graph node derived from FAnimNode_Base
+  * Any concrete implementations will be paired with a runtime graph node derived from FAINode_Base
   */
 UCLASS(Abstract)
-class UTILITYTREEEDITOR_API UUTGraphNode_Base : public UK2Node
+class UTILITYTREEEDITOR_API UAIGraphNode_Base : public UK2Node
 {
 	GENERATED_UCLASS_BODY()
 
@@ -154,7 +153,7 @@ class UTILITYTREEEDITOR_API UUTGraphNode_Base : public UK2Node
 	virtual void GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const override;
 	virtual FText GetMenuCategory() const override;
 
-	// By default return any animation assets we have
+	// By default return any utility tree assets we have
 	virtual UObject* GetJumpTargetForDoubleClick() const override { return nullptr;/* GetUtilityTreeAsset(); */}
 	// End of UK2Node interface
 
@@ -173,10 +172,10 @@ class UTILITYTREEEDITOR_API UUTGraphNode_Base : public UK2Node
 	virtual void CustomizePinData(UEdGraphPin* Pin, FName SourcePropertyName, int32 ArrayIndex) const {}
 
 	// Gives each visual node a chance to do final validation before it's node is harvested for use at runtime
-	virtual void ValidateAnimNodeDuringCompilation(USkeleton* ForSkeleton, FCompilerResultsLog& MessageLog) {}
+	virtual void ValidateAINodeDuringCompilation(FCompilerResultsLog& MessageLog) {}
 
 	// Gives each visual node a chance to validate that they are still valid in the context of the compiled class, giving a last shot at error or warning generation after primary compilation is finished
-	virtual void ValidateAnimNodePostCompile(FCompilerResultsLog& MessageLog, UAnimBlueprintGeneratedClass* CompiledClass, int32 CompiledNodeIndex) {}
+	virtual void ValidateAINodePostCompile(FCompilerResultsLog& MessageLog, UUTBlueprintGeneratedClass* CompiledClass, int32 CompiledNodeIndex) {}
 
 	// Gives each visual node a chance to update the node template before it is inserted in the compiled class
 	virtual void BakeDataDuringCompilation(FCompilerResultsLog& MessageLog) {}
@@ -187,21 +186,8 @@ class UTILITYTREEEDITOR_API UUTGraphNode_Base : public UK2Node
 	// Give the node a chance to change the display name of a pin
 	virtual void PostProcessPinName(const UEdGraphPin* Pin, FString& DisplayName) const;
 
-	/** Get the animation blueprint to which this node belongs */
-	UAnimBlueprint* GetAnimBlueprint() const { return CastChecked<UAnimBlueprint>(GetBlueprint()); }
-
-	// Populate the supplied arrays with the currently reffered to animation assets 
-	virtual void GetAllAnimationSequencesReferred(TArray<UAnimationAsset*>& AnimAssets) const {}
-
-	// Replace references to animations that exist in the supplied maps 	
-	virtual void ReplaceReferredAnimations(const TMap<UAnimationAsset*, UAnimationAsset*>& AnimAssetReplacementMap) {};
-	
-	// Helper function for GetAllAnimationSequencesReferred
-	void HandleAnimReferenceCollection(UAnimationAsset* AnimAsset, TArray<UAnimationAsset*>& AnimationAssets) const;
-
-	// Helper function for ReplaceReferredAnimations	
-	template<class AssetType>
-	void HandleAnimReferenceReplacement(AssetType*& OriginalAsset, const TMap<UAnimationAsset*, UAnimationAsset*>& AnimAssetReplacementMap);
+	/** Get the utility tree blueprint to which this node belongs */
+	UUtilityTreeBlueprint* GetUTBlueprint() const { return CastChecked<UUtilityTreeBlueprint>(GetBlueprint()); }
 
 	/**
 	 * Selection notification callback.
@@ -210,23 +196,21 @@ class UTILITYTREEEDITOR_API UUTGraphNode_Base : public UK2Node
 	 * @param	InModeTools		The mode tools. Use this to push the editor mode if required.
 	 * @param	InRuntimeNode	The runtime node to go with this skeletal control. This may be NULL in some cases when bInIsSelected is false.
 	 */
-	virtual void OnNodeSelected(bool bInIsSelected, class FEditorModeTools& InModeTools, struct FAnimNode_Base* InRuntimeNode);
+	virtual void OnNodeSelected(bool bInIsSelected, class FEditorModeTools& InModeTools, struct FAINode_Base* InRuntimeNode);
 
 	// Draw function for supporting visualization
-	virtual void Draw(FPrimitiveDrawInterface* PDI, USkeletalMeshComponent * PreviewSkelMeshComp) const {}
+	virtual void Draw(FPrimitiveDrawInterface* PDI) const {}
 	// Canvas draw function to draw to viewport
-	virtual void DrawCanvas(FViewport& InViewport, FSceneView& View, FCanvas& Canvas, USkeletalMeshComponent * PreviewSkelMeshComp) const {}
+	virtual void DrawCanvas(FViewport& InViewport, FSceneView& View, FCanvas& Canvas) const {}
 	// Function to collect strings from nodes to display in the viewport.
 	// Use this rather than DrawCanvas when adding general text to the viewport.
-	DEPRECATED(4.16, "Please use GetOnScreenDebugInfo(TArray<FText>& DebugInfo, FAnimNode_Base* RuntimeAnimNode, USkeletalMeshComponent* PreviewSkelMeshComp)")
-	virtual void GetOnScreenDebugInfo(TArray<FText>& DebugInfo, USkeletalMeshComponent* PreviewSkelMeshComp) const {}
-	virtual void GetOnScreenDebugInfo(TArray<FText>& DebugInfo, FAnimNode_Base* RuntimeAnimNode, USkeletalMeshComponent* PreviewSkelMeshComp) const {}
+	virtual void GetOnScreenDebugInfo(TArray<FText>& DebugInfo, FAINode_Base* RuntimeAINode, USkeletalMeshComponent* PreviewSkelMeshComp) const {}
 
 	/** Called after editing a default value to update internal node from pin defaults. This is needed for forwarding code to propagate values to preview. */
 	virtual void CopyPinDefaultsToNodeData(UEdGraphPin* InPin) {}
 
 	/** Called to propagate data from the internal node to the preview in Persona. */
-	virtual void CopyNodeDataToPreviewNode(FAnimNode_Base* InPreviewNode) {}
+	virtual void CopyNodeDataToPreviewNode(FAINode_Base* InPreviewNode) {}
 
 	// BEGIN Interface to support transition getter
 	// if you return true for DoesSupportExposeTimeForTransitionGetter
@@ -240,20 +224,20 @@ class UTILITYTREEEDITOR_API UUTGraphNode_Base : public UK2Node
 	// can customize details tab 
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder){ }
 
-	/** Try to find the preview node instance for this anim graph node */
-	FAnimNode_Base* FindDebugAnimNode(USkeletalMeshComponent * PreviewSkelMeshComp) const;
+	/** Try to find the preview node instance for this ai graph node */
+	FAINode_Base* FindDebugAINode() const;
 
 	template<typename NodeType>
-	NodeType* GetActiveInstanceNode(UObject* AnimInstanceObject) const
+	NodeType* GetActiveInstanceNode(UObject* UtilityTreeObject) const
 	{
-		if(!AnimInstanceObject)
+		if(!UtilityTreeObject)
 		{
 			return nullptr;
 		}
 
-		if(UAnimBlueprintGeneratedClass* AnimClass = Cast<UAnimBlueprintGeneratedClass>(AnimInstanceObject->GetClass()))
+		if(UUTBlueprintGeneratedClass* UTClass = Cast<UUTBlueprintGeneratedClass>(UtilityTreeObject->GetClass()))
 		{
-			return AnimClass->GetPropertyInstance<NodeType>(AnimInstanceObject, NodeGuid);
+			return UTClass->GetPropertyInstance<NodeType>(UtilityTreeObject, NodeGuid);
 		}
 
 		return nullptr;
@@ -267,7 +251,7 @@ class UTILITYTREEEDITOR_API UUTGraphNode_Base : public UK2Node
 
 	// Event that observers can bind to so that they are notified about changes
 	// made to this node through the property system
-	DECLARE_EVENT_OneParam(UUTGraphNode_Base, FOnNodePropertyChangedEvent, FPropertyChangedEvent&);
+	DECLARE_EVENT_OneParam(UAIGraphNode_Base, FOnNodePropertyChangedEvent, FPropertyChangedEvent&);
 	FOnNodePropertyChangedEvent& OnNodePropertyChanged() { return PropertyChangeEvent;	}
 
 	/**
@@ -282,10 +266,10 @@ protected:
 	friend FUTBlueprintCompiler;
 	friend FUTGraphNodeDetails;
 
-	// Gets the animation FNode type represented by this ed graph node
+	// Gets the ai FNode type represented by this ed graph node
 	UScriptStruct* GetFNodeType() const;
 
-	// Gets the animation FNode property represented by this ed graph node
+	// Gets the ai FNode property represented by this ed graph node
 	UStructProperty* GetFNodeProperty() const;
 
 	// This will be called when a pose link is found, and can be called with PoseProperty being either of:
@@ -294,7 +278,7 @@ protected:
 	virtual void CreatePinsForPoseLink(UProperty* PoseProperty, int32 ArrayIndex);
 
 	//
-	virtual FPoseLinkMappingRecord GetLinkIDLocation(const UScriptStruct* NodeType, UEdGraphPin* InputLinkPin);
+	virtual FAILinkMappingRecord GetLinkIDLocation(const UScriptStruct* NodeType, UEdGraphPin* InputLinkPin);
 
 	/** Get the property (and possibly array index) associated with the supplied pin */
 	virtual void GetPinAssociatedProperty(const UScriptStruct* NodeType, const UEdGraphPin* InputPin, UProperty*& OutProperty, int32& OutIndex) const;
@@ -307,15 +291,3 @@ protected:
 private:
 	TArray<FName> OldShownPins;
 };
-
-template<class AssetType>
-void UUTGraphNode_Base::HandleAnimReferenceReplacement(AssetType*& OriginalAsset, const TMap<UAnimationAsset*, UAnimationAsset*>& AnimAssetReplacementMap)
-{
-	AssetType* CacheOriginalAsset = OriginalAsset;
-	OriginalAsset = nullptr;
-
-	if (UAnimationAsset* const* ReplacementAsset = AnimAssetReplacementMap.Find(CacheOriginalAsset))
-	{
-		OriginalAsset = Cast<AssetType>(*ReplacementAsset);
-	}
-}

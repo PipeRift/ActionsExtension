@@ -60,8 +60,8 @@ EGraphType UUtilityTreeGraphSchema::GetGraphType(const UEdGraph* TestEdGraph) co
 void UUtilityTreeGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 {
 	// Create the result node
-	FGraphNodeCreator<UUTGraphNode_Root> NodeCreator(Graph);
-	UUTGraphNode_Root* ResultSinkNode = NodeCreator.CreateNode();
+	FGraphNodeCreator<UAIGraphNode_Root> NodeCreator(Graph);
+	UAIGraphNode_Root* ResultSinkNode = NodeCreator.CreateNode();
 	NodeCreator.Finalize();
 	SetNodeMetaData(ResultSinkNode, FNodeMetadata::DefaultGraphNode);
 }
@@ -89,7 +89,7 @@ bool UUtilityTreeGraphSchema::IsPosePin(const FEdGraphPinType& PinType)
 {
 	const UUtilityTreeGraphSchema* Schema = GetDefault<UUtilityTreeGraphSchema>();
 
-	//const UScriptStruct* PoseLinkStruct = FPoseLink::StaticStruct();
+	//const UScriptStruct* PoseLinkStruct = FAILink::StaticStruct();
 	return false;// (PinType.PinCategory == Schema->PC_Struct) && (PinType.PinSubCategoryObject == PoseLinkStruct);
 }
 

@@ -11,7 +11,7 @@
 
 #include "UTBlueprintGeneratedClass.generated.h"
 
-class UUTGraphNode_Base;
+class UAIGraphNode_Base;
 class UUtilityTree;
 class UEdGraph;
 
@@ -70,7 +70,7 @@ public:
 	TMap<TWeakObjectPtr<UEdGraph>, TWeakObjectPtr<class UAnimStateNode> > StateGraphToNodeMap;
 
 	// Map from animation node to their property index
-	TMap<TWeakObjectPtr<class UUTGraphNode_Base>, int32> NodePropertyToIndexMap;
+	TMap<TWeakObjectPtr<class UAIGraphNode_Base>, int32> NodePropertyToIndexMap;
 
 	// Map from animation node GUID to property index
 	TMap<FGuid, int32> NodeGuidToIndexMap;
@@ -178,7 +178,7 @@ public:
 	}
 
 	template<typename StructType>
-	const int32* GetNodePropertyIndexFromHierarchy(class UUTGraphNode_Base* Node)
+	const int32* GetNodePropertyIndexFromHierarchy(class UAIGraphNode_Base* Node)
 	{
 		TArray<const UBlueprintGeneratedClass*> BlueprintHierarchy;
 		GetGeneratedClassesHierarchy(this, BlueprintHierarchy);
@@ -216,7 +216,7 @@ public:
 	}
 
 	template<typename StructType>
-	UStructProperty* GetPropertyForNode(class UUTGraphNode_Base* Node, EUTPropertySearchMode::Type SearchMode = EUTPropertySearchMode::OnlyThis)
+	UStructProperty* GetPropertyForNode(class UAIGraphNode_Base* Node, EUTPropertySearchMode::Type SearchMode = EUTPropertySearchMode::OnlyThis)
 	{
 		const int32* pIndex = GetNodePropertyIndex<StructType>(Node, SearchMode);
 		if (pIndex)

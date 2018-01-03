@@ -1,13 +1,13 @@
 // Copyright 2015-2017 Piperift. All Rights Reserved.
 
-#include "UtilityTree/UTGraphNode_Root.h"
+#include "UtilityTree/AIGraphNode_Root.h"
 #include "GraphEditorSettings.h"
 
 
 /////////////////////////////////////////////////////
-// FPoseLinkMappingRecord
+// FAILinkMappingRecord
 
-void FPoseLinkMappingRecord::PatchLinkIndex(uint8* DestinationPtr, int32 LinkID, int32 SourceLinkID) const
+void FAILinkMappingRecord::PatchLinkIndex(uint8* DestinationPtr, int32 LinkID, int32 SourceLinkID) const
 {
 	checkSlow(IsValid());
 
@@ -27,7 +27,7 @@ void FPoseLinkMappingRecord::PatchLinkIndex(uint8* DestinationPtr, int32 LinkID,
 	check((LinkID == INDEX_NONE) || (LinkID != SourceLinkID));
 
 	// Patch the pose link
-	FPoseLinkBase& PoseLink = *((FPoseLinkBase*)DestinationPtr);
+	FAILinkBase& PoseLink = *((FAILinkBase*)DestinationPtr);
 	PoseLink.LinkID = LinkID;
 	PoseLink.SourceLinkID = SourceLinkID;
 }
@@ -37,32 +37,32 @@ void FPoseLinkMappingRecord::PatchLinkIndex(uint8* DestinationPtr, int32 LinkID,
 
 #define LOCTEXT_NAMESPACE "UTGraphNode"
 
-UUTGraphNode_Root::UUTGraphNode_Root(const FObjectInitializer& ObjectInitializer)
+UAIGraphNode_Root::UAIGraphNode_Root(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 }
 
-FLinearColor UUTGraphNode_Root::GetNodeTitleColor() const
+FLinearColor UAIGraphNode_Root::GetNodeTitleColor() const
 {
 	return GetDefault<UGraphEditorSettings>()->ResultNodeTitleColor;
 }
 
-FText UUTGraphNode_Root::GetNodeTitle(ENodeTitleType::Type TitleType) const
+FText UAIGraphNode_Root::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
 	return LOCTEXT("UTGraphNodeRoot_Title", "Final Animation Pose");
 }
 
-FText UUTGraphNode_Root::GetTooltipText() const
+FText UAIGraphNode_Root::GetTooltipText() const
 {
 	return LOCTEXT("UTGraphNodeRoot_Tooltip", "Wire the final animation pose into this node");
 }
 
-bool UUTGraphNode_Root::IsSinkNode() const
+bool UAIGraphNode_Root::IsSinkNode() const
 {
 	return true;
 }
 
-void UUTGraphNode_Root::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
+void UAIGraphNode_Root::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
 {
 	// Intentionally empty. This node is auto-generated when a new graph is created.
 }

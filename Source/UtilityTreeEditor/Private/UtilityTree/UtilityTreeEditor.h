@@ -112,5 +112,5 @@ private:
 
 
 	// selected Utility Tree graph node 
-	TWeakObjectPtr<class UUTGraphNode_Base> SelectedAIGraphNode;
+	TWeakObjectPtr<class UAIGraphNode_Base> SelectedAIGraphNode;
 };

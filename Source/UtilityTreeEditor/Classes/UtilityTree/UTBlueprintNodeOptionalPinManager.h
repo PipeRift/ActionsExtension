@@ -10,13 +10,13 @@ class UEdGraphPin;
 struct FUTBlueprintNodeOptionalPinManager : public FOptionalPinManager
 {
 protected:
-	class UUTGraphNode_Base* BaseNode;
+	class UAIGraphNode_Base* BaseNode;
 	TArray<UEdGraphPin*>* OldPins;
 
 	TMap<FString, UEdGraphPin*> OldPinMap;
 
 public:
-	FUTBlueprintNodeOptionalPinManager(class UUTGraphNode_Base* Node, TArray<UEdGraphPin*>* InOldPins);
+	FUTBlueprintNodeOptionalPinManager(class UAIGraphNode_Base* Node, TArray<UEdGraphPin*>* InOldPins);
 
 	/** FOptionalPinManager interface */
 	virtual void GetRecordDefaults(UProperty* TestProperty, FOptionalPinFromProperty& Record) const override;

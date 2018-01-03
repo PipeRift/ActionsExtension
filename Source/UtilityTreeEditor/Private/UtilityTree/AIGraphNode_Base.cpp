@@ -1,6 +1,6 @@
 // Copyright 2015-2017 Piperift. All Rights Reserved.
 
-#include "UtilityTree/UTGraphNode_Base.h"
+#include "UtilityTree/AIGraphNode_Base.h"
 #include "UtilityTree/UtilityTreeGraph.h"
 #include "UtilityTree/UtilityTreeGraphSchema.h"
 
@@ -14,12 +14,12 @@
 /////////////////////////////////////////////////////
 // UUTGraphNode_Base
 
-UUTGraphNode_Base::UUTGraphNode_Base(const FObjectInitializer& ObjectInitializer)
+UAIGraphNode_Base::UAIGraphNode_Base(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 }
 
-void UUTGraphNode_Base::PreEditChange(UProperty* PropertyThatWillChange)
+void UAIGraphNode_Base::PreEditChange(UProperty* PropertyThatWillChange)
 {
 	Super::PreEditChange(PropertyThatWillChange);
 
@@ -29,7 +29,7 @@ void UUTGraphNode_Base::PreEditChange(UProperty* PropertyThatWillChange)
 	}
 }
 
-void UUTGraphNode_Base::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+void UAIGraphNode_Base::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	FName PropertyName = (PropertyChangedEvent.Property != NULL) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 
@@ -44,16 +44,16 @@ void UUTGraphNode_Base::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 	PropertyChangeEvent.Broadcast(PropertyChangedEvent);
 }
 
-void UUTGraphNode_Base::CreateOutputPins()
+void UAIGraphNode_Base::CreateOutputPins()
 {
 	if (!IsSinkNode())
 	{
 		const UUtilityTreeGraphSchema* Schema = GetDefault<UUtilityTreeGraphSchema>();
-		CreatePin(EGPD_Output, Schema->PC_Struct, FString(), FPoseLink::StaticStruct(), TEXT("Pose"));
+		CreatePin(EGPD_Output, Schema->PC_Struct, FString(), FAILink::StaticStruct(), TEXT("Pose"));
 	}
 }
 
-void UUTGraphNode_Base::InternalPinCreation(TArray<UEdGraphPin*>* OldPins)
+void UAIGraphNode_Base::InternalPinCreation(TArray<UEdGraphPin*>* OldPins)
 {
 	// pre-load required assets first before creating pins
 	PreloadRequiredAssets();
@@ -73,26 +73,26 @@ void UUTGraphNode_Base::InternalPinCreation(TArray<UEdGraphPin*>* OldPins)
 	}
 }
 
-void UUTGraphNode_Base::AllocateDefaultPins()
+void UAIGraphNode_Base::AllocateDefaultPins()
 {
 	InternalPinCreation(NULL);
 }
 
-void UUTGraphNode_Base::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& OldPins)
+void UAIGraphNode_Base::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& OldPins)
 {
 	InternalPinCreation(&OldPins);
 
 	RestoreSplitPins(OldPins);
 }
 
-FLinearColor UUTGraphNode_Base::GetNodeTitleColor() const
+FLinearColor UAIGraphNode_Base::GetNodeTitleColor() const
 {
 	return FLinearColor::Black;
 }
 
-UScriptStruct* UUTGraphNode_Base::GetFNodeType() const
+UScriptStruct* UAIGraphNode_Base::GetFNodeType() const
 {
-	UScriptStruct* BaseFStruct = FAnimNode_Base::StaticStruct();
+	UScriptStruct* BaseFStruct = FAINode_Base::StaticStruct();
 
 	for (TFieldIterator<UProperty> PropIt(GetClass(), EFieldIteratorFlags::IncludeSuper); PropIt; ++PropIt)
 	{
@@ -108,9 +108,9 @@ UScriptStruct* UUTGraphNode_Base::GetFNodeType() const
 	return NULL;
 }
 
-UStructProperty* UUTGraphNode_Base::GetFNodeProperty() const
+UStructProperty* UAIGraphNode_Base::GetFNodeProperty() const
 {
-	UScriptStruct* BaseFStruct = FAnimNode_Base::StaticStruct();
+	UScriptStruct* BaseFStruct = FAINode_Base::StaticStruct();
 
 	for (TFieldIterator<UProperty> PropIt(GetClass(), EFieldIteratorFlags::IncludeSuper); PropIt; ++PropIt)
 	{
@@ -126,19 +126,19 @@ UStructProperty* UUTGraphNode_Base::GetFNodeProperty() const
 	return NULL;
 }
 
-FString UUTGraphNode_Base::GetNodeCategory() const
+FString UAIGraphNode_Base::GetNodeCategory() const
 {
 	return TEXT("Misc.");
 }
 
-void UUTGraphNode_Base::GetNodeAttributes( TArray<TKeyValuePair<FString, FString>>& OutNodeAttributes ) const
+void UAIGraphNode_Base::GetNodeAttributes( TArray<TKeyValuePair<FString, FString>>& OutNodeAttributes ) const
 {
 	OutNodeAttributes.Add( TKeyValuePair<FString, FString>( TEXT( "Type" ), TEXT( "UTGraphNode" ) ));
 	OutNodeAttributes.Add( TKeyValuePair<FString, FString>( TEXT( "Class" ), GetClass()->GetName() ));
 	OutNodeAttributes.Add( TKeyValuePair<FString, FString>( TEXT( "Name" ), GetName() ));
 }
 
-void UUTGraphNode_Base::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
+void UAIGraphNode_Base::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
 {
 	// actions get registered under specific object-keys; the idea is that 
 	// actions might have to be updated (or deleted) if their object-key is  
@@ -157,12 +157,12 @@ void UUTGraphNode_Base::GetMenuActions(FBlueprintActionDatabaseRegistrar& Action
 	}
 }
 
-FText UUTGraphNode_Base::GetMenuCategory() const
+FText UAIGraphNode_Base::GetMenuCategory() const
 {
 	return FText::FromString(GetNodeCategory());
 }
 
-void UUTGraphNode_Base::GetPinAssociatedProperty(const UScriptStruct* NodeType, const UEdGraphPin* InputPin, UProperty*& OutProperty, int32& OutIndex) const
+void UAIGraphNode_Base::GetPinAssociatedProperty(const UScriptStruct* NodeType, const UEdGraphPin* InputPin, UProperty*& OutProperty, int32& OutIndex) const
 {
 	OutProperty = nullptr;
 	OutIndex = INDEX_NONE;
@@ -192,11 +192,11 @@ void UUTGraphNode_Base::GetPinAssociatedProperty(const UScriptStruct* NodeType, 
 	}
 }
 
-FPoseLinkMappingRecord UUTGraphNode_Base::GetLinkIDLocation(const UScriptStruct* NodeType, UEdGraphPin* SourcePin)
+FAILinkMappingRecord UAIGraphNode_Base::GetLinkIDLocation(const UScriptStruct* NodeType, UEdGraphPin* SourcePin)
 {
 	if (SourcePin->LinkedTo.Num() > 0)
 	{
-		if (UUTGraphNode_Base* LinkedNode = Cast<UUTGraphNode_Base>(FBlueprintEditorUtils::FindFirstCompilerRelevantNode(SourcePin->LinkedTo[0])))
+		if (UAIGraphNode_Base* LinkedNode = Cast<UAIGraphNode_Base>(FBlueprintEditorUtils::FindFirstCompilerRelevantNode(SourcePin->LinkedTo[0])))
 		{
 			//@TODO: Name-based hackery, avoid the roundtrip and better indicate when it's an array pose pin
 			int32 UnderscoreIndex = SourcePin->PinName.Find(TEXT("_"), ESearchCase::CaseSensitive);
@@ -209,9 +209,9 @@ FPoseLinkMappingRecord UUTGraphNode_Base::GetLinkIDLocation(const UScriptStruct*
 				{
 					if (UStructProperty* Property = Cast<UStructProperty>(ArrayProperty->Inner))
 					{
-						if (Property->Struct->IsChildOf(FPoseLinkBase::StaticStruct()))
+						if (Property->Struct->IsChildOf(FAILinkBase::StaticStruct()))
 						{
-							return FPoseLinkMappingRecord::MakeFromArrayEntry(this, LinkedNode, ArrayProperty, ArrayIndex);
+							return FAILinkMappingRecord::MakeFromArrayEntry(this, LinkedNode, ArrayProperty, ArrayIndex);
 						}
 					}
 				}
@@ -220,19 +220,19 @@ FPoseLinkMappingRecord UUTGraphNode_Base::GetLinkIDLocation(const UScriptStruct*
 			{
 				if (UStructProperty* Property = FindField<UStructProperty>(NodeType, *(SourcePin->PinName)))
 				{
-					if (Property->Struct->IsChildOf(FPoseLinkBase::StaticStruct()))
+					if (Property->Struct->IsChildOf(FAILinkBase::StaticStruct()))
 					{
-						return FPoseLinkMappingRecord::MakeFromMember(this, LinkedNode, Property);
+						return FAILinkMappingRecord::MakeFromMember(this, LinkedNode, Property);
 					}
 				}
 			}
 		}
 	}
 
-	return FPoseLinkMappingRecord::MakeInvalid();
+	return FAILinkMappingRecord::MakeInvalid();
 }
 
-void UUTGraphNode_Base::CreatePinsForPoseLink(UProperty* PoseProperty, int32 ArrayIndex)
+void UAIGraphNode_Base::CreatePinsForPoseLink(UProperty* PoseProperty, int32 ArrayIndex)
 {
 	const UUtilityTreeGraphSchema* Schema = GetDefault<UUtilityTreeGraphSchema>();
 	//UScriptStruct* A2PoseStruct = FA2Pose::StaticStruct();
@@ -242,7 +242,7 @@ void UUTGraphNode_Base::CreatePinsForPoseLink(UProperty* PoseProperty, int32 Arr
 	//CreatePin(EGPD_Input, Schema->PC_Struct, FString(), A2PoseStruct, NewPinName);
 }
 
-void UUTGraphNode_Base::PostProcessPinName(const UEdGraphPin* Pin, FString& DisplayName) const
+void UAIGraphNode_Base::PostProcessPinName(const UEdGraphPin* Pin, FString& DisplayName) const
 {
 	if (Pin->Direction == EGPD_Output)
 	{
@@ -253,17 +253,17 @@ void UUTGraphNode_Base::PostProcessPinName(const UEdGraphPin* Pin, FString& Disp
 	}
 }
 
-bool UUTGraphNode_Base::CanCreateUnderSpecifiedSchema(const UEdGraphSchema* DesiredSchema) const
+bool UAIGraphNode_Base::CanCreateUnderSpecifiedSchema(const UEdGraphSchema* DesiredSchema) const
 {
 	return DesiredSchema->GetClass()->IsChildOf(UUtilityTreeGraphSchema::StaticClass());
 }
 
-FString UUTGraphNode_Base::GetDocumentationLink() const
+FString UAIGraphNode_Base::GetDocumentationLink() const
 {
-	return TEXT("Shared/GraphNodes/Animation");
+	return TEXT("");
 }
 
-void UUTGraphNode_Base::GetPinHoverText(const UEdGraphPin& Pin, FString& HoverTextOut) const
+void UAIGraphNode_Base::GetPinHoverText(const UEdGraphPin& Pin, FString& HoverTextOut) const
 {
 	if (UUtilityTreeGraphSchema::IsPosePin(Pin.PinType))
 	{
@@ -275,25 +275,17 @@ void UUTGraphNode_Base::GetPinHoverText(const UEdGraphPin& Pin, FString& HoverTe
 	}
 }
 
-void UUTGraphNode_Base::HandleAnimReferenceCollection(UAnimationAsset* AnimAsset, TArray<UAnimationAsset*>& AnimationAssets) const
-{
-	if(AnimAsset)
-	{
-		AnimAsset->HandleAnimReferenceCollection(AnimationAssets, true);
-	}
-}
-
-void UUTGraphNode_Base::OnNodeSelected(bool bInIsSelected, FEditorModeTools& InModeTools, FAnimNode_Base* InRuntimeNode)
+void UAIGraphNode_Base::OnNodeSelected(bool bInIsSelected, FEditorModeTools& InModeTools, FAINode_Base* InRuntimeNode)
 {
 }
 
-EUTAssetHandlerType UUTGraphNode_Base::SupportsAssetClass(const UClass* AssetClass) const
+EUTAssetHandlerType UAIGraphNode_Base::SupportsAssetClass(const UClass* AssetClass) const
 {
 	return EUTAssetHandlerType::NotSupported;
 }
 
 
-void UUTGraphNode_Base::PinDefaultValueChanged(UEdGraphPin* Pin)
+void UAIGraphNode_Base::PinDefaultValueChanged(UEdGraphPin* Pin)
 {
 	Super::PinDefaultValueChanged(Pin);
 
@@ -305,7 +297,7 @@ void UUTGraphNode_Base::PinDefaultValueChanged(UEdGraphPin* Pin)
 	}
 }
 
-bool UUTGraphNode_Base::IsPinExposedAndLinked(const FString& InPinName, const EEdGraphPinDirection InDirection) const
+bool UAIGraphNode_Base::IsPinExposedAndLinked(const FString& InPinName, const EEdGraphPinDirection InDirection) const
 {
 	UEdGraphPin* Pin = FindPin(InPinName, InDirection);
 	return Pin != nullptr && Pin->LinkedTo.Num() > 0 && Pin->LinkedTo[0] != nullptr;
