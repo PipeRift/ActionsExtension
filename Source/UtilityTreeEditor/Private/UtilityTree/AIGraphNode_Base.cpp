@@ -232,7 +232,7 @@ FAILinkMappingRecord UAIGraphNode_Base::GetLinkIDLocation(const UScriptStruct* N
 	return FAILinkMappingRecord::MakeInvalid();
 }
 
-void UAIGraphNode_Base::CreatePinsForPoseLink(UProperty* PoseProperty, int32 ArrayIndex)
+void UAIGraphNode_Base::CreatePinsForAILink(UProperty* AIProperty, int32 ArrayIndex)
 {
 	const UUtilityTreeGraphSchema* Schema = GetDefault<UUtilityTreeGraphSchema>();
 	//UScriptStruct* A2PoseStruct = FA2Pose::StaticStruct();
@@ -265,9 +265,9 @@ FString UAIGraphNode_Base::GetDocumentationLink() const
 
 void UAIGraphNode_Base::GetPinHoverText(const UEdGraphPin& Pin, FString& HoverTextOut) const
 {
-	if (UUtilityTreeGraphSchema::IsPosePin(Pin.PinType))
+	if (UUtilityTreeGraphSchema::IsAIPin(Pin.PinType))
 	{
-		HoverTextOut = TEXT("Utility Pin");
+		HoverTextOut = TEXT("AI Pin");
 	}
 	else
 	{

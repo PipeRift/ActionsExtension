@@ -294,9 +294,9 @@ uint8* UUTBlueprintGeneratedClass::GetPersistentUberGraphFrame(UObject* Obj, UFu
 
 #if WITH_EDITORONLY_DATA
 
-const int32* UUTBlueprintGeneratedClass::GetNodePropertyIndexFromGuid(FGuid Guid, EUTPropertySearchMode::Type SearchMode /*= EUTPropertySearchMode::OnlyThis*/)
+const int32* UUTBlueprintGeneratedClass::GetNodePropertyIndexFromGuid(FGuid Guid, EAIPropertySearchMode::Type SearchMode /*= EUTPropertySearchMode::OnlyThis*/)
 {
-	if (SearchMode == EUTPropertySearchMode::OnlyThis)
+	if (SearchMode == EAIPropertySearchMode::OnlyThis)
 	{
 		return UTBlueprintDebugData.NodeGuidToIndexMap.Find(Guid);
 	}

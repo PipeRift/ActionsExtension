@@ -394,7 +394,7 @@ void FUTBlueprintCompiler::ProcessUtilityTreeNode(UAIGraphNode_Base* VisualUTNod
 		bool bConsumed = false;
 
 		// Register pose links for future use
-		if ((SourcePin->Direction == EGPD_Input) && (UTGraphDefaultSchema->IsPosePin(SourcePin->PinType)))
+		if ((SourcePin->Direction == EGPD_Input) && (UTGraphDefaultSchema->IsAIPin(SourcePin->PinType)))
 		{
 			// Input pose pin, going to need to be linked up
 			FAILinkMappingRecord LinkRecord = VisualUTNode->GetLinkIDLocation(NodeType, SourcePin);
@@ -459,7 +459,7 @@ void FUTBlueprintCompiler::ProcessUtilityTreeNode(UAIGraphNode_Base* VisualUTNod
 	{
 		if (UStructProperty* StructProp = Cast<UStructProperty>(*NodePropIt))
 		{
-			if (StructProp->Struct == FExposedValueHandler::StaticStruct())
+			if (StructProp->Struct == FAIExposedValueHandler::StaticStruct())
 			{
 				// Register this property to the list of pins that need to be updated
 				// (it's OK if there isn't an entry for this handler, it means that the values are static and don't need to be calculated every frame)
@@ -538,7 +538,7 @@ void FUTBlueprintCompiler::PruneIsolatedUtilityTreeNodes(const TArray<UAIGraphNo
 			{
 				UEdGraphPin* MyPin = Node->Pins[i];
 
-				if ((MyPin->Direction == EGPD_Input) && (UTSchema->IsPosePin(MyPin->PinType)))
+				if ((MyPin->Direction == EGPD_Input) && (UTSchema->IsAIPin(MyPin->PinType)))
 				{
 					for (int32 j = 0; j < MyPin->LinkedTo.Num(); ++j)
 					{
@@ -778,7 +778,7 @@ void FUTBlueprintCompiler::CopyTermDefaultsToDefaultObject(UObject* DefaultObjec
 		{
 			if (Override->NewAsset)
 			{
-				FAINode_Base* BaseNode = NewUTBlueprintClass->GetPropertyInstance<FAINode_Base>(DefaultObject, Override->ParentNodeGuid, EPropertySearchMode::Hierarchy);
+				FAINode_Base* BaseNode = NewUTBlueprintClass->GetPropertyInstance<FAINode_Base>(DefaultObject, Override->ParentNodeGuid, EAIPropertySearchMode::Hierarchy);
 				if (BaseNode)
 				{
 					//BaseNode->OverrideAsset(Override->NewAsset);
@@ -1017,7 +1017,7 @@ void FUTBlueprintCompiler::PostCompile()
 			UAIGraphNode_Base* Node = CastChecked<UAIGraphNode_Base>(Handler.CopyRecords[0].DestPin->GetOwningNode());
 			UAIGraphNode_Base* TrueNode = MessageLog.FindSourceObjectTypeChecked<UAIGraphNode_Base>(Node);	
 
-			FExposedValueHandler* HandlerPtr = EvaluationHandler.EvaluationHandlerProperty->ContainerPtrToValuePtr<FExposedValueHandler>(EvaluationHandler.NodeVariableProperty->ContainerPtrToValuePtr<void>(DefaultUtilityTree));
+			FAIExposedValueHandler* HandlerPtr = EvaluationHandler.EvaluationHandlerProperty->ContainerPtrToValuePtr<FAIExposedValueHandler>(EvaluationHandler.NodeVariableProperty->ContainerPtrToValuePtr<void>(DefaultUtilityTree));
 			TrueNode->BlueprintUsage = HandlerPtr->BoundFunction != NAME_None ? EUTBlueprintUsage::UsesBlueprint : EUTBlueprintUsage::DoesNotUseBlueprint;
 		}
 	}
@@ -1098,7 +1098,7 @@ void FUTBlueprintCompiler::DumpUTDebugData()
 
 void FUTBlueprintCompiler::FEvaluationHandlerRecord::PatchFunctionNameAndCopyRecordsInto(UObject* TargetObject) const
 {
-	FExposedValueHandler* HandlerPtr = EvaluationHandlerProperty->ContainerPtrToValuePtr<FExposedValueHandler>(NodeVariableProperty->ContainerPtrToValuePtr<void>(TargetObject));
+	FAIExposedValueHandler* HandlerPtr = EvaluationHandlerProperty->ContainerPtrToValuePtr<FAIExposedValueHandler>(NodeVariableProperty->ContainerPtrToValuePtr<void>(TargetObject));
 	HandlerPtr->CopyRecords.Empty();
 
 	if (IsFastPath())
@@ -1117,7 +1117,7 @@ void FUTBlueprintCompiler::FEvaluationHandlerRecord::PatchFunctionNameAndCopyRec
 					  DestPropertySize = DestArrayProperty->Inner->GetSize();
 				  }
 
-				  FExposedValueCopyRecord CopyRecord;
+				  FAIExposedValueCopyRecord CopyRecord;
 				  CopyRecord.DestProperty = PropertyCopyRecord.DestProperty;
 				  CopyRecord.DestArrayIndex = PropertyCopyRecord.DestArrayIndex == INDEX_NONE ? 0 : PropertyCopyRecord.DestArrayIndex;
 				  CopyRecord.SourcePropertyName = PropertyCopyRecord.SourcePropertyName;
@@ -1278,7 +1278,7 @@ bool FUTBlueprintCompiler::FEvaluationHandlerRecord::CheckForLogicalNot(FPropert
 				if(CheckForVariableGet(CopyRecord, InputPin) || CheckForStructMemberAccess(CopyRecord, InputPin))
 				{
 					check(CopyRecord.SourcePropertyName != NAME_None);	// this should have been filled in by CheckForVariableGet() or CheckForStructMemberAccess() above
-					CopyRecord.Operation = EPostCopyOperation::LogicalNegateBool;
+					CopyRecord.Operation = EAIPostCopyOperation::LogicalNegateBool;
 					return true;
 				}
 			}
@@ -1369,7 +1369,7 @@ bool FUTBlueprintCompiler::FEvaluationHandlerRecord::CheckForMemberOnlyAccess(FP
 					bool bLeafNode = true;
 					for(auto& Pin : LinkedNode->Pins)
 					{
-						if(Pin != LinkedPin && Pin->Direction == EGPD_Input && !UTGraphDefaultSchema->IsPosePin(Pin->PinType))
+						if(Pin != LinkedPin && Pin->Direction == EGPD_Input && !UTGraphDefaultSchema->IsAIPin(Pin->PinType))
 						{
 							bLeafNode = false;
 							PinStack.Add(Pin);

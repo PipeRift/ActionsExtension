@@ -5,7 +5,7 @@
 #include "Kismet2/BlueprintEditorUtils.h"
 
 #include "UtilityTree/UtilityTreeGraphSchema.h"
-#include "UtilityTree/UTGraphNode_Base.h"
+#include "UtilityTree/AIGraphNode_Base.h"
 
 
 FUTBlueprintNodeOptionalPinManager::FUTBlueprintNodeOptionalPinManager(class UAIGraphNode_Base* Node, TArray<UEdGraphPin*>* InOldPins)
@@ -29,10 +29,10 @@ void FUTBlueprintNodeOptionalPinManager::GetRecordDefaults(UProperty* TestProper
 	// Determine if this is a pose or array of poses
 	UArrayProperty* ArrayProp = Cast<UArrayProperty>(TestProperty);
 	UStructProperty* StructProp = Cast<UStructProperty>((ArrayProp != NULL) ? ArrayProp->Inner : TestProperty);
-	//const bool bIsPoseInput = (StructProp != NULL) && (StructProp->Struct->IsChildOf(FAILinkBase::StaticStruct()));
+	const bool bIsAIInput = (StructProp != NULL) && (StructProp->Struct->IsChildOf(FAILinkBase::StaticStruct()));
 
 	//@TODO: Error if they specified two or more of these flags
-	const bool bAlwaysShow = TestProperty->HasMetaData(Schema->NAME_AlwaysAsPin);// || bIsPoseInput;
+	const bool bAlwaysShow = TestProperty->HasMetaData(Schema->NAME_AlwaysAsPin) || bIsAIInput;
 	const bool bOptional_ShowByDefault = TestProperty->HasMetaData(Schema->NAME_PinShownByDefault);
 	const bool bOptional_HideByDefault = TestProperty->HasMetaData(Schema->NAME_PinHiddenByDefault);
 	const bool bNeverShow = TestProperty->HasMetaData(Schema->NAME_NeverAsPin);

@@ -84,10 +84,10 @@ protected:
 	}
 
 protected:
-	// Linked node for this pose link, can be nullptr
+	// Linked node for this ai link, can be nullptr
 	UAIGraphNode_Base* LinkedNode;
 
-	// Linking node for this pose link, can be nullptr
+	// Linking node for this ai link, can be nullptr
 	UAIGraphNode_Base* LinkingNode;
 
 	// Will either be an array property containing FAILinkBase derived structs, indexed by ChildPropertyIndex, or a FAILinkBase derived struct property 
@@ -272,10 +272,10 @@ protected:
 	// Gets the ai FNode property represented by this ed graph node
 	UStructProperty* GetFNodeProperty() const;
 
-	// This will be called when a pose link is found, and can be called with PoseProperty being either of:
+	// This will be called when a AI link is found, and can be called with AIProperty being either of:
 	//  - an array property (ArrayIndex >= 0)
-	//  - a single pose property (ArrayIndex == INDEX_NONE)
-	virtual void CreatePinsForPoseLink(UProperty* PoseProperty, int32 ArrayIndex);
+	//  - a single ai property (ArrayIndex == INDEX_NONE)
+	virtual void CreatePinsForAILink(UProperty* AIProperty, int32 ArrayIndex);
 
 	//
 	virtual FAILinkMappingRecord GetLinkIDLocation(const UScriptStruct* NodeType, UEdGraphPin* InputLinkPin);

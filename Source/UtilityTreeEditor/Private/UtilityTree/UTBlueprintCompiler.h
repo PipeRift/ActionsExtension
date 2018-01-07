@@ -61,7 +61,7 @@ protected:
 			, DestArrayIndex(InDestArrayIndex)
 			, SourcePropertyName(NAME_None)
 			, SourceSubStructPropertyName(NAME_None)
-			, Operation(EPostCopyOperation::None)
+			, Operation(EAIPostCopyOperation::None)
 		{}
 
 		bool IsFastPath() const
@@ -93,7 +93,7 @@ protected:
 		FName SourceSubStructPropertyName;
 
 		/** Any operation we want to perform post-copy on the destination data */
-		EPostCopyOperation Operation;
+		EAIPostCopyOperation Operation;
 	};
 
 	// Wireup record for a single anim node property (which might be an array)

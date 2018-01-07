@@ -15,6 +15,7 @@ class UAIGraphNode_Base;
 class UUtilityTree;
 class UEdGraph;
 
+
 struct FUTNodePoseWatch
 {
 	TSharedPtr<FCompactHeapPose>	PoseInfo;
@@ -133,7 +134,7 @@ public:
 };
 
 #if WITH_EDITORONLY_DATA
-namespace EUTPropertySearchMode
+namespace EAIPropertySearchMode
 {
 	enum Type
 	{
@@ -199,13 +200,13 @@ public:
 	}
 
 	template<typename StructType>
-	const int32* GetNodePropertyIndex(class UAnimGraphNode_Base* Node, EUTPropertySearchMode::Type SearchMode = EUTPropertySearchMode::OnlyThis)
+	const int32* GetNodePropertyIndex(class UAnimGraphNode_Base* Node, EAIPropertySearchMode::Type SearchMode = EAIPropertySearchMode::OnlyThis)
 	{
-		return (SearchMode == EUTPropertySearchMode::OnlyThis) ? UTBlueprintDebugData.NodePropertyToIndexMap.Find(Node) : GetNodePropertyIndexFromHierarchy<StructType>(Node);
+		return (SearchMode == EAIPropertySearchMode::OnlyThis) ? UTBlueprintDebugData.NodePropertyToIndexMap.Find(Node) : GetNodePropertyIndexFromHierarchy<StructType>(Node);
 	}
 
 	template<typename StructType>
-	int32 GetLinkIDForNode(class UAnimGraphNode_Base* Node, EUTPropertySearchMode::Type SearchMode = EUTPropertySearchMode::OnlyThis)
+	int32 GetLinkIDForNode(class UAnimGraphNode_Base* Node, EAIPropertySearchMode::Type SearchMode = EAIPropertySearchMode::OnlyThis)
 	{
 		const int32* pIndex = GetNodePropertyIndex<StructType>(Node, SearchMode);
 		if (pIndex)
@@ -216,7 +217,7 @@ public:
 	}
 
 	template<typename StructType>
-	UStructProperty* GetPropertyForNode(class UAIGraphNode_Base* Node, EUTPropertySearchMode::Type SearchMode = EUTPropertySearchMode::OnlyThis)
+	UStructProperty* GetPropertyForNode(class UAIGraphNode_Base* Node, EAIPropertySearchMode::Type SearchMode = EAIPropertySearchMode::OnlyThis)
 	{
 		const int32* pIndex = GetNodePropertyIndex<StructType>(Node, SearchMode);
 		if (pIndex)
@@ -234,28 +235,28 @@ public:
 	}
 
 	template<typename StructType>
-	StructType* GetPropertyInstance(UObject* Object, class UAnimGraphNode_Base* Node, EUTPropertySearchMode::Type SearchMode = EUTPropertySearchMode::OnlyThis)
+	StructType* GetPropertyInstance(UObject* Object, class UAIGraphNode_Base* Node, EAIPropertySearchMode::Type SearchMode = EAIPropertySearchMode::OnlyThis)
 	{
-		UStructProperty* AnimationProperty = GetPropertyForNode<StructType>(Node);
-		if (AnimationProperty)
+		UStructProperty* AIProperty = GetPropertyForNode<StructType>(Node);
+		if (AIProperty)
 		{
-			return AnimationProperty->ContainerPtrToValuePtr<StructType>((void*)Object);
+			return AIProperty->ContainerPtrToValuePtr<StructType>((void*)Object);
 		}
 
 		return NULL;
 	}
 
 	template<typename StructType>
-	StructType* GetPropertyInstance(UObject* Object, FGuid NodeGuid, EUTPropertySearchMode::Type SearchMode = EUTPropertySearchMode::OnlyThis)
+	StructType* GetPropertyInstance(UObject* Object, FGuid NodeGuid, EAIPropertySearchMode::Type SearchMode = EAIPropertySearchMode::OnlyThis)
 	{
 		const int32* pIndex = GetNodePropertyIndexFromGuid(NodeGuid, SearchMode);
 		if (pIndex)
 		{
-			if (UStructProperty* AnimProperty = AnimNodeProperties[AnimNodeProperties.Num() - 1 - *pIndex])
+			if (UStructProperty* UTProperty = UTNodeProperties[UTNodeProperties.Num() - 1 - *pIndex])
 			{
-				if (AnimProperty->Struct->IsChildOf(StructType::StaticStruct()))
+				if (UTProperty->Struct->IsChildOf(StructType::StaticStruct()))
 				{
-					return AnimProperty->ContainerPtrToValuePtr<StructType>((void*)Object);
+					return UTProperty->ContainerPtrToValuePtr<StructType>((void*)Object);
 				}
 			}
 		}
@@ -264,16 +265,16 @@ public:
 	}
 
 	template<typename StructType>
-	StructType& GetPropertyInstanceChecked(UObject* Object, class UAnimGraphNode_Base* Node, EUTPropertySearchMode::Type SearchMode = EUTPropertySearchMode::OnlyThis)
+	StructType& GetPropertyInstanceChecked(UObject* Object, class UAnimGraphNode_Base* Node, EAIPropertySearchMode::Type SearchMode = EAIPropertySearchMode::OnlyThis)
 	{
 		const int32 Index = UtilityTreeBlueprintDebugData.NodePropertyToIndexMap.FindChecked(Node);
-		UStructProperty* AnimationProperty = AnimNodeProperties[AnimNodeProperties.Num() - 1 - Index];
-		check(AnimationProperty);
-		check(AnimationProperty->Struct->IsChildOf(StructType::StaticStruct()));
-		return AnimationProperty->ContainerPtrToValuePtr<StructType>((void*)Object);
+		UStructProperty* UTProperty = UTNodeProperties[UTNodeProperties.Num() - 1 - Index];
+		check(UTProperty);
+		check(UTProperty->Struct->IsChildOf(StructType::StaticStruct()));
+		return UTProperty->ContainerPtrToValuePtr<StructType>((void*)Object);
 	}
 
-	const int32* GetNodePropertyIndexFromGuid(FGuid Guid, EUTPropertySearchMode::Type SearchMode = EUTPropertySearchMode::OnlyThis);
+	const int32* GetNodePropertyIndexFromGuid(FGuid Guid, EAIPropertySearchMode::Type SearchMode = EAIPropertySearchMode::OnlyThis);
 
 #endif
 

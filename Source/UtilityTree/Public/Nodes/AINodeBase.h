@@ -13,6 +13,30 @@ struct FUtilityTreeProxy;
 struct FAINode_Base;
 
 
+UENUM()
+enum class EAIPostCopyOperation : uint8
+{
+	None,
+	LogicalNegateBool,
+};
+
+UENUM()
+enum class EAICopyType : uint8
+{
+	// Just copy the memory
+	MemCopy,
+
+	// Read and write properties using bool property helpers, as source/dest could be bitfirld or boolean
+	BoolProperty,
+
+	// Use struct copy operation, as this needs to correctly handle CPP struct ops
+	StructProperty,
+
+	// Read and write properties using object property helpers, as source/dest could be regular/weak/lazy etc.
+	ObjectProperty,
+};
+
+
 /**
 * We pass array items by reference, which is scary as TArray can move items around in memory.
 * So we make sure to allocate enough here so it doesn't happen and crash on us.
@@ -152,13 +176,12 @@ public:
 
 	// Interface
 
-	//void Initialize(const FAnimationInitializeContext& Context);
-	//void CacheBones(const FAnimationCacheBonesContext& Context);
-	//void Update(const FAnimationUpdateContext& Context);
+	void Initialize();
+	void Update();
 	void GatherDebugData(FAINodeDebugData& DebugData);
 
 	/** Try to re-establish the linked node pointer. */
-	//void AttemptRelink(const FAnimationBaseContext& Context);
+	void AttemptRelink();
 	/** This only used by custom handlers, and it is advanced feature. */
 	void SetLinkNode(struct FAINode_Base* NewLinkNode);
 	/** This only used by custom handlers, and it is advanced feature. */
@@ -175,7 +198,7 @@ struct UTILITYTREE_API FAILink : public FAILinkBase
 
 public:
 	// Interface
-	void Evaluate(FPoseContext& Output, bool bExpectsAdditivePose = false);
+	void Evaluate();
 
 #if ENABLE_AINODE_POSE_DEBUG
 private:
@@ -184,6 +207,122 @@ private:
 #endif //#if ENABLE_ANIMNODE_POSE_DEBUG
 };
 
+
+USTRUCT()
+struct FAIExposedValueCopyRecord
+{
+	GENERATED_USTRUCT_BODY()
+
+	FAIExposedValueCopyRecord()
+		: SourceProperty_DEPRECATED(nullptr)
+		, SourcePropertyName(NAME_None)
+		, SourceSubPropertyName(NAME_None)
+		, SourceArrayIndex(0)
+		, DestProperty(nullptr)
+		, DestArrayIndex(0)
+		, Size(0)
+		, bInstanceIsTarget(false)
+		, PostCopyOperation(EAIPostCopyOperation::None)
+		, CopyType(EAICopyType::MemCopy)
+		, CachedSourceProperty(nullptr)
+		, CachedSourceContainer(nullptr)
+		, CachedDestContainer(nullptr)
+		, Source(nullptr)
+		, Dest(nullptr)
+	{}
+
+	void PostSerialize(const FArchive& Ar);
+
+	UPROPERTY()
+	UProperty* SourceProperty_DEPRECATED;
+
+	UPROPERTY()
+	FName SourcePropertyName;
+
+	UPROPERTY()
+	FName SourceSubPropertyName;
+
+	UPROPERTY()
+	int32 SourceArrayIndex;
+
+	UPROPERTY()
+	UProperty* DestProperty;
+
+	UPROPERTY()
+	int32 DestArrayIndex;
+
+	UPROPERTY()
+	int32 Size;
+
+	// Whether or not the utility tree object is the target for the copy instead of a node.
+	UPROPERTY()
+	bool bInstanceIsTarget;
+
+	UPROPERTY()
+	EAIPostCopyOperation PostCopyOperation;
+
+	UPROPERTY(Transient)
+	EAICopyType CopyType;
+
+	// cached source property
+	UPROPERTY(Transient)
+	UProperty* CachedSourceProperty;
+
+	// cached source container for use with boolean operations
+	void* CachedSourceContainer;
+
+	// cached dest container for use with boolean operations
+	void* CachedDestContainer;
+
+	// Cached source copy ptr
+	void* Source;
+
+	// Cached dest copy ptr
+	void* Dest;
+};
+
+template<>
+struct TStructOpsTypeTraits< FAIExposedValueCopyRecord > : public TStructOpsTypeTraitsBase2< FAIExposedValueCopyRecord >
+{
+	enum
+	{
+		WithPostSerialize = true,
+	};
+};
+
+// An exposed value updater
+USTRUCT()
+struct UTILITYTREE_API FAIExposedValueHandler
+{
+	GENERATED_USTRUCT_BODY()
+
+	FAIExposedValueHandler()
+		: BoundFunction(NAME_None)
+		, Function(nullptr)
+		, bInitialized(false)
+	{
+	}
+
+	// The function to call to update associated properties (can be NULL)
+	UPROPERTY()
+	FName BoundFunction;
+
+	// Direct data access to property in utility tree
+	UPROPERTY()
+	TArray<FAIExposedValueCopyRecord> CopyRecords;
+
+	// function pointer if BoundFunction != NAME_None
+	UFunction* Function;
+
+	// Prevent multiple initialization
+	bool bInitialized;
+
+	// Bind copy records and cache UFunction if necessary
+	void Initialize(FAINode_Base* AINode, UObject* UtilityTreeObject);
+
+	// Execute the function and copy records
+	void Execute() const;
+};
 
 
 /**
@@ -203,7 +342,7 @@ struct UTILITYTREE_API FAINode_Base
 	 * This can be called on any thread.
 	 * @param	Context		Context structure providing access to relevant data
 	 */
-	//virtual void Initialize(const FAnimationInitializeContext& Context);
+	virtual void Initialize();
 
 	/** 
 	 * Called to update the state of the graph relative to this node.
@@ -212,15 +351,7 @@ struct UTILITYTREE_API FAINode_Base
 	 * This can be called on any thread.
 	 * @param	Context		Context structure providing access to relevant data
 	 */
-	//virtual void Update(const FAnimationUpdateContext& Context);
-
-	/** 
-	 * Called to evaluate component-space bone transforms according to the weights set up in Update().
-	 * You should implement either Evaluate or EvaluateComponentSpace, but not both of these.
-	 * This can be called on any thread.
-	 * @param	Output		Output structure to write pose or curve data to. Also provides access to relevant data as a context.
-	 */	
-	//virtual void EvaluateComponentSpace(FComponentSpacePoseContext& Output);
+	virtual void Update();
 
 	/** 
 	 * If a derived ai node should respond to asset overrides, OverrideAsset should be defined to handle changing the asset 

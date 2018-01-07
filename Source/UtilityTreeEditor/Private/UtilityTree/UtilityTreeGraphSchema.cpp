@@ -37,7 +37,7 @@ UUtilityTreeGraphSchema::UUtilityTreeGraphSchema(const FObjectInitializer& Objec
 FLinearColor UUtilityTreeGraphSchema::GetPinTypeColor(const FEdGraphPinType& PinType) const
 {
 	const bool bAdditive = PinType.PinSubCategory == TEXT("Additive");
-	if (UUtilityTreeGraphSchema::IsPosePin(PinType))
+	if (UUtilityTreeGraphSchema::IsAIPin(PinType))
 	{
 		if (bAdditive) 
 		{
@@ -85,12 +85,12 @@ void UUtilityTreeGraphSchema::GetGraphDisplayInformation(const UEdGraph& Graph, 
 	DisplayInfo.DocExcerptName = TEXT("UtilityTreeGraph");
 }
 
-bool UUtilityTreeGraphSchema::IsPosePin(const FEdGraphPinType& PinType)
+bool UUtilityTreeGraphSchema::IsAIPin(const FEdGraphPinType& PinType)
 {
 	const UUtilityTreeGraphSchema* Schema = GetDefault<UUtilityTreeGraphSchema>();
 
-	//const UScriptStruct* PoseLinkStruct = FAILink::StaticStruct();
-	return false;// (PinType.PinCategory == Schema->PC_Struct) && (PinType.PinSubCategoryObject == PoseLinkStruct);
+	const UScriptStruct* PoseLinkStruct = FAILink::StaticStruct();
+	return (PinType.PinCategory == Schema->PC_Struct) && (PinType.PinSubCategoryObject == PoseLinkStruct);
 }
 
 bool UUtilityTreeGraphSchema::TryCreateConnection(UEdGraphPin* A, UEdGraphPin* B) const
@@ -115,8 +115,8 @@ bool UUtilityTreeGraphSchema::TryCreateConnection(UEdGraphPin* A, UEdGraphPin* B
 	if(UK2Node_Knot* RerouteNode = Cast<UK2Node_Knot>(OutputNode))
 	{
 		// Double check this is our "exec"-like line
-		bool bOutputIsPose = IsPosePin(OutputPin->PinType);
-		bool bInputIsPose = IsPosePin(InputPin->PinType);
+		bool bOutputIsPose = IsAIPin(OutputPin->PinType);
+		bool bInputIsPose = IsAIPin(InputPin->PinType);
 		bool bHavePosePin = bOutputIsPose || bInputIsPose;
 		bool bHaveWildPin = InputPin->PinType.PinCategory == PC_Wildcard || OutputPin->PinType.PinCategory == PC_Wildcard;
 
@@ -132,8 +132,8 @@ bool UUtilityTreeGraphSchema::TryCreateConnection(UEdGraphPin* A, UEdGraphPin* B
 
 const FPinConnectionResponse UUtilityTreeGraphSchema::DetermineConnectionResponseOfCompatibleTypedPins(const UEdGraphPin* PinA, const UEdGraphPin* PinB, const UEdGraphPin* InputPin, const UEdGraphPin* OutputPin) const
 {
-	// Enforce a tree hierarchy; where poses can only have one output (parent) connection
-	if (IsPosePin(OutputPin->PinType) && IsPosePin(InputPin->PinType))
+	// Enforce a tree hierarchy; where AI inputs can only have one output (parent) connection
+	if (IsAIPin(OutputPin->PinType) && IsAIPin(InputPin->PinType))
 	{
 		if ((OutputPin->LinkedTo.Num() > 0) || (InputPin->LinkedTo.Num() > 0))
 		{
@@ -149,28 +149,22 @@ const FPinConnectionResponse UUtilityTreeGraphSchema::DetermineConnectionRespons
 bool UUtilityTreeGraphSchema::ArePinsCompatible(const UEdGraphPin* PinA, const UEdGraphPin* PinB, const UClass* CallingContext, bool bIgnoreArray) const
 {
 	// both are pose pin, but doesn't match type, then return false;
-	if (IsPosePin(PinA->PinType) && IsPosePin(PinB->PinType))
+	if (IsAIPin(PinA->PinType) && IsAIPin(PinB->PinType))
 	{
 		return false;
 	}
 
 	// Disallow pose pins connecting to wildcards (apart from reroute nodes)
-	if(IsPosePin(PinA->PinType) && PinB->PinType.PinCategory == PC_Wildcard)
+	if(IsAIPin(PinA->PinType) && PinB->PinType.PinCategory == PC_Wildcard)
 	{
 		return Cast<UK2Node_Knot>(PinB->GetOwningNode()) != nullptr;
 	}
-	else if(IsPosePin(PinB->PinType) && PinA->PinType.PinCategory == PC_Wildcard)
+	else if(IsAIPin(PinB->PinType) && PinA->PinType.PinCategory == PC_Wildcard)
 	{
 		return Cast<UK2Node_Knot>(PinA->GetOwningNode()) != nullptr;
 	}
 
 	return Super::ArePinsCompatible(PinA, PinB, CallingContext, bIgnoreArray);
-}
-
-bool UUtilityTreeGraphSchema::DoesSupportAnimNotifyActions() const
-{
-	// Don't offer notify items in anim graph
-	return false;
 }
 
 bool UUtilityTreeGraphSchema::SearchForAutocastFunction(const UEdGraphPin* OutputPin, const UEdGraphPin* InputPin, FName& TargetFunction, /*out*/ UClass*& FunctionOwner) const
