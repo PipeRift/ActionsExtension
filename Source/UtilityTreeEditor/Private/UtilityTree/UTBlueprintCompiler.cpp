@@ -694,7 +694,7 @@ void FUTBlueprintCompiler::ProcessAllUtilityTreeNodes()
 			{
 				if (PrePhysicsRoot != NULL)
 				{
-					MessageLog.Error(*FString::Printf(*LOCTEXT("ExpectedOneFunctionEntry_Error", "Expected only one animation root, but found both @@ and @@").ToString()),
+					MessageLog.Error(*FString::Printf(*LOCTEXT("ExpectedOneFunctionEntry_Error", "Expected only one AI root, but found both @@ and @@").ToString()),
 						PrePhysicsRoot, Root);
 				}
 				else

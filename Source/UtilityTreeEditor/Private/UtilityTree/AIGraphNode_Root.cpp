@@ -49,12 +49,12 @@ FLinearColor UAIGraphNode_Root::GetNodeTitleColor() const
 
 FText UAIGraphNode_Root::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
-	return LOCTEXT("UTGraphNodeRoot_Title", "Final Animation Pose");
+	return LOCTEXT("UTGraphNodeRoot_Title", "Root");
 }
 
 FText UAIGraphNode_Root::GetTooltipText() const
 {
-	return LOCTEXT("UTGraphNodeRoot_Tooltip", "Wire the final animation pose into this node");
+	return LOCTEXT("UTGraphNodeRoot_Tooltip", "Wire the final ai behavior into this node");
 }
 
 bool UAIGraphNode_Root::IsSinkNode() const

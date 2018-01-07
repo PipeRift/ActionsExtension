@@ -11,7 +11,11 @@
 #include "UtilityTree/UTBlueprintCompiler.h"
 
 #include "UtilityTreeBlueprint.h"
- 
+
+struct FAIGraphNodeFactory;
+struct FAIGraphPinFactory;
+struct FAIGraphPinConnectionFactory;
+
 
 DECLARE_LOG_CATEGORY_EXTERN(LogUtilityEd, All, All)
  
@@ -91,4 +95,10 @@ private:
 	}
 	//~ End BlueprintCompiler Interface
 
+
+private:
+
+	TSharedPtr<FAIGraphNodeFactory> AIGraphNodeFactory;
+	TSharedPtr<FAIGraphPinFactory> AIGraphPinFactory;
+	TSharedPtr<FAIGraphPinConnectionFactory> AIGraphPinConnectionFactory;
 };

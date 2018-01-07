@@ -86,7 +86,12 @@ void FUtilityTreeEditorStyle::Create()
 		StyleSet->Set("UtilityTreeEditor.Graph.Pin.Disconnected.Background", new IMAGE_PLUGIN_BRUSH("UtilityTreeEditor/NodeDisconnectedPin", Icon10x10));
 		StyleSet->Set("UtilityTreeEditor.Graph.Pin.Disconnected.BackgroundHovered", new IMAGE_PLUGIN_BRUSH("UtilityTreeEditor/NodeDisconnectedPinHoverCue", Icon10x10));
 		StyleSet->Set("UtilityTreeEditor.Graph.Node.ShadowSelected", new BOX_PLUGIN_BRUSH("UtilityTreeEditor/NodeShadowSelected", FMargin(18.0f / 64.0f)));
-		StyleSet->Set("UtilityTreeEditor.Graph.Node.Shadow",      new BOX_BRUSH("Graph/RegularNode_shadow", FMargin(18.0f / 64.0f)));
+		StyleSet->Set("UtilityTreeEditor.Graph.Node.Shadow", new BOX_BRUSH("Graph/RegularNode_shadow", FMargin(18.0f / 64.0f)));
+
+		StyleSet->Set("Graph.AIPin.Connected",           new IMAGE_PLUGIN_BRUSH("AIGraph/AIPin_Connected",    Icon16x16));
+		StyleSet->Set("Graph.AIPin.Disconnected",        new IMAGE_PLUGIN_BRUSH("AIGraph/AIPin_Disconnected", Icon16x16));
+		StyleSet->Set("Graph.AIPin.ConnectedHovered",    new IMAGE_PLUGIN_BRUSH("AIGraph/AIPin_Connected",    Icon16x16, FLinearColor(0.8f, 0.8f, 0.8f)));
+		StyleSet->Set("Graph.AIPin.DisconnectedHovered", new IMAGE_PLUGIN_BRUSH("AIGraph/AIPin_Disconnected", Icon16x16, FLinearColor(0.8f, 0.8f, 0.8f)));
 	}
 }
 

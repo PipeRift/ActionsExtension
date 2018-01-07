@@ -1,6 +1,7 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+// Copyright 2015-2017 Piperift. All Rights Reserved.
 
 #include "UtilityTree/AIPins/SGraphPinAI.h"
+#include "UtilityTreeEditorStyle.h"
 
 /////////////////////////////////////////////////////
 // SGraphPinPose
@@ -9,10 +10,10 @@ void SGraphPinAI::Construct(const FArguments& InArgs, UEdGraphPin* InPin)
 {
 	SGraphPin::Construct(SGraphPin::FArguments(), InPin);
 
-	CachedImg_Pin_ConnectedHovered = FEditorStyle::GetBrush(TEXT("Graph.PosePin.ConnectedHovered"));
-	CachedImg_Pin_Connected = FEditorStyle::GetBrush(TEXT("Graph.PosePin.Connected"));
-	CachedImg_Pin_DisconnectedHovered = FEditorStyle::GetBrush(TEXT("Graph.PosePin.DisconnectedHovered"));
-	CachedImg_Pin_Disconnected = FEditorStyle::GetBrush(TEXT("Graph.PosePin.Disconnected"));
+	CachedImg_Pin_ConnectedHovered = FUtilityTreeEditorStyle::GetBrush("Graph.AIPin.ConnectedHovered");
+	CachedImg_Pin_Connected        = FUtilityTreeEditorStyle::GetBrush("Graph.AIPin.Connected");
+	CachedImg_Pin_DisconnectedHovered = FUtilityTreeEditorStyle::GetBrush("Graph.AIPin.DisconnectedHovered");
+	CachedImg_Pin_Disconnected     = FUtilityTreeEditorStyle::GetBrush("Graph.AIPin.Disconnected");
 }
 
 const FSlateBrush* SGraphPinAI::GetPinIcon() const

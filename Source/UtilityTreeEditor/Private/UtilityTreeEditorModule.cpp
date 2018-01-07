@@ -1,6 +1,7 @@
 // Copyright 2015-2017 Piperift. All Rights Reserved.
 
 #include "UtilityTreeEditorModule.h"
+#include "UtilityTree/UtilityTreeGraphFactory.h"
 
 #include "Kismet2/KismetEditorUtilities.h"
 #include "AssetToolsModule.h"
@@ -35,6 +36,17 @@ void FUtilityTreeEditorModule::StartupModule()
     // Register asset types
     IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
     RegisterAssetTypeAction(AssetTools, MakeShareable(new FAssetTypeAction_UtilityTreeBlueprint));
+
+
+	AIGraphNodeFactory = MakeShareable(new FAIGraphNodeFactory());
+	FEdGraphUtilities::RegisterVisualNodeFactory(AIGraphNodeFactory);
+
+	AIGraphPinFactory = MakeShareable(new FAIGraphPinFactory());
+	FEdGraphUtilities::RegisterVisualPinFactory(AIGraphPinFactory);
+
+	AIGraphPinConnectionFactory = MakeShareable(new FAIGraphPinConnectionFactory());
+	FEdGraphUtilities::RegisterVisualPinConnectionFactory(AIGraphPinConnectionFactory);
+
 
 	// Integrate UtilityTree actions into existing editor context menus
 	if (!IsRunningCommandlet())
