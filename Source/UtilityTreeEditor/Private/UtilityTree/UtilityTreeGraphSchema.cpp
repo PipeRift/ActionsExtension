@@ -36,17 +36,9 @@ UUtilityTreeGraphSchema::UUtilityTreeGraphSchema(const FObjectInitializer& Objec
 
 FLinearColor UUtilityTreeGraphSchema::GetPinTypeColor(const FEdGraphPinType& PinType) const
 {
-	const bool bAdditive = PinType.PinSubCategory == TEXT("Additive");
 	if (UUtilityTreeGraphSchema::IsAIPin(PinType))
 	{
-		if (bAdditive) 
-		{
-			return FLinearColor(0.12, 0.60, 0.10);
-		}
-		else
-		{
-			return FLinearColor::White;
-		}
+		return FLinearColor::White;
 	}
 
 	return Super::GetPinTypeColor(PinType);
@@ -54,7 +46,7 @@ FLinearColor UUtilityTreeGraphSchema::GetPinTypeColor(const FEdGraphPinType& Pin
 
 EGraphType UUtilityTreeGraphSchema::GetGraphType(const UEdGraph* TestEdGraph) const
 {
-	return GT_Ubergraph;
+	return GT_StateMachine;
 }
 
 void UUtilityTreeGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
@@ -75,7 +67,6 @@ void UUtilityTreeGraphSchema::HandleGraphBeingDeleted(UEdGraph& GraphBeingRemove
 
 void UUtilityTreeGraphSchema::GetGraphDisplayInformation(const UEdGraph& Graph, /*out*/ FGraphDisplayInfo& DisplayInfo) const
 {
-	DisplayInfo.DocLink = TEXT("Shared/Editors/BlueprintEditor/GraphTypes");
 	DisplayInfo.PlainName = FText::FromString(Graph.GetName()); // Fallback is graph name
 
 
@@ -89,8 +80,8 @@ bool UUtilityTreeGraphSchema::IsAIPin(const FEdGraphPinType& PinType)
 {
 	const UUtilityTreeGraphSchema* Schema = GetDefault<UUtilityTreeGraphSchema>();
 
-	const UScriptStruct* PoseLinkStruct = FAILink::StaticStruct();
-	return (PinType.PinCategory == Schema->PC_Struct) && (PinType.PinSubCategoryObject == PoseLinkStruct);
+	const UScriptStruct* AILinkStruct = FAILink::StaticStruct();
+	return (PinType.PinCategory == Schema->PC_Struct) && (PinType.PinSubCategoryObject == AILinkStruct);
 }
 
 bool UUtilityTreeGraphSchema::TryCreateConnection(UEdGraphPin* A, UEdGraphPin* B) const
@@ -265,12 +256,12 @@ FText UUtilityTreeGraphSchema::GetPinDisplayName(const UEdGraphPin* Pin) const
 
 	FText DisplayName = Super::GetPinDisplayName(Pin);
 
-	/*if (UUTGraphNode_Base* Node = Cast<UUTGraphNode_Base>(Pin->GetOwningNode()))
+	if (UAIGraphNode_Base* Node = Cast<UAIGraphNode_Base>(Pin->GetOwningNode()))
 	{
 		FString ProcessedDisplayName = DisplayName.ToString();
 		Node->PostProcessPinName(Pin, ProcessedDisplayName);
 		DisplayName = FText::FromString(ProcessedDisplayName);
-	}*/
+	}
 
 	return DisplayName;
 }
