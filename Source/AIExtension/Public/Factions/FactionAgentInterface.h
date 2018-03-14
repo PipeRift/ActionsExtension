@@ -47,7 +47,9 @@ public:
         return GetAttitudeTowards(Other) == ETeamAttitude::Hostile;
     }
 
-    static const FFaction Execute_GetFaction(const AActor* Other);
+	static const FFaction Execute_GetFaction(const AActor* Other);
+
+	static void Execute_SetFaction(AActor* Other, const FFaction& NewFaction);
 
 private:
 

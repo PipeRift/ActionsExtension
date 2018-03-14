@@ -79,9 +79,6 @@ public:
 private:
 
     UPROPERTY(EditAnywhere, Category = AI)
-    FFaction Faction;
-
-    UPROPERTY(EditAnywhere, Category = AI)
     float ReactionTime;
 
     UPROPERTY(Transient)

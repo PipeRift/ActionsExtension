@@ -50,3 +50,21 @@ const FFaction IFactionAgentInterface::Execute_GetFaction(const AActor* Other)
     }
     return FFaction::NoFaction;
 }
+
+void IFactionAgentInterface::Execute_SetFaction(AActor* Other, const FFaction& NewFaction)
+{
+	if (Other && Other->Implements<UFactionAgentInterface>())
+	{
+		IFactionAgentInterface* OtherFactionAgent = Cast<IFactionAgentInterface>(Other);
+		if (OtherFactionAgent)
+		{
+			//C++ Interface
+			OtherFactionAgent->SetFaction(NewFaction);
+		}
+		else
+		{
+			//BP Interface
+			IFactionAgentInterface::Execute_EventSetFaction(Other, NewFaction);
+		}
+	}
+}

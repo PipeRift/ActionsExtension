@@ -30,7 +30,6 @@ AAIGeneric::AAIGeneric(const FObjectInitializer& ObjectInitializer) : Super(Obje
     //BaseBehavior = BaseBehaviorAsset.Object;
 
     State = ECombatState::Passive;
-    Faction = FFaction::NoFaction;
     ReactionTime = 0.2f;
 
     bScanPotentialTargets = true;
@@ -307,13 +306,21 @@ FFaction AAIGeneric::GetFaction() const
 {
     FFaction EventFaction;
     Execute_EventGetFaction(this, EventFaction);
-    return EventFaction.IsNone() ? Faction : EventFaction;
+
+	if (EventFaction.IsNone())
+	{
+		return IFactionAgentInterface::Execute_GetFaction(GetControlledPawn());
+	}
+	else
+	{
+		return EventFaction;
+	}
 }
 
 void AAIGeneric::SetFaction(const FFaction & InFaction)
 {
-    Faction = InFaction;
     Execute_EventSetFaction(this, InFaction);
+	IFactionAgentInterface::Execute_SetFaction(GetPawn(), InFaction);
 }
 
 
