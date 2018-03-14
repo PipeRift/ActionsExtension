@@ -37,7 +37,7 @@ public class AIExtension : ModuleRules
         });
 
 
-        if (UEBuildConfiguration.bBuildEditor == true)
+        if (TargetRules.bBuildEditor == true)
         {
             PrivateDependencyModuleNames.AddRange(
                 new string[]
@@ -48,7 +48,7 @@ public class AIExtension : ModuleRules
             );
         }
 
-        if (UEBuildConfiguration.bBuildDeveloperTools || (Target.Configuration != UnrealTargetConfiguration.Shipping && Target.Configuration != UnrealTargetConfiguration.Test))
+        if (TargetRules.bBuildDeveloperTools || (Target.Configuration != UnrealTargetConfiguration.Shipping && Target.Configuration != UnrealTargetConfiguration.Test))
         {
             PrivateDependencyModuleNames.Add("GameplayDebugger");
             Definitions.Add("WITH_GAMEPLAY_DEBUGGER=1");

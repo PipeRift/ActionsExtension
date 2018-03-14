@@ -7,7 +7,7 @@ public class UtilityTreeEditor : ModuleRules
 {
 	public UtilityTreeEditor(ReadOnlyTargetRules TargetRules) : base(TargetRules)
     {
-        var EngineDir = Path.GetFullPath(BuildConfiguration.RelativeEnginePath);
+        var EngineDir = Path.GetFullPath(TargetRules.RelativeEnginePath);
 
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -35,6 +35,7 @@ public class UtilityTreeEditor : ModuleRules
             {
                 "Core",
                 "CoreUObject",
+                "ApplicationCore",
                 "Engine",
                 "UnrealEd",
                 "Slate",
@@ -50,16 +51,5 @@ public class UtilityTreeEditor : ModuleRules
                 "UtilityTree"
             }
         );
-
-        //Version specific dependencies
-        BuildVersion Version;
-        if (BuildVersion.TryRead(out Version))
-        {
-            //Is 4.18 or greater
-            if (Version.MinorVersion >= 18)
-            {
-                PrivateDependencyModuleNames.Add("ApplicationCore");
-            }
-        }
 	}
 }
