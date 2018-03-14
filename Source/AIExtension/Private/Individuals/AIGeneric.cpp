@@ -309,7 +309,7 @@ FFaction AAIGeneric::GetFaction() const
 
 	if (EventFaction.IsNone())
 	{
-		return IFactionAgentInterface::Execute_GetFaction(GetControlledPawn());
+		return IFactionAgentInterface::Execute_GetFaction(GetPawn());
 	}
 	else
 	{
