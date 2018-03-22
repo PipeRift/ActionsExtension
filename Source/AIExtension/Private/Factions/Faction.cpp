@@ -26,10 +26,15 @@ const ETeamAttitude::Type FFaction::GetAttitudeTowards(const FFaction& Other) co
 
     const FFactionRelation* FoundRelationPtr = Settings->Relations.FindByKey(FFactionRelation(*this, Other));
     if (FoundRelationPtr == NULL) {
+		//Relation not found, use default
         const FFactionInfo* Info = GetFactionInfo();
         if (Info)
         {
-            return Info->DefaultAttitude;
+			if (*this == Other)
+			{
+				return Info->DefaultAttitudeToItself;
+			}
+			return Info->DefaultAttitudeToOthers;
         }
         return ETeamAttitude::Neutral;
     }

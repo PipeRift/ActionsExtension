@@ -62,21 +62,29 @@ struct AIEXTENSION_API FFactionInfo
     GENERATED_USTRUCT_BODY()
 
 public:
-    FFactionInfo() : Name(NO_FACTION_NAME), Color(FColor::Cyan), DefaultAttitude(ETeamAttitude::Neutral)
+    FFactionInfo()
+		: Name(NO_FACTION_NAME)
+		, Color(FColor::Cyan)
+		, DefaultAttitudeToItself(ETeamAttitude::Friendly)
+		, DefaultAttitudeToOthers(ETeamAttitude::Neutral)
     {}
 
-    FFactionInfo(FString InName, FColor InColor = FColor::Cyan) :
-        Name(InName),
-        Color(InColor),
-        DefaultAttitude(ETeamAttitude::Neutral) 
+    FFactionInfo(FString InName, FColor InColor = FColor::Cyan)
+		: Name(InName)
+		, Color(InColor)
+		, DefaultAttitudeToItself(ETeamAttitude::Friendly)
+		, DefaultAttitudeToOthers(ETeamAttitude::Neutral)
     {}
 
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Faction)
     FString Name;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    TEnumAsByte<ETeamAttitude::Type> DefaultAttitude;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Faction)
+	TEnumAsByte<ETeamAttitude::Type> DefaultAttitudeToItself;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Faction)
+	TEnumAsByte<ETeamAttitude::Type> DefaultAttitudeToOthers;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Faction)
     FColor Color;
