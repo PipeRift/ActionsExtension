@@ -2,6 +2,7 @@
 
 #include "AIExtensionPrivatePCH.h"
 #include "ActionManagerComponent.h"
+#include "Action.h"
 
 
 // Sets default values for this component's properties
@@ -56,7 +57,7 @@ const bool UActionManagerComponent::RemoveChildren(UAction* Children)
     return ChildrenTasks.Remove(Children) > 0;
 }
 
-UActionManagerComponent* UActionManagerComponent::GetTaskOwnerComponent()
+UActionManagerComponent* UActionManagerComponent::GetActionOwnerComponent()
 {
     return this;
 }

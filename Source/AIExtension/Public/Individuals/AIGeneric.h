@@ -12,16 +12,27 @@
 #include "ActionOwnerInterface.h"
 #include "FactionAgentInterface.h"
 
-#include "AISquad.h"
 #include "AIGeneric.generated.h"
 
-
+class UAISquad;
 class UBehaviorTreeComponent;
 class UBehaviorTree;
 
 class UAction;
 class UActionManagerComponent;
 
+
+/**
+ *
+**/
+UENUM(BlueprintType)
+enum class ECombatState : uint8
+{
+	Passive,
+	Suspicion,
+	Alert,
+	Combat
+};
 
 /**
  * 
@@ -107,7 +118,7 @@ public:
     // Begin ITaskOwnerInterface interface
     virtual const bool AddChildren(UAction* NewChildren) override;
     virtual const bool RemoveChildren(UAction* Children) override;
-    virtual UActionManagerComponent* GetTaskOwnerComponent() override;
+    virtual UActionManagerComponent* GetActionOwnerComponent() override;
     // End ITaskOwnerInterface interface
 
 
@@ -211,15 +222,12 @@ public:
     void LeaveSquad();
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Squad)
-    FORCEINLINE AAISquad* GetSquad() const
-    {
+    FORCEINLINE AAISquad* GetSquad() const {
         return Squad;
     }
 
-    UFUNCTION(BlueprintCallable, Category = Squad)
-    FORCEINLINE bool IsInSquad() const {
-        return IsValid(Squad) && Squad->HasMember(this);
-    }
+	UFUNCTION(BlueprintCallable, Category = Squad)
+	bool IsInSquad() const;
 
     UFUNCTION(BlueprintPure, Category = Squad)
     UClass* GetSquadOrder() const;

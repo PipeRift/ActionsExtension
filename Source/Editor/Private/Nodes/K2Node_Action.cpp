@@ -577,35 +577,43 @@ void UK2Node_Action::OnClassPinChanged()
     TArray<UEdGraphPin*> OldPins = Pins;
     TArray<UEdGraphPin*> OldClassPins;
 
-    for (int32 i = 0; i < OldPins.Num(); i++)
-    {
-        UEdGraphPin* OldPin = OldPins[i];
-        if (IsSpawnVarPin(OldPin))
-        {
-            OldPin->MarkPendingKill();
-            Pins.Remove(OldPin);
-            OldClassPins.Add(OldPin);
-        }
-    }
+
+	for (UEdGraphPin* OldPin : OldPins)
+	{
+		if (IsSpawnVarPin(OldPin))
+		{
+			Pins.Remove(OldPin);
+			OldClassPins.Add(OldPin);
+		}
+	}
 
     CachedNodeTitle.MarkDirty();
 
-    UClass* UseSpawnClass = GetClassToSpawn();
-    TArray<UEdGraphPin*> NewClassPins;
-    if (UseSpawnClass != NULL)
-    {
-        CreatePinsForClass(UseSpawnClass, &NewClassPins);
-    }
+	TArray<UEdGraphPin*> NewClassPins;
+	if (UClass* UseSpawnClass = GetClassToSpawn())
+	{
+		CreatePinsForClass(UseSpawnClass, &NewClassPins);
+	}
+
+	RestoreSplitPins(OldPins);
+
+	UEdGraphPin* ResultPin = GetResultPin();
+	// Cache all the pin connections to the ResultPin, we will attempt to recreate them
+	TArray<UEdGraphPin*> ResultPinConnectionList = ResultPin->LinkedTo;
+	// Because the archetype has changed, we break the output link as the output pin type will change
+	ResultPin->BreakAllPinLinks(true);
+
+	// Recreate any pin links to the Result pin that are still valid
+	for (UEdGraphPin* Connections : ResultPinConnectionList)
+	{
+		K2Schema->TryCreateConnection(ResultPin, Connections);
+	}
 
     // Rewire the old pins to the new pins so connections are maintained if possible
-    RewireOldPinsToNewPins(OldClassPins, NewClassPins);
-
-    // Destroy the old pins
-    DestroyPinList(OldClassPins);
+    RewireOldPinsToNewPins(OldClassPins, Pins);
 
     // Refresh the UI for the graph so the pin changes show up
-    UEdGraph* Graph = GetGraph();
-    Graph->NotifyGraphChanged();
+	GetGraph()->NotifyGraphChanged();
 
     // Mark dirty
     FBlueprintEditorUtils::MarkBlueprintAsModified(GetBlueprint());

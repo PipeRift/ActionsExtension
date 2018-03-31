@@ -15,7 +15,7 @@ DECLARE_LOG_CATEGORY_EXTERN(TaskLog, Log, All);
  * Result of a node execution
  */
 UENUM(Blueprintable)
-enum class ETaskState : uint8
+enum class EActionState : uint8
 {
     RUNNING  UMETA(DisplayName = "Running"),
     SUCCESS  UMETA(DisplayName = "Success"),
@@ -27,7 +27,7 @@ enum class ETaskState : uint8
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTaskActivated);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTaskFinished, const ETaskState, Reason);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTaskFinished, const EActionState, Reason);
 
 
 class UActionManagerComponent;
@@ -67,13 +67,8 @@ public:
 
     void Destroy();
 
-
-    virtual UActionManagerComponent* GetTaskOwnerComponent() override;
-
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action, meta = (DisplayName = "GetTaskOwnerComponent"))
-    UActionManagerComponent* ExposedGetTaskOwnerComponent() {
-        return GetTaskOwnerComponent();
-    }
+	UFUNCTION(BlueprintPure, Category = Action)
+    virtual UActionManagerComponent* GetActionOwnerComponent() override;
 
 
     //~ Begin Ticking
@@ -93,7 +88,7 @@ private:
 protected:
 
     UPROPERTY()
-    ETaskState State;
+    EActionState State;
 
     UPROPERTY()
     TArray<UAction*> ChildrenTasks;
@@ -118,7 +113,7 @@ protected:
 
 public:
 
-    virtual void OnFinish(const ETaskState Reason);
+    virtual void OnFinish(const EActionState Reason);
 
     /** Event when play begins for this actor. */
     UFUNCTION(BlueprintNativeEvent, meta = (DisplayName = "Activate"))
@@ -126,7 +121,7 @@ public:
 
     /** Event when finishing this task. */
     UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Finished"))
-    void ReceiveFinished(const ETaskState Reason);
+    void ReceiveFinished(const EActionState Reason);
 
     // DELEGATES
     UPROPERTY()
@@ -144,19 +139,19 @@ public:
     }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
-    FORCEINLINE bool IsRunning() const { return IsValid() && State == ETaskState::RUNNING; }
+    FORCEINLINE bool IsRunning() const { return IsValid() && State == EActionState::RUNNING; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
-    FORCEINLINE bool Succeeded() const { return IsValid() && State == ETaskState::SUCCESS; }
+    FORCEINLINE bool Succeeded() const { return IsValid() && State == EActionState::SUCCESS; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
-    FORCEINLINE bool Failed() const    { return IsValid() && State == ETaskState::FAILURE; }
+    FORCEINLINE bool Failed() const    { return IsValid() && State == EActionState::FAILURE; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
-    FORCEINLINE bool IsCanceled() const { return State == ETaskState::CANCELED; }
+    FORCEINLINE bool IsCanceled() const { return State == EActionState::CANCELED; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
-    FORCEINLINE ETaskState GetState() const { return State; }
+    FORCEINLINE EActionState GetState() const { return State; }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
     FORCEINLINE UObject* const GetParent() const {
@@ -168,7 +163,7 @@ public:
     }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
-    AActor* GetTaskOwnerActor();
+    AActor* GetActionOwnerActor();
 
 
 
@@ -178,7 +173,7 @@ public:
         return InParent ? InParent->GetWorld() : nullptr;
     }
 
-    static FORCEINLINE FString StateToString(ETaskState Value) {
+    static FORCEINLINE FString StateToString(EActionState Value) {
         const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("ETaskState"), true);
         if (!EnumPtr)
             return FString("Invalid");

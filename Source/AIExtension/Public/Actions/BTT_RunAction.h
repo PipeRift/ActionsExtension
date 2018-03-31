@@ -45,9 +45,9 @@ public:
     // Begin ITaskOwnerInterface interface
     virtual const bool AddChildren(UAction* NewChildren) override;
     virtual const bool RemoveChildren(UAction* Children) override;
-    virtual UActionManagerComponent* GetTaskOwnerComponent() override;
+    virtual UActionManagerComponent* GetActionOwnerComponent() override;
     // End ITaskOwnerInterface interface
 
     UFUNCTION()
-    void OnRunActionFinished(const ETaskState Reason);
+    void OnRunActionFinished(const EActionState Reason);
 };

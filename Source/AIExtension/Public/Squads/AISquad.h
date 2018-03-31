@@ -4,23 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "SquadOrder.h"
+#include "AIGeneric.h"
 #include "AISquad.generated.h"
-
-class USquadOrder;
-class AAIGeneric;
-
-
-/**
-*
-*/
-UENUM(BlueprintType)
-enum class ECombatState : uint8
-{
-    Passive,
-    Suspicion,
-    Alert,
-    Combat
-};
 
 
 /**

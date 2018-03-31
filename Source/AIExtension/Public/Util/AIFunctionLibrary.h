@@ -5,6 +5,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 
 #include "Faction.h"
+#include "FactionInfo.h"
 #include "AISquad.h"
 #include "BTD_CompareState.h"
 
@@ -60,6 +61,12 @@ public:
 	{
         return A.GetAttitudeTowards(B);
     }
+
+	UFUNCTION(BlueprintPure, Category = "Factions")
+	static FORCEINLINE bool GetFactionInfo(FFaction Faction, FFactionInfo& Info)
+	{
+		return Faction.GetFactionInfo(Info);
+	}
 
 
     /***************************************/

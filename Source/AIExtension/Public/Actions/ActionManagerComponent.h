@@ -29,7 +29,7 @@ public:
     // Begin ITaskOwnerInterface interface
     virtual const bool AddChildren(UAction* NewChildren) override;
     virtual const bool RemoveChildren(UAction* Children) override;
-    virtual UActionManagerComponent* GetTaskOwnerComponent() override;
+    virtual UActionManagerComponent* GetActionOwnerComponent() override;
     // End ITaskOwnerInterface interface
 
 protected:

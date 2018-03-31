@@ -35,8 +35,7 @@ struct AIEXTENSION_API FFaction
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     int32 Id;
 
-
-    FFactionInfo* GetFactionInfo() const;
+	bool GetFactionInfo(FFactionInfo& Info) const;
 
     /*UFUNCTION(BlueprintPure, Category = Faction, meta = (DisplayName = "Get Faction Info"))
     FORCEINLINE const FFactionInfo& exec_GetFactionInfo() const {

@@ -2,9 +2,6 @@
 
 #include "AIExtensionPrivatePCH.h"
 
-#include "SquadOrder.h"
-#include "AIGeneric.h"
-
 #include "AISquad.h"
 
 

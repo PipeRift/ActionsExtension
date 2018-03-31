@@ -8,7 +8,7 @@
 
 void UAIAction::OnActivation()
 {
-    AI = Cast<AAIGeneric>(GetTaskOwnerActor());
+    AI = Cast<AAIGeneric>(GetActionOwnerActor());
     if (!AI)
         Abort();
 

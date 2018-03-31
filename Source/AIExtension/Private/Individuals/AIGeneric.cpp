@@ -14,8 +14,10 @@
 #include "Actions/ActionManagerComponent.h"
 #include "EnvQueryGenerator_Context.h"
 #include "EnvQueryContext_PotentialTargets.h"
+#include "AISquad.h"
 
 #define LOCTEXT_NAMESPACE "AAIGeneric"
+
 
 static const TCHAR* TargetFilterAsset = TEXT("/AIExtension/Base/Individuals/EQS/TargetFilter");
 
@@ -98,7 +100,7 @@ const bool AAIGeneric::RemoveChildren(UAction* RemChildren)
     return ActionManagerComponent->RemoveChildren(RemChildren);
 }
 
-UActionManagerComponent* AAIGeneric::GetTaskOwnerComponent()
+UActionManagerComponent* AAIGeneric::GetActionOwnerComponent()
 {
     check(ActionManagerComponent);
     return ActionManagerComponent;
@@ -285,6 +287,11 @@ void AAIGeneric::LeaveSquad()
 {
     Squad->RemoveMember(this);
     Squad = NULL;
+}
+
+bool AAIGeneric::IsInSquad() const
+{
+	return IsValid(Squad) && Squad->HasMember(this);
 }
 
 UClass* AAIGeneric::GetSquadOrder() const

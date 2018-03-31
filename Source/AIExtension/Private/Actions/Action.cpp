@@ -17,7 +17,7 @@ UAction::UAction(const FObjectInitializer& ObjectInitializer)
 {
     TickTimeElapsed = 0;
 
-    State = ETaskState::NOT_RUN;
+    State = EActionState::NOT_RUN;
 
     // SETUP PROPERTIES
     bWantsToTick = false;
@@ -39,10 +39,10 @@ void UAction::Activate()
     //Registry this children task in the owner
     const bool bSuccess = Parent->AddChildren(this);
     if (!bSuccess) {
-        GetTaskOwnerComponent()->AddChildren(this);
+        GetActionOwnerComponent()->AddChildren(this);
     }
 
-    State = ETaskState::RUNNING;
+    State = EActionState::RUNNING;
     
     OnActivation();
 }
@@ -67,7 +67,7 @@ void UAction::Finish(bool bSuccess) {
     if (!IsRunning() || IsPendingKill())
         return;
 
-    State = bSuccess ? ETaskState::SUCCESS : ETaskState::FAILURE;
+    State = bSuccess ? EActionState::SUCCESS : EActionState::FAILURE;
     OnFinish(State);
     Destroy();
 }
@@ -76,7 +76,7 @@ void UAction::Abort() {
     if (!IsRunning() || IsPendingKill())
         return;
 
-    OnFinish(State = ETaskState::ABORTED);
+    OnFinish(State = EActionState::ABORTED);
 
     Destroy();
 }
@@ -93,7 +93,7 @@ void UAction::Cancel()
         return;
     }
 
-    OnFinish(State = ETaskState::CANCELED);
+    OnFinish(State = EActionState::CANCELED);
     
     Destroy();
 }
@@ -134,7 +134,7 @@ void UAction::Tick(float DeltaTime)
     }
 }
 
-void UAction::OnFinish(const ETaskState Reason)
+void UAction::OnFinish(const EActionState Reason)
 {
     OnTaskFinished.Broadcast(Reason);
 
@@ -147,12 +147,12 @@ void UAction::OnFinish(const ETaskState Reason)
     }
 }
 
-AActor* UAction::GetTaskOwnerActor()
+AActor* UAction::GetActionOwnerActor()
 {
-    return GetTaskOwnerComponent()->GetOwner();
+    return GetActionOwnerComponent()->GetOwner();
 }
 
-UActionManagerComponent* UAction::GetTaskOwnerComponent()
+UActionManagerComponent* UAction::GetActionOwnerComponent()
 {
-    return GetParentInterface()->GetTaskOwnerComponent();
+    return GetParentInterface()->GetActionOwnerComponent();
 }

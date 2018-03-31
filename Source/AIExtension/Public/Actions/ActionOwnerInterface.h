@@ -29,5 +29,5 @@ public:
 
     virtual const bool RemoveChildren(UAction* Children);
 
-    virtual UActionManagerComponent* GetTaskOwnerComponent() { return nullptr; }
+    virtual UActionManagerComponent* GetActionOwnerComponent() { return nullptr; }
 };

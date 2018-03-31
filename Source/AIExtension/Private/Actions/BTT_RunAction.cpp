@@ -3,8 +3,9 @@
 #include "AIExtensionPrivatePCH.h"
 #include "AIGeneric.h"
 #include "ActionFunctionLibrary.h"
-
+#include "ActionManagerComponent.h"
 #include "BTT_RunAction.h"
+
 
 UBTT_RunAction::UBTT_RunAction()
 {
@@ -92,24 +93,24 @@ const bool UBTT_RunAction::RemoveChildren(UAction* Children)
     return (*ActionInterface).RemoveChildren(Children);
 }
 
-UActionManagerComponent* UBTT_RunAction::GetTaskOwnerComponent()
+UActionManagerComponent* UBTT_RunAction::GetActionOwnerComponent()
 {
-    return (*ActionInterface).GetTaskOwnerComponent();
+    return ActionInterface->GetActionOwnerComponent();
 }
 
-void UBTT_RunAction::OnRunActionFinished(const ETaskState Reason)
+void UBTT_RunAction::OnRunActionFinished(const EActionState Reason)
 {
     if (OwnerComp)
     {
         switch (Reason)
         {
-        case ETaskState::SUCCESS:
+        case EActionState::SUCCESS:
             FinishLatentTask(*OwnerComp, EBTNodeResult::Succeeded);
             break;
-        case ETaskState::FAILURE:
+        case EActionState::FAILURE:
             FinishLatentTask(*OwnerComp, EBTNodeResult::Failed);
             break;
-        case ETaskState::CANCELED: //Do Nothing
+        case EActionState::CANCELED: //Do Nothing
             break;
         default:
             FinishLatentTask(*OwnerComp, EBTNodeResult::Aborted);

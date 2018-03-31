@@ -16,7 +16,7 @@ UActionOwnerInterface::UActionOwnerInterface(const class FObjectInitializer& Obj
 
 const bool IActionOwnerInterface::AddChildren(UAction* NewChildren)
 {
-    if (UActionManagerComponent* comp = GetTaskOwnerComponent()) {
+    if (UActionManagerComponent* comp = GetActionOwnerComponent()) {
         return comp->AddChildren(NewChildren);
     }
     return false;
@@ -24,7 +24,7 @@ const bool IActionOwnerInterface::AddChildren(UAction* NewChildren)
 
 const bool IActionOwnerInterface::RemoveChildren(UAction* Children)
 {
-    if (UActionManagerComponent* comp = GetTaskOwnerComponent()) {
+    if (UActionManagerComponent* comp = GetActionOwnerComponent()) {
         return comp->RemoveChildren(Children);
     }
     return false;

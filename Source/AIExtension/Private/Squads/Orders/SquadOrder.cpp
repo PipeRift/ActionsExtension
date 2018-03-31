@@ -2,6 +2,7 @@
 
 #include "AIExtension/Private/AIExtensionPrivatePCH.h"
 #include "SquadOrder.h"
+#include "AISquad.h"
 
 void USquadOrder::Apply()
 {
