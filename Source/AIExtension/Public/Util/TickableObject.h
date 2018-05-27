@@ -21,7 +21,7 @@ class AIEXTENSION_API UTickableObject : public UObject, public FTickableGameObje
     };
 
     /**
-    *	Indicates that BeginPlay has been called for this Actor.
+    *    Indicates that BeginPlay has been called for this Actor.
     *  Set back to false once EndPlay has been called.
     */
     EObjectBeginPlayState ObjectHasBegunPlay : 2;

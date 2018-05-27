@@ -67,7 +67,7 @@ public:
 
     void Destroy();
 
-	UFUNCTION(BlueprintPure, Category = Action)
+    UFUNCTION(BlueprintPure, Category = Action)
     virtual UActionManagerComponent* GetActionOwnerComponent() override;
 
 

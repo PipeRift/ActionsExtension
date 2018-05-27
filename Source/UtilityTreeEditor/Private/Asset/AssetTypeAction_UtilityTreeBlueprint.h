@@ -19,10 +19,10 @@ public:
     virtual void OpenAssetEditor(const TArray<UObject*>& InObjects, TSharedPtr<IToolkitHost> EditWithinLevelEditor) override;
     // End of IAssetTypeActions interface
 
-	// FAssetTypeActions_Blueprint interface
-	virtual UFactory* GetFactoryForBlueprintType(UBlueprint* InBlueprint) const override;
+    // FAssetTypeActions_Blueprint interface
+    virtual UFactory* GetFactoryForBlueprintType(UBlueprint* InBlueprint) const override;
 
 private:
-	/** Returns true if the blueprint is data only */
-	bool ShouldUseDataOnlyEditor(const UBlueprint* Blueprint) const;
+    /** Returns true if the blueprint is data only */
+    bool ShouldUseDataOnlyEditor(const UBlueprint* Blueprint) const;
 };

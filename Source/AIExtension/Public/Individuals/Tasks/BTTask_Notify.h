@@ -14,7 +14,7 @@
 UCLASS()
 class AIEXTENSION_API UBTTask_Notify : public UBTTaskNode
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
     UBTTask_Notify();
 

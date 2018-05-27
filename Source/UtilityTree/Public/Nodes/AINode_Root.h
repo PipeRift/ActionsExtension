@@ -11,17 +11,17 @@
 USTRUCT(BlueprintInternalUseOnly)
 struct UTILITYTREE_API FAINode_Root : public FAINode_Base
 {
-	GENERATED_USTRUCT_BODY()
+    GENERATED_USTRUCT_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Links)
-	FAILink Result;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Links)
+    FAILink Result;
 
-public:	
-	FAINode_Root();
+public:    
+    FAINode_Root();
 
-	// FAINode_Base interface
-	virtual void Initialize() override;
-	virtual void Update() override;
-	virtual void GatherDebugData(FAINodeDebugData& DebugData) override;
-	// End of FAINode_Base interface
+    // FAINode_Base interface
+    virtual void Initialize() override;
+    virtual void Update() override;
+    virtual void GatherDebugData(FAINodeDebugData& DebugData) override;
+    // End of FAINode_Base interface
 };

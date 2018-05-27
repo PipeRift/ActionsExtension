@@ -12,10 +12,10 @@ const FFaction FFaction::NoFaction(NO_FACTION);
 bool FFaction::GetFactionInfo(FFactionInfo& Info) const
 {
     UAIExtensionSettings* Settings = GetMutableDefault<UAIExtensionSettings>();
-	check(Settings);
+    check(Settings);
 
     if (Settings->Factions.IsValidIndex(Id)) {
-		Info = Settings->Factions[Id];
+        Info = Settings->Factions[Id];
         return true;
     }
 
@@ -28,15 +28,15 @@ const ETeamAttitude::Type FFaction::GetAttitudeTowards(const FFaction& Other) co
 
     const FFactionRelation* FoundRelationPtr = Settings->Relations.FindByKey(FFactionRelation(*this, Other));
     if (FoundRelationPtr == NULL) {
-		//Relation not found, use default
-		FFactionInfo Info;
+        //Relation not found, use default
+        FFactionInfo Info;
         if (GetFactionInfo(Info))
         {
-			if (*this == Other)
-			{
-				return Info.DefaultAttitudeToItself;
-			}
-			return Info.DefaultAttitudeToOthers;
+            if (*this == Other)
+            {
+                return Info.DefaultAttitudeToItself;
+            }
+            return Info.DefaultAttitudeToOthers;
         }
         return ETeamAttitude::Neutral;
     }

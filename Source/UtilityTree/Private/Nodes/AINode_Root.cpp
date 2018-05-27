@@ -11,20 +11,20 @@ FAINode_Root::FAINode_Root()
 
 void FAINode_Root::Initialize()
 {
-	FAINode_Base::Initialize();
+    FAINode_Base::Initialize();
 
-	Result.Initialize();
+    Result.Initialize();
 }
 
 void FAINode_Root::Update()
 {
-	//EvaluateGraphExposedInputs.Execute(Context);
-	Result.Update();
+    //EvaluateGraphExposedInputs.Execute(Context);
+    Result.Update();
 }
 
 void FAINode_Root::GatherDebugData(FAINodeDebugData& DebugData)
 {
-	FString DebugLine = DebugData.GetNodeName(this);
-	DebugData.AddDebugItem(DebugLine);
-	Result.GatherDebugData(DebugData);
+    FString DebugLine = DebugData.GetNodeName(this);
+    DebugData.AddDebugItem(DebugLine);
+    Result.GatherDebugData(DebugData);
 }

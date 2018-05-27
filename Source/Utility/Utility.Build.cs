@@ -4,20 +4,20 @@ using UnrealBuildTool;
 
 public class Utility : ModuleRules
 {
-	public Utility(ReadOnlyTargetRules Target): base(Target)
-	{
-		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+    public Utility(ReadOnlyTargetRules Target): base(Target)
+    {
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
         PrivateIncludePaths.Add("Utility/Private");
 
-		PublicDependencyModuleNames.AddRange(
+        PublicDependencyModuleNames.AddRange(
             new string[] {
                 "Core",
                 "CoreUObject",
                 "Engine",
                 "AIModule",
-				"GameplayTasks"
+                "GameplayTasks"
             }
         );
-	}
+    }
 }

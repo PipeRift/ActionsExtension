@@ -54,9 +54,9 @@ private:
 
 #if WITH_EDITOR
 public:
-	EAssetTypeCategories::Type GetAssetCategoryBit() const {
-		return IAIModule::Get().GetAIAssetCategoryBit();
-	}
+    EAssetTypeCategories::Type GetAssetCategoryBit() const {
+        return IAIModule::Get().GetAIAssetCategoryBit();
+    }
 #endif
 
 public:

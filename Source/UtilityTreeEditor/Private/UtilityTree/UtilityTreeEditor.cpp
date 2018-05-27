@@ -39,221 +39,221 @@
 
 #define LOCTEXT_NAMESPACE "UtilityTreeEditor"
 
-void FUtilityTreeEditor::InitUtilityTreeEditor(const EToolkitMode::Type Mode, const TSharedPtr< class IToolkitHost >& InitToolkitHost, const TArray<UBlueprint*>& InBlueprints,	bool bShouldOpenInDefaultsMode)
+void FUtilityTreeEditor::InitUtilityTreeEditor(const EToolkitMode::Type Mode, const TSharedPtr< class IToolkitHost >& InitToolkitHost, const TArray<UBlueprint*>& InBlueprints,    bool bShouldOpenInDefaultsMode)
 {
-	InitBlueprintEditor(Mode, InitToolkitHost, InBlueprints, bShouldOpenInDefaultsMode);
+    InitBlueprintEditor(Mode, InitToolkitHost, InBlueprints, bShouldOpenInDefaultsMode);
 
 }
 
 FUtilityTreeEditor::FUtilityTreeEditor()
 {
-	GEditor->OnBlueprintPreCompile().AddRaw(this, &FUtilityTreeEditor::OnBlueprintPreCompile);
+    GEditor->OnBlueprintPreCompile().AddRaw(this, &FUtilityTreeEditor::OnBlueprintPreCompile);
 }
 
 FUtilityTreeEditor::~FUtilityTreeEditor()
 {
-	GEditor->OnBlueprintPreCompile().RemoveAll(this);
+    GEditor->OnBlueprintPreCompile().RemoveAll(this);
 
-	FEditorDelegates::OnAssetPostImport.RemoveAll(this);
-	FReimportManager::Instance()->OnPostReimport().RemoveAll(this);
+    FEditorDelegates::OnAssetPostImport.RemoveAll(this);
+    FReimportManager::Instance()->OnPostReimport().RemoveAll(this);
 }
 
 FName FUtilityTreeEditor::GetToolkitFName() const
 {
-	return FName("UtilityTreeEditor");
+    return FName("UtilityTreeEditor");
 }
 
 FText FUtilityTreeEditor::GetBaseToolkitName() const
 {
-	return LOCTEXT("UtilityTreeEditorAppLabel", "Utility Tree Editor");
+    return LOCTEXT("UtilityTreeEditorAppLabel", "Utility Tree Editor");
 }
 
 FText FUtilityTreeEditor::GetToolkitName() const
 {
-	const TArray<UObject*>& EditingObjs = GetEditingObjects();
+    const TArray<UObject*>& EditingObjs = GetEditingObjects();
 
-	check(EditingObjs.Num() > 0);
+    check(EditingObjs.Num() > 0);
 
-	FFormatNamedArguments Args;
+    FFormatNamedArguments Args;
 
-	const UObject* EditingObject = EditingObjs[0];
+    const UObject* EditingObject = EditingObjs[0];
 
-	const bool bDirtyState = EditingObject->GetOutermost()->IsDirty();
+    const bool bDirtyState = EditingObject->GetOutermost()->IsDirty();
 
-	Args.Add(TEXT("ObjectName"), FText::FromString(EditingObject->GetName()));
-	Args.Add(TEXT("DirtyState"), bDirtyState ? FText::FromString(TEXT("*")) : FText::GetEmpty());
-	return FText::Format(LOCTEXT("UtilityTreeToolkitName", "{ObjectName}{DirtyState}"), Args);
+    Args.Add(TEXT("ObjectName"), FText::FromString(EditingObject->GetName()));
+    Args.Add(TEXT("DirtyState"), bDirtyState ? FText::FromString(TEXT("*")) : FText::GetEmpty());
+    return FText::Format(LOCTEXT("UtilityTreeToolkitName", "{ObjectName}{DirtyState}"), Args);
 }
 
 FText FUtilityTreeEditor::GetToolkitToolTipText() const
 {
-	const UObject* EditingObject = GetEditingObject();
+    const UObject* EditingObject = GetEditingObject();
 
-	check(EditingObject != NULL);
+    check(EditingObject != NULL);
 
-	return FAssetEditorToolkit::GetToolTipTextForObject(EditingObject);
+    return FAssetEditorToolkit::GetToolTipTextForObject(EditingObject);
 }
 
 FString FUtilityTreeEditor::GetWorldCentricTabPrefix() const
 {
-	return TEXT("UtilityTreeEditor");
+    return TEXT("UtilityTreeEditor");
 }
 
 FLinearColor FUtilityTreeEditor::GetWorldCentricTabColorScale() const
 {
-	return FLinearColor::White;
+    return FLinearColor::White;
 }
 
 UUtilityTreeBlueprint* FUtilityTreeEditor::GetUtilityTreeBlueprint() const
 {
-	return Cast<UUtilityTreeBlueprint>(GetBlueprintObj());
+    return Cast<UUtilityTreeBlueprint>(GetBlueprintObj());
 }
 
 UBlueprint* FUtilityTreeEditor::GetBlueprintObj() const
 {
-	const TArray<UObject*>& EditingObjs = GetEditingObjects();
-	for (int32 i = 0; i < EditingObjs.Num(); ++i)
-	{
-		if (EditingObjs[i]->IsA<UUtilityTreeBlueprint>())
-		{
-			return (UBlueprint*)EditingObjs[i];
-		}
-	}
-	return nullptr;
+    const TArray<UObject*>& EditingObjs = GetEditingObjects();
+    for (int32 i = 0; i < EditingObjs.Num(); ++i)
+    {
+        if (EditingObjs[i]->IsA<UUtilityTreeBlueprint>())
+        {
+            return (UBlueprint*)EditingObjs[i];
+        }
+    }
+    return nullptr;
 }
 
 void FUtilityTreeEditor::SetDetailObjects(const TArray<UObject*>& InObjects)
 {
-	Inspector->ShowDetailsForObjects(InObjects);
+    Inspector->ShowDetailsForObjects(InObjects);
 }
 
 void FUtilityTreeEditor::SetDetailObject(UObject* Obj)
 {
-	TArray<UObject*> Objects;
-	if (Obj)
-	{
-		Objects.Add(Obj);
-	}
-	SetDetailObjects(Objects);
+    TArray<UObject*> Objects;
+    if (Obj)
+    {
+        Objects.Add(Obj);
+    }
+    SetDetailObjects(Objects);
 }
 
 void FUtilityTreeEditor::CreateDefaultCommands()
 {
-	if (GetBlueprintObj())
-	{
-		FBlueprintEditor::CreateDefaultCommands();
-	}
-	else
-	{
-		ToolkitCommands->MapAction(FGenericCommands::Get().Undo,
-			FExecuteAction::CreateSP(this, &FUtilityTreeEditor::UndoAction));
-		ToolkitCommands->MapAction(FGenericCommands::Get().Redo,
-			FExecuteAction::CreateSP(this, &FUtilityTreeEditor::RedoAction));
-	}
+    if (GetBlueprintObj())
+    {
+        FBlueprintEditor::CreateDefaultCommands();
+    }
+    else
+    {
+        ToolkitCommands->MapAction(FGenericCommands::Get().Undo,
+            FExecuteAction::CreateSP(this, &FUtilityTreeEditor::UndoAction));
+        ToolkitCommands->MapAction(FGenericCommands::Get().Redo,
+            FExecuteAction::CreateSP(this, &FUtilityTreeEditor::RedoAction));
+    }
 }
 
 void FUtilityTreeEditor::OnCreateGraphEditorCommands(TSharedPtr<FUICommandList> GraphEditorCommandsList)
 {
-	//GraphEditorCommandsList->MapAction(FAIGraphCommands::Get().ToggleAIWatch,
-		//FExecuteAction::CreateSP(this, &FUtilityTreeEditor::OnToggleAIWatch));
+    //GraphEditorCommandsList->MapAction(FAIGraphCommands::Get().ToggleAIWatch,
+        //FExecuteAction::CreateSP(this, &FUtilityTreeEditor::OnToggleAIWatch));
 }
 
 void FUtilityTreeEditor::Compile()
 {
-	// Grab the currently debugged object, so we can re-set it below
-	UUtilityTree* CurrentDebugObject = nullptr;
-	if (UBlueprint* Blueprint = GetBlueprintObj())
-	{
-		CurrentDebugObject = Cast<UUtilityTree>(Blueprint->GetObjectBeingDebugged());
-		if (CurrentDebugObject)
-		{
-			// Force close any asset editors that are using the AnimScriptInstance (such as the Property Matrix), the class will be garbage collected
-			FAssetEditorManager::Get().CloseOtherEditors(CurrentDebugObject, nullptr);
-		}
-	}
+    // Grab the currently debugged object, so we can re-set it below
+    UUtilityTree* CurrentDebugObject = nullptr;
+    if (UBlueprint* Blueprint = GetBlueprintObj())
+    {
+        CurrentDebugObject = Cast<UUtilityTree>(Blueprint->GetObjectBeingDebugged());
+        if (CurrentDebugObject)
+        {
+            // Force close any asset editors that are using the AnimScriptInstance (such as the Property Matrix), the class will be garbage collected
+            FAssetEditorManager::Get().CloseOtherEditors(CurrentDebugObject, nullptr);
+        }
+    }
 
-	// Compile the blueprint
-	FBlueprintEditor::Compile();
+    // Compile the blueprint
+    FBlueprintEditor::Compile();
 
-	if (CurrentDebugObject != nullptr)
-	{
-		GetBlueprintObj()->SetObjectBeingDebugged(CurrentDebugObject);
-	}
+    if (CurrentDebugObject != nullptr)
+    {
+        GetBlueprintObj()->SetObjectBeingDebugged(CurrentDebugObject);
+    }
 
-	// reset the selected skeletal control node
-	SelectedAIGraphNode.Reset();
+    // reset the selected skeletal control node
+    SelectedAIGraphNode.Reset();
 
-	// if the user manipulated Pin values directly from the node, then should copy updated values to the internal node to retain data consistency
-	OnPostCompile();
+    // if the user manipulated Pin values directly from the node, then should copy updated values to the internal node to retain data consistency
+    OnPostCompile();
 }
 
 /** Called when graph editor focus is changed */
 void FUtilityTreeEditor::OnGraphEditorFocused(const TSharedRef<class SGraphEditor>& InGraphEditor)
 {
-	// in the future, depending on which graph editor is this will act different
-	FBlueprintEditor::OnGraphEditorFocused(InGraphEditor);
+    // in the future, depending on which graph editor is this will act different
+    FBlueprintEditor::OnGraphEditorFocused(InGraphEditor);
 
-	// install callback to allow us to propagate pin default changes live to the preview
-	//UAIGraph* AIGraph = Cast<UAIGraph>(InGraphEditor->GetCurrentGraph());
-	//if (AIGraph)
-	//{
-		//OnPinDefaultValueChangedHandle = AIGraph->OnPinDefaultValueChanged.Add(FOnPinDefaultValueChanged::FDelegate::CreateSP(this, &FUtilityTreeEditor::HandlePinDefaultValueChanged));
-	//}
+    // install callback to allow us to propagate pin default changes live to the preview
+    //UAIGraph* AIGraph = Cast<UAIGraph>(InGraphEditor->GetCurrentGraph());
+    //if (AIGraph)
+    //{
+        //OnPinDefaultValueChangedHandle = AIGraph->OnPinDefaultValueChanged.Add(FOnPinDefaultValueChanged::FDelegate::CreateSP(this, &FUtilityTreeEditor::HandlePinDefaultValueChanged));
+    //}
 }
 
 void FUtilityTreeEditor::OnGraphEditorBackgrounded(const TSharedRef<SGraphEditor>& InGraphEditor)
 {
-	FBlueprintEditor::OnGraphEditorBackgrounded(InGraphEditor);
+    FBlueprintEditor::OnGraphEditorBackgrounded(InGraphEditor);
 
-	/*UAIGraph* AIGraph = Cast<UAIGraph>(InGraphEditor->GetCurrentGraph());
-	if (AIGraph)
-	{
-		AIGraph->OnPinDefaultValueChanged.Remove(OnPinDefaultValueChangedHandle);
-	}*/
+    /*UAIGraph* AIGraph = Cast<UAIGraph>(InGraphEditor->GetCurrentGraph());
+    if (AIGraph)
+    {
+        AIGraph->OnPinDefaultValueChanged.Remove(OnPinDefaultValueChangedHandle);
+    }*/
 }
 
 void FUtilityTreeEditor::PostUndo(bool bSuccess)
 {
-	DocumentManager->CleanInvalidTabs();
-	DocumentManager->RefreshAllTabs();
+    DocumentManager->CleanInvalidTabs();
+    DocumentManager->RefreshAllTabs();
 
-	FBlueprintEditor::PostUndo(bSuccess);
+    FBlueprintEditor::PostUndo(bSuccess);
 
-	// If we undid a node creation that caused us to clean up a tab/graph we need to refresh the UI state
-	RefreshEditors();
+    // If we undid a node creation that caused us to clean up a tab/graph we need to refresh the UI state
+    RefreshEditors();
 
-	// PostUndo broadcast
-	OnPostUndo.Broadcast();
+    // PostUndo broadcast
+    OnPostUndo.Broadcast();
 
-	OnPostCompile();
+    OnPostCompile();
 }
 
 void FUtilityTreeEditor::PostRedo(bool bSuccess)
 {
-	DocumentManager->RefreshAllTabs();
+    DocumentManager->RefreshAllTabs();
 
-	FBlueprintEditor::PostRedo(bSuccess);
+    FBlueprintEditor::PostRedo(bSuccess);
 
-	// PostUndo broadcast, OnPostRedo
-	OnPostUndo.Broadcast();
+    // PostUndo broadcast, OnPostRedo
+    OnPostUndo.Broadcast();
 
-	// calls PostCompile to copy proper values between AI nodes
-	OnPostCompile();
+    // calls PostCompile to copy proper values between AI nodes
+    OnPostCompile();
 }
 
 void FUtilityTreeEditor::NotifyPostChange(const FPropertyChangedEvent& PropertyChangedEvent, UProperty* PropertyThatChanged)
 {
-	FBlueprintEditor::NotifyPostChange(PropertyChangedEvent, PropertyThatChanged);
+    FBlueprintEditor::NotifyPostChange(PropertyChangedEvent, PropertyThatChanged);
 }
 
 void FUtilityTreeEditor::UndoAction()
 {
-	GEditor->UndoTransaction();
+    GEditor->UndoTransaction();
 }
 
 void FUtilityTreeEditor::RedoAction()
 {
-	GEditor->RedoTransaction();
+    GEditor->RedoTransaction();
 }
 
 void FUtilityTreeEditor::OnBlueprintPreCompile(UBlueprint* BlueprintToCompile)

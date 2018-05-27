@@ -12,7 +12,7 @@ class UActionManagerComponent;
 UINTERFACE(MinimalAPI)
 class UActionOwnerInterface : public UInterface
 {
-	GENERATED_UINTERFACE_BODY()
+    GENERATED_UINTERFACE_BODY()
 };
 
 /**
@@ -20,9 +20,9 @@ class UActionOwnerInterface : public UInterface
  */
 class AIEXTENSION_API IActionOwnerInterface
 {
-	GENERATED_IINTERFACE_BODY()
+    GENERATED_IINTERFACE_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
+    // Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
     virtual const bool AddChildren(UAction* NewChildren);

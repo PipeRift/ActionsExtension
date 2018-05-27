@@ -4,32 +4,32 @@ using UnrealBuildTool;
 
 public class AIExtension : ModuleRules
 {
-	public AIExtension(ReadOnlyTargetRules TargetRules) : base(TargetRules)
+    public AIExtension(ReadOnlyTargetRules TargetRules) : base(TargetRules)
     {
-		PublicIncludePaths.AddRange(new string[]
+        PublicIncludePaths.AddRange(new string[]
         {
             "AIExtension/Public"
-			// ... add public include paths required here ...
-	    });
-				
-		
-		PrivateIncludePaths.AddRange(new string[]
+            // ... add public include paths required here ...
+        });
+                
+        
+        PrivateIncludePaths.AddRange(new string[]
         {
-			"AIExtension/Private"
-			// ... add other private include paths required here ...
-		});
-			
-		
-		PublicDependencyModuleNames.AddRange(new string[]
-		{
-			"Core",
-			"CoreUObject",
-			"Engine",
+            "AIExtension/Private"
+            // ... add other private include paths required here ...
+        });
+            
+        
+        PublicDependencyModuleNames.AddRange(new string[]
+        {
+            "Core",
+            "CoreUObject",
+            "Engine",
             "GameplayTasks",
             "AIModule",
             "MovieSceneTracks"
-			// ... add other public dependencies that you statically link with here ...
-		});
+            // ... add other public dependencies that you statically link with here ...
+        });
 
         PrivateDependencyModuleNames.AddRange(new string[]
         {

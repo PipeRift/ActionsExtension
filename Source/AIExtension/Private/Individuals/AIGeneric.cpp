@@ -25,8 +25,8 @@ AAIGeneric::AAIGeneric(const FObjectInitializer& ObjectInitializer) : Super(Obje
 {
     ActionManagerComponent  = ObjectInitializer.CreateDefaultSubobject<UActionManagerComponent>(this, TEXT("Action Manager"));
     
- 	BlackboardComp = ObjectInitializer.CreateDefaultSubobject<UBlackboardComponent>(this, TEXT("BlackBoard"));
-	BrainComponent = BehaviorComp = ObjectInitializer.CreateDefaultSubobject<UBehaviorTreeComponent>(this, TEXT("Behavior"));	
+     BlackboardComp = ObjectInitializer.CreateDefaultSubobject<UBlackboardComponent>(this, TEXT("BlackBoard"));
+    BrainComponent = BehaviorComp = ObjectInitializer.CreateDefaultSubobject<UBehaviorTreeComponent>(this, TEXT("Behavior"));    
 
     //static ConstructorHelpers::FObjectFinder<UBehaviorTree> BaseBehaviorAsset(TEXT("/AIExtension/Base/Individuals/BT_Generic"));
     //BaseBehavior = BaseBehaviorAsset.Object;
@@ -48,43 +48,43 @@ void AAIGeneric::OnConstruction(const FTransform& Transform)
 
 void AAIGeneric::Possess(APawn* InPawn)
 {
-	Super::Possess(InPawn);
+    Super::Possess(InPawn);
 
-	// start behavior
-	if (BaseBehavior)
-	{
-		if (BaseBehavior->BlackboardAsset)
-		{
-			BlackboardComp->InitializeBlackboard(*BaseBehavior->BlackboardAsset);
+    // start behavior
+    if (BaseBehavior)
+    {
+        if (BaseBehavior->BlackboardAsset)
+        {
+            BlackboardComp->InitializeBlackboard(*BaseBehavior->BlackboardAsset);
             BlackboardComp->SetValueAsObject(TEXT("SelfActor"), InPawn);
-		}
+        }
 
-		BehaviorComp->StartTree(*BaseBehavior);
+        BehaviorComp->StartTree(*BaseBehavior);
         SetDynamicSubBehavior(FAIExtensionModule::FBehaviorTags::Combat,    CombatBehavior);
         SetDynamicSubBehavior(FAIExtensionModule::FBehaviorTags::Alert,     AlertBehavior);
         SetDynamicSubBehavior(FAIExtensionModule::FBehaviorTags::Suspicion, SuspicionBehavior);
         SetDynamicSubBehavior(FAIExtensionModule::FBehaviorTags::Passive,   PassiveBehavior);
-	}
+    }
 
     GetWorldTimerManager().SetTimer(TimerHandle_TargetScan, this, &AAIGeneric::TryScanPotentialTarget, TargetScanRate);
 }
 
 void AAIGeneric::UnPossess()
 {
-	Super::UnPossess();
+    Super::UnPossess();
 
-	BehaviorComp->StopTree();
+    BehaviorComp->StopTree();
 }
 
 void AAIGeneric::BeginInactiveState()
 {
-	Super::BeginInactiveState();
+    Super::BeginInactiveState();
 
-	AGameStateBase const* const GameState = GetWorld()->GetGameState();
+    AGameStateBase const* const GameState = GetWorld()->GetGameState();
 
-	const float MinRespawnDelay = GameState ? GameState->GetPlayerRespawnDelay(this) : 1.0f;
+    const float MinRespawnDelay = GameState ? GameState->GetPlayerRespawnDelay(this) : 1.0f;
 
-	GetWorldTimerManager().SetTimer(TimerHandle_Respawn, this, &AAIGeneric::Respawn, MinRespawnDelay);
+    GetWorldTimerManager().SetTimer(TimerHandle_Respawn, this, &AAIGeneric::Respawn, MinRespawnDelay);
 }
 
 
@@ -109,7 +109,7 @@ UActionManagerComponent* AAIGeneric::GetActionOwnerComponent()
 
 void AAIGeneric::Respawn()
 {
-	GetWorld()->GetAuthGameMode()->RestartPlayer(this);
+    GetWorld()->GetAuthGameMode()->RestartPlayer(this);
 }
 
 void AAIGeneric::StartCombat(APawn* InTarget)
@@ -143,16 +143,16 @@ void AAIGeneric::FinishCombat(ECombatState DestinationState /*= ECombatState::Al
 
 void AAIGeneric::GameHasEnded(AActor* EndGameFocus, bool bIsWinner)
 {
-	// Stop the behavior tree/logic
-	BehaviorComp->StopTree();
+    // Stop the behavior tree/logic
+    BehaviorComp->StopTree();
 
-	// Stop any movement we already have
-	StopMovement();
+    // Stop any movement we already have
+    StopMovement();
 
-	// Cancel the respawn timer
-	GetWorldTimerManager().ClearTimer(TimerHandle_Respawn);
+    // Cancel the respawn timer
+    GetWorldTimerManager().ClearTimer(TimerHandle_Respawn);
 
-	// Clear any target
+    // Clear any target
     FinishCombat();
 }
 
@@ -291,7 +291,7 @@ void AAIGeneric::LeaveSquad()
 
 bool AAIGeneric::IsInSquad() const
 {
-	return IsValid(Squad) && Squad->HasMember(this);
+    return IsValid(Squad) && Squad->HasMember(this);
 }
 
 UClass* AAIGeneric::GetSquadOrder() const
@@ -314,20 +314,20 @@ FFaction AAIGeneric::GetFaction() const
     FFaction EventFaction;
     Execute_EventGetFaction(this, EventFaction);
 
-	if (EventFaction.IsNone())
-	{
-		return IFactionAgentInterface::Execute_GetFaction(GetPawn());
-	}
-	else
-	{
-		return EventFaction;
-	}
+    if (EventFaction.IsNone())
+    {
+        return IFactionAgentInterface::Execute_GetFaction(GetPawn());
+    }
+    else
+    {
+        return EventFaction;
+    }
 }
 
 void AAIGeneric::SetFaction(const FFaction & InFaction)
 {
     Execute_EventSetFaction(this, InFaction);
-	IFactionAgentInterface::Execute_SetFaction(GetPawn(), InFaction);
+    IFactionAgentInterface::Execute_SetFaction(GetPawn(), InFaction);
 }
 
 

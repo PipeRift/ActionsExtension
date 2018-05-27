@@ -12,8 +12,8 @@
 UCLASS()
 class AIEXTENSION_API UBTT_SetState : public UBTTaskNode
 {
-	GENERATED_BODY()	
-	
+    GENERATED_BODY()    
+    
 public:
     UBTT_SetState();
 

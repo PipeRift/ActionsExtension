@@ -85,8 +85,8 @@ protected:
     * Takes the specified "MutatablePin" and sets its 'PinToolTip' field (according
     * to the specified description)
     *
-    * @param   MutatablePin	The pin you want to set tool-tip text on
-    * @param   PinDescription	A string describing the pin's purpose
+    * @param   MutatablePin    The pin you want to set tool-tip text on
+    * @param   PinDescription    A string describing the pin's purpose
     */
     void SetPinToolTip(UEdGraphPin& MutatablePin, const FText& PinDescription) const;
 

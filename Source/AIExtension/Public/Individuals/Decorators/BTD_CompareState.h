@@ -24,8 +24,8 @@ enum class ECompareStateMode : uint8
 UCLASS()
 class AIEXTENSION_API UBTD_CompareState : public UBTDecorator
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+    
 public:
 
     UBTD_CompareState();

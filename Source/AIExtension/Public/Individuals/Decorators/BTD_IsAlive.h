@@ -12,8 +12,8 @@
 UCLASS()
 class AIEXTENSION_API UBTD_IsAlive : public UBTDecorator
 {
-	GENERATED_BODY()	
-	
+    GENERATED_BODY()    
+    
 public:
     UFUNCTION(BlueprintCallable)
         bool PerformConditionCheckAI(AAIController* OwnerController);

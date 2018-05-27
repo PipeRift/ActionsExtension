@@ -4,45 +4,45 @@ using UnrealBuildTool;
 
 public class AIExtensionEditor : ModuleRules
 {
-	public AIExtensionEditor(ReadOnlyTargetRules TargetRules) : base(TargetRules)
+    public AIExtensionEditor(ReadOnlyTargetRules TargetRules) : base(TargetRules)
     {
-		
-		PublicIncludePaths.AddRange(
-			new string[] {
+        
+        PublicIncludePaths.AddRange(
+            new string[] {
                 "Editor/Public"
-				// ... add public include paths required here ...
-			}
-			);
-				
-		
-		PrivateIncludePaths.AddRange(
-			new string[] {
-				"Editor/Private"
-				// ... add other private include paths required here ...
-			}
-			);
-			
-		
-		PublicDependencyModuleNames.AddRange(
-			new string[]
-			{
-				"Core",
-                "InputCore"
-				// ... add other public dependencies that you statically link with here ...
-			}
-			);
-			
-		
-		PrivateDependencyModuleNames.AddRange(
-			new string[]
-			{
+                // ... add public include paths required here ...
+            }
+            );
+                
+        
+        PrivateIncludePaths.AddRange(
+            new string[] {
+                "Editor/Private"
+                // ... add other private include paths required here ...
+            }
+            );
+            
+        
+        PublicDependencyModuleNames.AddRange(
+            new string[]
+            {
                 "Core",
-				"CoreUObject",
-				"Engine",
+                "InputCore"
+                // ... add other public dependencies that you statically link with here ...
+            }
+            );
+            
+        
+        PrivateDependencyModuleNames.AddRange(
+            new string[]
+            {
+                "Core",
+                "CoreUObject",
+                "Engine",
                 "UnrealEd",
                 "Blutility",
-				"Slate",
-				"SlateCore",
+                "Slate",
+                "SlateCore",
                 "AssetTools",
                 "EditorStyle",
                 "KismetWidgets",
@@ -56,16 +56,16 @@ public class AIExtensionEditor : ModuleRules
                 "Settings",
                 "AIModule",
                 "AIExtension"
-				// ... add private dependencies that you statically link with here ...	
-			}
-			);
-		
-		
-		DynamicallyLoadedModuleNames.AddRange(
-			new string[]
-			{
-				// ... add any modules that your module loads dynamically here ...
-			}
-			);
-	}
+                // ... add private dependencies that you statically link with here ...    
+            }
+            );
+        
+        
+        DynamicallyLoadedModuleNames.AddRange(
+            new string[]
+            {
+                // ... add any modules that your module loads dynamically here ...
+            }
+            );
+    }
 }

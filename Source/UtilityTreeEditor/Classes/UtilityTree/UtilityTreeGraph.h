@@ -15,9 +15,9 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnPinDefaultValueChanged, UEdGraphPin* /*In
 UCLASS()
 class UUtilityTreeGraph : public UEdGraph
 {
-	GENERATED_UCLASS_BODY()
+    GENERATED_UCLASS_BODY()
 
-	/** Delegate fired when a pin's default value is changed */
-	FOnPinDefaultValueChanged OnPinDefaultValueChanged;
+    /** Delegate fired when a pin's default value is changed */
+    FOnPinDefaultValueChanged OnPinDefaultValueChanged;
 };
 

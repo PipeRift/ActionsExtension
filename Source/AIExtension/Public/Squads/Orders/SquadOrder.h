@@ -16,7 +16,7 @@ class AAISquad;
 UCLASS()
 class AIEXTENSION_API USquadOrder : public UObject
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
     UPROPERTY(BlueprintReadWrite, EditAnywhere)

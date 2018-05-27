@@ -13,33 +13,33 @@ duplicate it.
 UCLASS(Abstract, Blueprintable)
 class BTUTILITYPLUGIN_API UBTDecorator_UtilityBlueprintBase : public UBTDecorator_UtilityFunction
 {
-	GENERATED_UCLASS_BODY()
+    GENERATED_UCLASS_BODY()
 
-	/* UBTDecorator_UtilityFunction interface */
-	virtual float CalculateUtilityValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
-	/**/
+    /* UBTDecorator_UtilityFunction interface */
+    virtual float CalculateUtilityValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
+    /**/
 
-	virtual FString GetStaticDescription() const override;
-	virtual void DescribeRuntimeValues(const UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTDescriptionVerbosity::Type Verbosity, TArray< FString >& Values) const override;
+    virtual FString GetStaticDescription() const override;
+    virtual void DescribeRuntimeValues(const UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTDescriptionVerbosity::Type Verbosity, TArray< FString >& Values) const override;
 
-	virtual void SetOwner(AActor* ActorOwner) override;
+    virtual void SetOwner(AActor* ActorOwner) override;
 
 #if WITH_EDITOR
-	virtual bool UsesBlueprint() const override;
+    virtual bool UsesBlueprint() const override;
 #endif
 
 protected:
-	/** Cached AIController owner of BehaviorTreeComponent. */
-	UPROPERTY(Transient)
-	AAIController* AIOwner;
+    /** Cached AIController owner of BehaviorTreeComponent. */
+    UPROPERTY(Transient)
+    AAIController* AIOwner;
 
-	/** Cached actor owner of BehaviorTreeComponent. */
-	UPROPERTY(Transient)
-	AActor* ActorOwner;
+    /** Cached actor owner of BehaviorTreeComponent. */
+    UPROPERTY(Transient)
+    AActor* ActorOwner;
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent, Category = Utility)
-	float CalculateUtility(AAIController* OwnerController, APawn* ControlledPawn) const;
+    UFUNCTION(BlueprintImplementableEvent, Category = Utility)
+    float CalculateUtility(AAIController* OwnerController, APawn* ControlledPawn) const;
 };
 
 

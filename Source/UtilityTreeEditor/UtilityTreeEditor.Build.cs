@@ -5,7 +5,7 @@ using System.IO;
 
 public class UtilityTreeEditor : ModuleRules
 {
-	public UtilityTreeEditor(ReadOnlyTargetRules TargetRules) : base(TargetRules)
+    public UtilityTreeEditor(ReadOnlyTargetRules TargetRules) : base(TargetRules)
     {
         var EngineDir = Path.GetFullPath(TargetRules.RelativeEnginePath);
 
@@ -14,24 +14,24 @@ public class UtilityTreeEditor : ModuleRules
         PublicIncludePaths.Add("UtilityTreeEditor/Public");
 
         PrivateIncludePaths.Add("UtilityTreeEditor/Private");
-		PrivateIncludePaths.AddRange(
+        PrivateIncludePaths.AddRange(
             new string[] {
                 "UtilityTreeEditor/Private",
                 Path.Combine(EngineDir, @"Source/Developer/AssetTools/Private")
             });
-		
-		PublicDependencyModuleNames.AddRange(
-			new string[]
-			{
-				"Core",
+        
+        PublicDependencyModuleNames.AddRange(
+            new string[]
+            {
+                "Core",
                 "InputCore",
                 "Projects",
             }
-		);
-			
-		
-		PrivateDependencyModuleNames.AddRange(
-			new string[]
+        );
+            
+        
+        PrivateDependencyModuleNames.AddRange(
+            new string[]
             {
                 "Core",
                 "CoreUObject",
@@ -51,5 +51,5 @@ public class UtilityTreeEditor : ModuleRules
                 "UtilityTree"
             }
         );
-	}
+    }
 }

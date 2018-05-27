@@ -4,17 +4,17 @@ using UnrealBuildTool;
 
 public class UtilityTree : ModuleRules
 {
-	public UtilityTree(ReadOnlyTargetRules Target): base(Target)
-	{
+    public UtilityTree(ReadOnlyTargetRules Target): base(Target)
+    {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
         PublicIncludePaths.Add("UtilityTree/Public");
         
-		PrivateIncludePaths.Add("UtilityTree/Private");
+        PrivateIncludePaths.Add("UtilityTree/Private");
 
 
-		PublicDependencyModuleNames.AddRange(
-			new string[]
+        PublicDependencyModuleNames.AddRange(
+            new string[]
             {
                 "Core"
             }
@@ -22,15 +22,15 @@ public class UtilityTree : ModuleRules
             
         PrivateDependencyModuleNames.AddRange(
             new string[]
-			{
+            {
                 "RenderCore",
                 "CoreUObject",
                 "Engine",
                 "RHI",
                 "Slate",
                 "SlateCore"
-			}
-		);
+            }
+        );
     
     
         if (Target.bBuildDeveloperTools || (Target.Configuration != UnrealTargetConfiguration.Shipping && Target.Configuration != UnrealTargetConfiguration.Test))
@@ -42,5 +42,5 @@ public class UtilityTree : ModuleRules
         {
             Definitions.Add("WITH_GAMEPLAY_DEBUGGER=0");
         }
-	}
+    }
 }

@@ -5,7 +5,7 @@
 
 int32 UBTUtilitySelectionMethod::SelectOption(TArray< float > const& UtilityValues)
 {
-	return NoSelection;
+    return NoSelection;
 }
 
 void UBTUtilitySelectionMethod::GenerateOrdering(TArray< float > const& UtilityValues, FUtilityExecutionOrdering& ExecutionOrdering)

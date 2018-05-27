@@ -28,10 +28,10 @@ class UActionManagerComponent;
 UENUM(BlueprintType)
 enum class ECombatState : uint8
 {
-	Passive,
-	Suspicion,
-	Alert,
-	Combat
+    Passive,
+    Suspicion,
+    Alert,
+    Combat
 };
 
 /**
@@ -47,11 +47,11 @@ class AIEXTENSION_API AAIGeneric : public AAIController, public IActionOwnerInte
 
 private:
 
-	UPROPERTY(Transient)
-	UBlackboardComponent* BlackboardComp;
+    UPROPERTY(Transient)
+    UBlackboardComponent* BlackboardComp;
 
-	/* Cached BT component */
-	UPROPERTY(Transient)
+    /* Cached BT component */
+    UPROPERTY(Transient)
     UBehaviorTreeComponent* BehaviorComp;
 
 public:
@@ -73,7 +73,7 @@ public:
 
 
     /** Behaviors */
-	UPROPERTY(EditAnywhere, Category = "AI|Behaviors", meta = (DisplayName = "Base"))
+    UPROPERTY(EditAnywhere, Category = "AI|Behaviors", meta = (DisplayName = "Base"))
     UBehaviorTree* BaseBehavior;
     UPROPERTY(EditAnywhere, Category = "AI|Behaviors", meta = (DisplayName = "Combat", DisplayThumbnail = false))
     UBehaviorTree* CombatBehavior;
@@ -108,11 +108,11 @@ private:
 public:
 
     // Begin AController interface
-	virtual void Possess(class APawn* InPawn) override;
-	virtual void UnPossess() override;
-	virtual void GameHasEnded(class AActor* EndGameFocus = NULL, bool bIsWinner = false) override;
-	virtual void BeginInactiveState() override;
-	// End AController interface
+    virtual void Possess(class APawn* InPawn) override;
+    virtual void UnPossess() override;
+    virtual void GameHasEnded(class AActor* EndGameFocus = NULL, bool bIsWinner = false) override;
+    virtual void BeginInactiveState() override;
+    // End AController interface
 
 
     // Begin ITaskOwnerInterface interface
@@ -123,7 +123,7 @@ public:
 
 
     UFUNCTION(BlueprintCallable, Category = AI)
-	void Respawn();
+    void Respawn();
 
     /* Start combat with InTarget */
     UFUNCTION(BlueprintCallable, Category = "AI|Combat System")
@@ -226,8 +226,8 @@ public:
         return Squad;
     }
 
-	UFUNCTION(BlueprintCallable, Category = Squad)
-	bool IsInSquad() const;
+    UFUNCTION(BlueprintCallable, Category = Squad)
+    bool IsInSquad() const;
 
     UFUNCTION(BlueprintPure, Category = Squad)
     UClass* GetSquadOrder() const;

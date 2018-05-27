@@ -17,8 +17,8 @@
 UCLASS()
 class AIEXTENSION_API UBTT_RunAction : public UBTTaskNode, public IActionOwnerInterface
 {
-	GENERATED_BODY()	
-	
+    GENERATED_BODY()    
+    
 public:
     UBTT_RunAction();
 
