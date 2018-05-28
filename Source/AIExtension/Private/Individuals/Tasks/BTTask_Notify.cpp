@@ -8,22 +8,22 @@ UBTTask_Notify::UBTTask_Notify()
 
 EBTNodeResult::Type UBTTask_Notify::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-    AActor* Owner = OwnerComp.GetOwner();
+	AActor* Owner = OwnerComp.GetOwner();
 
-    if (!IsValid(Owner))
-    {
-        return EBTNodeResult::Failed;
-    }
+	if (!IsValid(Owner))
+	{
+		return EBTNodeResult::Failed;
+	}
 
-    if (FAINotify::TriggerNotify(*Owner, EventName, Parameters))
-    {
-        return EBTNodeResult::Succeeded;
-    }
+	if (FAINotify::TriggerNotify(*Owner, EventName, Parameters))
+	{
+		return EBTNodeResult::Succeeded;
+	}
 
-    return EBTNodeResult::Failed;
+	return EBTNodeResult::Failed;
 }
 
 FString UBTTask_Notify::GetStaticDescription() const
 {
-    return FString::Printf(TEXT("Event: %s"), *EventName.ToString());
+	return FString::Printf(TEXT("Event: %s"), *EventName.ToString());
 }

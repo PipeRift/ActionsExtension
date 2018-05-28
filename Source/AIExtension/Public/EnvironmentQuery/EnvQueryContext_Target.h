@@ -12,7 +12,7 @@
 UCLASS()
 class AIEXTENSION_API UEnvQueryContext_Target : public UEnvQueryContext
 {
-    GENERATED_UCLASS_BODY()
+	GENERATED_UCLASS_BODY()
 
-    virtual void ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const override;
+	virtual void ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const override;
 };

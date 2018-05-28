@@ -19,22 +19,22 @@ UEnvQueryContext_Target::UEnvQueryContext_Target(const FObjectInitializer& Objec
 
 void UEnvQueryContext_Target::ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const
 {
-    AActor* Owner = Cast<AActor>(QueryInstance.Owner.Get());
+	AActor* Owner = Cast<AActor>(QueryInstance.Owner.Get());
 
-    AAIGeneric* AI = Cast<AAIGeneric>(Owner);
-    if (!AI)
-    {
-        APawn* OwnerAsPawn = Cast<APawn>(Owner);
-        if (!OwnerAsPawn)
-            return;
+	AAIGeneric* AI = Cast<AAIGeneric>(Owner);
+	if (!AI)
+	{
+		APawn* OwnerAsPawn = Cast<APawn>(Owner);
+		if (!OwnerAsPawn)
+			return;
 
-        AI = Cast<AAIGeneric>(OwnerAsPawn->GetController());
-    }
+		AI = Cast<AAIGeneric>(OwnerAsPawn->GetController());
+	}
 
-    if (!AI)
-        return;
+	if (!AI)
+		return;
 
-    UEnvQueryItemType_Actor::SetContextHelper(ContextData, AI->GetTarget());
+	UEnvQueryItemType_Actor::SetContextHelper(ContextData, AI->GetTarget());
 }
 
 

@@ -6,6 +6,6 @@
 
 bool UBTD_IsInSquad::PerformConditionCheckAI(AAIController* OwnerController)
 {
-    const auto AIGen = Cast<AAIGeneric>(OwnerController);
-    return IsValid(AIGen) && AIGen->IsInSquad();
+	const auto AIGen = Cast<AAIGeneric>(OwnerController);
+	return IsValid(AIGen) && AIGen->IsInSquad();
 }

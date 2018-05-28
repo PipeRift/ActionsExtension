@@ -12,9 +12,9 @@
 UCLASS()
 class AIEXTENSION_API UBTD_IsInSquad : public UBTDecorator
 {
-    GENERATED_BODY()
-    
+	GENERATED_BODY()
+	
 public:
-    UFUNCTION(BlueprintCallable)
-    bool PerformConditionCheckAI(AAIController* OwnerController);
+	UFUNCTION(BlueprintCallable)
+	bool PerformConditionCheckAI(AAIController* OwnerController);
 };

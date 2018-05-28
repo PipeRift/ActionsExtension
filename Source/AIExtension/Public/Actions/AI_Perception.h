@@ -12,14 +12,14 @@
 UCLASS(BlueprintType)
 class AIEXTENSION_API UAI_Perception : public UAIAction
 {
-    GENERATED_BODY()
-    
+	GENERATED_BODY()
+	
 protected:
-    UPROPERTY(BlueprintReadOnly, Category = "AI|Perception")
-    UAIPerceptionComponent* Perception;
+	UPROPERTY(BlueprintReadOnly, Category = "AI|Perception")
+	UAIPerceptionComponent* Perception;
 
-    virtual void OnActivation() override;
+	virtual void OnActivation() override;
 
-    UFUNCTION(BlueprintImplementableEvent, Category = "AI|Perception")
-    void OnTargetUpdate(AActor* Target, FAIStimulus Stimulus);
+	UFUNCTION(BlueprintImplementableEvent, Category = "AI|Perception")
+	void OnTargetUpdate(AActor* Target, FAIStimulus Stimulus);
 };

@@ -20,17 +20,17 @@
 
 FText FAssetTypeAction_UtilityTreeBlueprint::GetName() const
 {
-    return LOCTEXT("FAssetTypeAction_UtilityTreeBlueprintName", "Utility Tree Blueprint");
+	return LOCTEXT("FAssetTypeAction_UtilityTreeBlueprintName", "Utility Tree Blueprint");
 }
 
 FColor FAssetTypeAction_UtilityTreeBlueprint::GetTypeColor() const
 {
-    return FColor(202, 65, 244);
+	return FColor(202, 65, 244);
 }
 
 UClass* FAssetTypeAction_UtilityTreeBlueprint::GetSupportedClass() const
 {
-    return UUtilityTreeBlueprint::StaticClass();
+	return UUtilityTreeBlueprint::StaticClass();
 }
 
 void FAssetTypeAction_UtilityTreeBlueprint::GetActions(const TArray<UObject*>& InObjects, FMenuBuilder& MenuBuilder)
@@ -39,47 +39,47 @@ void FAssetTypeAction_UtilityTreeBlueprint::GetActions(const TArray<UObject*>& I
 
 uint32 FAssetTypeAction_UtilityTreeBlueprint::GetCategories()
 {
-    return FAIExtensionModule::GetInstance().GetAssetCategoryBit();
+	return FAIExtensionModule::GetInstance().GetAssetCategoryBit();
 }
 
 void FAssetTypeAction_UtilityTreeBlueprint::OpenAssetEditor(const TArray<UObject*>& InObjects, TSharedPtr<IToolkitHost> EditWithinLevelEditor)
 {
-    EToolkitMode::Type Mode = EditWithinLevelEditor.IsValid() ? EToolkitMode::WorldCentric : EToolkitMode::Standalone;
+	EToolkitMode::Type Mode = EditWithinLevelEditor.IsValid() ? EToolkitMode::WorldCentric : EToolkitMode::Standalone;
 
-    for (auto ObjIt = InObjects.CreateConstIterator(); ObjIt; ++ObjIt)
-    {
-        auto Blueprint = Cast<UBlueprint>(*ObjIt);
-        if (Blueprint && Blueprint->SkeletonGeneratedClass && Blueprint->GeneratedClass)
-        {
-            TSharedRef< FUtilityTreeEditor > NewEditor(new FUtilityTreeEditor());
+	for (auto ObjIt = InObjects.CreateConstIterator(); ObjIt; ++ObjIt)
+	{
+		auto Blueprint = Cast<UBlueprint>(*ObjIt);
+		if (Blueprint && Blueprint->SkeletonGeneratedClass && Blueprint->GeneratedClass)
+		{
+			TSharedRef< FUtilityTreeEditor > NewEditor(new FUtilityTreeEditor());
 
-            TArray<UBlueprint*> Blueprints;
-            Blueprints.Add(Blueprint);
+			TArray<UBlueprint*> Blueprints;
+			Blueprints.Add(Blueprint);
 
-            NewEditor->InitUtilityTreeEditor(Mode, EditWithinLevelEditor, Blueprints, ShouldUseDataOnlyEditor(Blueprint));
-        }
-        else
-        {
-            FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("FailedToLoadAbilityBlueprint", "Utility Tree Blueprint could not be loaded because it derives from an invalid class.  Check to make sure the parent class for this blueprint hasn't been removed!"));
-        }
-    }
+			NewEditor->InitUtilityTreeEditor(Mode, EditWithinLevelEditor, Blueprints, ShouldUseDataOnlyEditor(Blueprint));
+		}
+		else
+		{
+			FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("FailedToLoadAbilityBlueprint", "Utility Tree Blueprint could not be loaded because it derives from an invalid class.  Check to make sure the parent class for this blueprint hasn't been removed!"));
+		}
+	}
 }
 
 UFactory* FAssetTypeAction_UtilityTreeBlueprint::GetFactoryForBlueprintType(UBlueprint* InBlueprint) const
 {
-    UUtilityTreeBlueprintFactory* UTBlueprintFactory = NewObject<UUtilityTreeBlueprintFactory>();
-    //UUtilityTreeBlueprint* UTBlueprint = CastChecked<UUtilityTreeBlueprint>(InBlueprint);
-    UTBlueprintFactory->ParentClass = TSubclassOf<UUtilityTree>(*InBlueprint->GeneratedClass);
-    return UTBlueprintFactory;
+	UUtilityTreeBlueprintFactory* UTBlueprintFactory = NewObject<UUtilityTreeBlueprintFactory>();
+	//UUtilityTreeBlueprint* UTBlueprint = CastChecked<UUtilityTreeBlueprint>(InBlueprint);
+	UTBlueprintFactory->ParentClass = TSubclassOf<UUtilityTree>(*InBlueprint->GeneratedClass);
+	return UTBlueprintFactory;
 }
 
 bool FAssetTypeAction_UtilityTreeBlueprint::ShouldUseDataOnlyEditor(const UBlueprint* Blueprint) const
 {
-    return FBlueprintEditorUtils::IsDataOnlyBlueprint(Blueprint)
-        && !FBlueprintEditorUtils::IsLevelScriptBlueprint(Blueprint)
-        && !FBlueprintEditorUtils::IsInterfaceBlueprint(Blueprint)
-        && !Blueprint->bForceFullEditor
-        && !Blueprint->bIsNewlyCreated;
+	return FBlueprintEditorUtils::IsDataOnlyBlueprint(Blueprint)
+		&& !FBlueprintEditorUtils::IsLevelScriptBlueprint(Blueprint)
+		&& !FBlueprintEditorUtils::IsInterfaceBlueprint(Blueprint)
+		&& !Blueprint->bForceFullEditor
+		&& !Blueprint->bIsNewlyCreated;
 }
 
 //////////////////////////////////////////////////////////////////////////

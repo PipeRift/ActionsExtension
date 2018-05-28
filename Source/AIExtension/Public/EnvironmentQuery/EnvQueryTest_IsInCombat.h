@@ -12,9 +12,9 @@
 UCLASS(meta = (DisplayName = "Is In Combat"))
 class AIEXTENSION_API UEnvQueryTest_IsInCombat : public UEnvQueryTest_AI
 {
-    GENERATED_UCLASS_BODY()
+	GENERATED_UCLASS_BODY()
 
 protected:
-    virtual void RunAITest(AAIGeneric* AI, FEnvQueryInstance& QueryInstance) const;
-    virtual FText GetDescriptionDetails() const override;
+	virtual void RunAITest(AAIGeneric* AI, FEnvQueryInstance& QueryInstance) const;
+	virtual FText GetDescriptionDetails() const override;
 };

@@ -16,24 +16,24 @@ class UBehaviorTree;
 UCLASS(Meta = (DisplayName = "Blackboard Utility", Category = "Utility Functions"))
 class BTUTILITYPLUGIN_API UBTDecorator_UtilityBlackboard : public UBTDecorator_UtilityFunction
 {
-    GENERATED_UCLASS_BODY()
+	GENERATED_UCLASS_BODY()
 
-    /** initialize any asset related data */
-    virtual void InitializeFromAsset(UBehaviorTree& Asset) override;
+	/** initialize any asset related data */
+	virtual void InitializeFromAsset(UBehaviorTree& Asset) override;
 
-    virtual FString GetStaticDescription() const override;
-    virtual void DescribeRuntimeValues(const UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTDescriptionVerbosity::Type Verbosity, TArray<FString>& Values) const override;
+	virtual FString GetStaticDescription() const override;
+	virtual void DescribeRuntimeValues(const UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTDescriptionVerbosity::Type Verbosity, TArray<FString>& Values) const override;
 
-    /** get name of selected blackboard key */
-    FName GetSelectedBlackboardKey() const;
-
-protected:
-    /** blackboard key selector */
-    UPROPERTY(EditAnywhere, Category = "Blackboard")
-    struct FBlackboardKeySelector Value;
+	/** get name of selected blackboard key */
+	FName GetSelectedBlackboardKey() const;
 
 protected:
-    virtual float CalculateUtilityValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
+	/** blackboard key selector */
+	UPROPERTY(EditAnywhere, Category = "Blackboard")
+	struct FBlackboardKeySelector Value;
+
+protected:
+	virtual float CalculateUtilityValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -41,5 +41,5 @@ protected:
 
 FORCEINLINE FName UBTDecorator_UtilityBlackboard::GetSelectedBlackboardKey() const
 {
-    return Value.SelectedKeyName;
+	return Value.SelectedKeyName;
 }

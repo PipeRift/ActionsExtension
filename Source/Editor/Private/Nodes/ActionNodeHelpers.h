@@ -14,13 +14,13 @@
 class UK2Node_Action;
 
 struct ActionNodeHelpers {
-    static void RegisterActionClassActions(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass);
+	static void RegisterActionClassActions(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass);
 
-    static void SetNodeFunc(UEdGraphNode* NewNode, bool /*bIsTemplateNode*/, TWeakObjectPtr<UClass> ClassPtr);
+	static void SetNodeFunc(UEdGraphNode* NewNode, bool /*bIsTemplateNode*/, TWeakObjectPtr<UClass> ClassPtr);
 
 
-    static int32 RegistryActionClassAction(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass, UClass* Class);
+	static int32 RegistryActionClassAction(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass, UClass* Class);
 
-    template < typename TBase >
-    static void GetAllBlueprintSubclasses(TSet< TAssetSubclassOf< TBase > >& OutSubclasses, bool bAllowAbstract, FString const& Path);
+	template < typename TBase >
+	static void GetAllBlueprintSubclasses(TSet< TAssetSubclassOf< TBase > >& OutSubclasses, bool bAllowAbstract, FString const& Path);
 };

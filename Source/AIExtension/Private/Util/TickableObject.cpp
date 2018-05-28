@@ -4,50 +4,50 @@
 #include "TickableObject.h"
 
 UTickableObject::UTickableObject(const FObjectInitializer& ObjectInitializer)
-    : Super(ObjectInitializer)
+	: Super(ObjectInitializer)
 {
-    bWantsToTick = true;
-    bTickInEditor = false;
-    TickRate = 0;
+	bWantsToTick = true;
+	bTickInEditor = false;
+	TickRate = 0;
 
-    DeltaElapsed = 0;
+	DeltaElapsed = 0;
 }
 
 void UTickableObject::BeginPlay()
 {
-    ensureMsgf(ObjectHasBegunPlay == EObjectBeginPlayState::HasNotBegunPlay, TEXT("BeginPlay was called on tickable object %s which was in state %d"), *GetPathName(), ObjectHasBegunPlay);
+	ensureMsgf(ObjectHasBegunPlay == EObjectBeginPlayState::HasNotBegunPlay, TEXT("BeginPlay was called on tickable object %s which was in state %d"), *GetPathName(), ObjectHasBegunPlay);
 
-    ObjectHasBegunPlay = EObjectBeginPlayState::BeginningPlay;
+	ObjectHasBegunPlay = EObjectBeginPlayState::BeginningPlay;
 
-    //Don't Garbage Collect this object
-    AddToRoot();
+	//Don't Garbage Collect this object
+	AddToRoot();
 
-    DeltaElapsed = 0;
-    ReceiveBeginPlay();
+	DeltaElapsed = 0;
+	ReceiveBeginPlay();
 
-    ObjectHasBegunPlay = EObjectBeginPlayState::HasBegunPlay;
+	ObjectHasBegunPlay = EObjectBeginPlayState::HasBegunPlay;
 }
 
 void UTickableObject::Tick(float DeltaTime) {
 
-    if (GWorld->HasBegunPlay() && !HasObjectBegunPlay()) {
-        DispatchBeginPlay();
-    }
-    
-    if (TickRate > 0) {
-        DeltaElapsed += DeltaTime;
-        if (DeltaElapsed < TickRate)
-            return;
+	if (GWorld->HasBegunPlay() && !HasObjectBegunPlay()) {
+		DispatchBeginPlay();
+	}
+	
+	if (TickRate > 0) {
+		DeltaElapsed += DeltaTime;
+		if (DeltaElapsed < TickRate)
+			return;
 
-        DeltaElapsed = 0;
-    }
+		DeltaElapsed = 0;
+	}
 
 
-    // Limited Tick
+	// Limited Tick
 
-    //TODO: Elapsed value may be wrong. Check it.
-    OTick(DeltaElapsed);
-    ReceiveTick(DeltaElapsed);
+	//TODO: Elapsed value may be wrong. Check it.
+	OTick(DeltaElapsed);
+	ReceiveTick(DeltaElapsed);
 }
 
 void UTickableObject::OTick(float DeltaTime) {
@@ -56,17 +56,17 @@ void UTickableObject::OTick(float DeltaTime) {
 
 
 void UTickableObject::DispatchBeginPlay() {
-    if (!HasObjectBegunPlay() && !IsPendingKill()) {
-        BeginPlay();
-    }
+	if (!HasObjectBegunPlay() && !IsPendingKill()) {
+		BeginPlay();
+	}
 }
 
 void UTickableObject::Destroy()
 {
-    RemoveFromRoot();
-    MarkPendingKill();
+	RemoveFromRoot();
+	MarkPendingKill();
 }
 
 void UTickableObject::PostInitProperties() {
-    Super::PostInitProperties();
+	Super::PostInitProperties();
 }

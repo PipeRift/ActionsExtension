@@ -6,12 +6,12 @@
 
 bool UBTD_OrderEquals::PerformConditionCheckAI(AAIController * OwnerController)
 {
-    const auto AIGen = Cast<AAIGeneric>(OwnerController);
-    if (!IsValid(AIGen))
-    {
-        return false;
-    }
+	const auto AIGen = Cast<AAIGeneric>(OwnerController);
+	if (!IsValid(AIGen))
+	{
+		return false;
+	}
 
-    // Not to sure this is how to correctly do class comparisons
-    return Compare.Get() && AIGen->GetSquadOrder() == Compare;
+	// Not to sure this is how to correctly do class comparisons
+	return Compare.Get() && AIGen->GetSquadOrder() == Compare;
 }

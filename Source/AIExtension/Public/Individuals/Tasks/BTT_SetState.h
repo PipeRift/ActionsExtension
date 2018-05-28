@@ -12,15 +12,15 @@
 UCLASS()
 class AIEXTENSION_API UBTT_SetState : public UBTTaskNode
 {
-    GENERATED_BODY()    
-    
+	GENERATED_BODY()	
+	
 public:
-    UBTT_SetState();
+	UBTT_SetState();
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Node)
-    ECombatState State;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Node)
+	ECombatState State;
 
-    virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
-    virtual FString GetStaticDescription() const override;
+	virtual FString GetStaticDescription() const override;
 };

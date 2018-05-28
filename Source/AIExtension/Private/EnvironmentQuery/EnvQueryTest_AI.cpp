@@ -10,22 +10,22 @@ UEnvQueryTest_AI::UEnvQueryTest_AI(const FObjectInitializer& ObjectInitializer) 
 
 void UEnvQueryTest_AI::RunTest(FEnvQueryInstance& QueryInstance) const
 {
-    UObject* Owner = QueryInstance.Owner.Get();
+	UObject* Owner = QueryInstance.Owner.Get();
 
-    AAIGeneric* AI = Cast<AAIGeneric>(Owner);
-    if (!AI)
-    {
-        APawn* OwnerAsPawn = Cast<APawn>(Owner);
-        if (!OwnerAsPawn)
-            return;
+	AAIGeneric* AI = Cast<AAIGeneric>(Owner);
+	if (!AI)
+	{
+		APawn* OwnerAsPawn = Cast<APawn>(Owner);
+		if (!OwnerAsPawn)
+			return;
 
-        AI = Cast<AAIGeneric>(OwnerAsPawn->GetController());
-    }
+		AI = Cast<AAIGeneric>(OwnerAsPawn->GetController());
+	}
 
-    if (!AI)
-        return;
+	if (!AI)
+		return;
 
-    RunAITest(AI, QueryInstance);
+	RunAITest(AI, QueryInstance);
 }
 
 void UEnvQueryTest_AI::RunAITest(AAIGeneric* AI, FEnvQueryInstance& QueryInstance) const

@@ -22,30 +22,30 @@ class FUtilityTreeModule : public IModuleInterface
 {
 public:
 
-    // Get Narrative Extension module instance
-    FORCEINLINE static FUtilityTreeModule* GetInstance() { 
-        return &FModuleManager::LoadModuleChecked<FUtilityTreeModule>("UtilityTree");
-    }
+	// Get Narrative Extension module instance
+	FORCEINLINE static FUtilityTreeModule* GetInstance() { 
+		return &FModuleManager::LoadModuleChecked<FUtilityTreeModule>("UtilityTree");
+	}
 
-    /** IModuleInterface implementation */
-    virtual void StartupModule() override;
-    virtual void ShutdownModule() override;
+	/** IModuleInterface implementation */
+	virtual void StartupModule() override;
+	virtual void ShutdownModule() override;
 
-    virtual bool SupportsDynamicReloading() override { return true; }
+	virtual bool SupportsDynamicReloading() override { return true; }
 
-    DECLARE_DELEGATE_RetVal(void, FOnModifiedSettings)
-    FOnModifiedSettings& OnModifiedSettings()
-    {
-        return ModifiedSettingsDelegate;
-    }
+	DECLARE_DELEGATE_RetVal(void, FOnModifiedSettings)
+	FOnModifiedSettings& OnModifiedSettings()
+	{
+		return ModifiedSettingsDelegate;
+	}
 
 private:
-    /** Holds a delegate that is executed after the settings section has been modified. */
-    FOnModifiedSettings ModifiedSettingsDelegate;
+	/** Holds a delegate that is executed after the settings section has been modified. */
+	FOnModifiedSettings ModifiedSettingsDelegate;
 
-    void RegisterSettings();
-    void UnregisterSettings();
+	void RegisterSettings();
+	void UnregisterSettings();
 
-    // Callbacks for when the settings were saved.
-    bool HandleSettingsSaved();
+	// Callbacks for when the settings were saved.
+	bool HandleSettingsSaved();
 };

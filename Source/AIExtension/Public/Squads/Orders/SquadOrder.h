@@ -16,18 +16,18 @@ class AAISquad;
 UCLASS()
 class AIEXTENSION_API USquadOrder : public UObject
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    UPROPERTY(BlueprintReadWrite, EditAnywhere)
-    AAISquad* Squad;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	AAISquad* Squad;
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere)
-    AAIGeneric* Member;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	AAIGeneric* Member;
 
-    UFUNCTION(BlueprintCallable)
-    void Apply();
+	UFUNCTION(BlueprintCallable)
+	void Apply();
 
-    UFUNCTION(BlueprintCallable)
-    void Cancel();
+	UFUNCTION(BlueprintCallable)
+	void Cancel();
 };

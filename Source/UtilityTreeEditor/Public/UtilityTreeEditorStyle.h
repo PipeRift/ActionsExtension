@@ -11,28 +11,28 @@ class UTILITYTREEEDITOR_API FUtilityTreeEditorStyle
 {
 public:
 
-    static void Initialize();
+	static void Initialize();
 
-    static void Shutdown();
+	static void Shutdown();
 
-    /** @return The Slate style set for UtilityTree editor widgets */
-    static const TSharedPtr<class ISlateStyle> Get();
+	/** @return The Slate style set for UtilityTree editor widgets */
+	static const TSharedPtr<class ISlateStyle> Get();
 
-    static FName GetStyleSetName();
+	static FName GetStyleSetName();
 
 private:
 
-    static FString InContent(const FString& RelativePath, const ANSICHAR* Extension);
+	static FString InContent(const FString& RelativePath, const ANSICHAR* Extension);
 
-    static void Create();
+	static void Create();
 
 
-    static TSharedPtr<class FSlateStyleSet> StyleSet;
+	static TSharedPtr<class FSlateStyleSet> StyleSet;
 
 public:
 
-    static const FSlateBrush* GetBrush(FName PropertyName, const ANSICHAR* Specifier = NULL)
-    {
-        return StyleSet->GetBrush(PropertyName, Specifier);
-    }
+	static const FSlateBrush* GetBrush(FName PropertyName, const ANSICHAR* Specifier = NULL)
+	{
+		return StyleSet->GetBrush(PropertyName, Specifier);
+	}
 };

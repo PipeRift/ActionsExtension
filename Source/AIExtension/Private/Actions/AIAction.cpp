@@ -8,9 +8,9 @@
 
 void UAIAction::OnActivation()
 {
-    AI = Cast<AAIGeneric>(GetActionOwnerActor());
-    if (!AI)
-        Abort();
+	AI = Cast<AAIGeneric>(GetActionOwnerActor());
+	if (!AI)
+		Abort();
 
-    Super::OnActivation();
+	Super::OnActivation();
 }

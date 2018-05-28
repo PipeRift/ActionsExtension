@@ -7,24 +7,24 @@
 
 UBTT_SetState::UBTT_SetState()
 {
-    State = ECombatState::Passive;
+	State = ECombatState::Passive;
 }
 
 EBTNodeResult::Type UBTT_SetState::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-    auto AIGen = Cast<AAIGeneric>(OwnerComp.GetOwner());
+	auto AIGen = Cast<AAIGeneric>(OwnerComp.GetOwner());
 
-    if (!IsValid(AIGen))
-    {
-        return EBTNodeResult::Failed;
-    }
+	if (!IsValid(AIGen))
+	{
+		return EBTNodeResult::Failed;
+	}
 
-    AIGen->State = State;
-    return EBTNodeResult::Succeeded;
+	AIGen->State = State;
+	return EBTNodeResult::Succeeded;
 }
 
 FString UBTT_SetState::GetStaticDescription() const
 {
-    const FString StateName = UAIFunctionLibrary::CombatStateToString(State);
-    return FString::Printf(TEXT("State: %s"), *StateName);
+	const FString StateName = UAIFunctionLibrary::CombatStateToString(State);
+	return FString::Printf(TEXT("State: %s"), *StateName);
 }

@@ -8,17 +8,17 @@
 
 void UAI_Perception::OnActivation()
 {
-    Super::OnActivation();
+	Super::OnActivation();
 
-    if (!IsRunning())
-        return;
+	if (!IsRunning())
+		return;
 
-    Perception = AI->GetPerceptionComponent();
-    if (!Perception)
-        Abort();
-    else
-    {
-        Perception->OnTargetPerceptionUpdated.AddDynamic(this, &UAI_Perception::OnTargetUpdate);
-    }
+	Perception = AI->GetPerceptionComponent();
+	if (!Perception)
+		Abort();
+	else
+	{
+		Perception->OnTargetPerceptionUpdated.AddDynamic(this, &UAI_Perception::OnTargetUpdate);
+	}
 
 }

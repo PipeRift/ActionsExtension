@@ -18,33 +18,33 @@ UEnvQueryContext_PotentialTargets::UEnvQueryContext_PotentialTargets(const FObje
 
 void UEnvQueryContext_PotentialTargets::ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const
 {
-    AActor* Owner = Cast<AActor>(QueryInstance.Owner.Get());
+	AActor* Owner = Cast<AActor>(QueryInstance.Owner.Get());
 
-    AAIGeneric* AI = Cast<AAIGeneric>(Owner);
-    if (!AI)
-    {
-        APawn* OwnerAsPawn = Cast<APawn>(Owner);
-        if (!OwnerAsPawn)
-            return;
+	AAIGeneric* AI = Cast<AAIGeneric>(Owner);
+	if (!AI)
+	{
+		APawn* OwnerAsPawn = Cast<APawn>(Owner);
+		if (!OwnerAsPawn)
+			return;
 
-        AI = Cast<AAIGeneric>(OwnerAsPawn->GetController());
-    }
+		AI = Cast<AAIGeneric>(OwnerAsPawn->GetController());
+	}
 
-    if (!AI)
-        return;
+	if (!AI)
+		return;
 
-    const TSet<APawn*>& PotentialTargets = AI->GetPotentialTargetsRef();
-    
-    TArray<AActor*> ActorTargets;
+	const TSet<APawn*>& PotentialTargets = AI->GetPotentialTargetsRef();
+	
+	TArray<AActor*> ActorTargets;
 
-    ActorTargets.Reserve(PotentialTargets.Num());
+	ActorTargets.Reserve(PotentialTargets.Num());
 
-    for (auto It = PotentialTargets.CreateConstIterator(); It; ++It)
-    {
-        ActorTargets.Add(*It);
-    }
+	for (auto It = PotentialTargets.CreateConstIterator(); It; ++It)
+	{
+		ActorTargets.Add(*It);
+	}
 
-    UEnvQueryItemType_Actor::SetContextHelper(ContextData, ActorTargets);
+	UEnvQueryItemType_Actor::SetContextHelper(ContextData, ActorTargets);
 }
 
 

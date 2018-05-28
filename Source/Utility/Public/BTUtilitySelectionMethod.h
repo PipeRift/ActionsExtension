@@ -12,14 +12,14 @@
 UCLASS(Abstract, EditInlineNew)
 class BTUTILITYPLUGIN_API UBTUtilitySelectionMethod : public UObject
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    static const int32 NoSelection = -1;
+	static const int32 NoSelection = -1;
 
 public:
-    virtual int32 SelectOption(TArray< float > const& UtilityValues);
-    virtual void GenerateOrdering(TArray< float > const& UtilityValues, FUtilityExecutionOrdering& ExecutionOrdering);
+	virtual int32 SelectOption(TArray< float > const& UtilityValues);
+	virtual void GenerateOrdering(TArray< float > const& UtilityValues, FUtilityExecutionOrdering& ExecutionOrdering);
 };
 
 

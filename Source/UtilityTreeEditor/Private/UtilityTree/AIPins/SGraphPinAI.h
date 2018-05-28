@@ -9,16 +9,16 @@
 class SGraphPinAI : public SGraphPin
 {
 public:
-    SLATE_BEGIN_ARGS(SGraphPinAI)    {}
-    SLATE_END_ARGS()
+	SLATE_BEGIN_ARGS(SGraphPinAI)	{}
+	SLATE_END_ARGS()
 
-    void Construct(const FArguments& InArgs, UEdGraphPin* InPin);
+	void Construct(const FArguments& InArgs, UEdGraphPin* InPin);
 
 protected:
-    //~ Begin SGraphPin Interface
-    virtual const FSlateBrush* GetPinIcon() const override;
-    //~ End SGraphPin Interface
+	//~ Begin SGraphPin Interface
+	virtual const FSlateBrush* GetPinIcon() const override;
+	//~ End SGraphPin Interface
 
-    mutable const FSlateBrush* CachedImg_Pin_ConnectedHovered;
-    mutable const FSlateBrush* CachedImg_Pin_DisconnectedHovered;
+	mutable const FSlateBrush* CachedImg_Pin_ConnectedHovered;
+	mutable const FSlateBrush* CachedImg_Pin_DisconnectedHovered;
 };

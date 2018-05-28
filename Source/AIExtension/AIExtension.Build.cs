@@ -4,58 +4,58 @@ using UnrealBuildTool;
 
 public class AIExtension : ModuleRules
 {
-    public AIExtension(ReadOnlyTargetRules TargetRules) : base(TargetRules)
-    {
-        PublicIncludePaths.AddRange(new string[]
-        {
-            "AIExtension/Public"
-            // ... add public include paths required here ...
-        });
-                
-        
-        PrivateIncludePaths.AddRange(new string[]
-        {
-            "AIExtension/Private"
-            // ... add other private include paths required here ...
-        });
-            
-        
-        PublicDependencyModuleNames.AddRange(new string[]
-        {
-            "Core",
-            "CoreUObject",
-            "Engine",
-            "GameplayTasks",
-            "AIModule",
-            "MovieSceneTracks"
-            // ... add other public dependencies that you statically link with here ...
-        });
+	public AIExtension(ReadOnlyTargetRules TargetRules) : base(TargetRules)
+	{
+		PublicIncludePaths.AddRange(new string[]
+		{
+			"AIExtension/Public"
+			// ... add public include paths required here ...
+		});
+				
+		
+		PrivateIncludePaths.AddRange(new string[]
+		{
+			"AIExtension/Private"
+			// ... add other private include paths required here ...
+		});
+			
+		
+		PublicDependencyModuleNames.AddRange(new string[]
+		{
+			"Core",
+			"CoreUObject",
+			"Engine",
+			"GameplayTasks",
+			"AIModule",
+			"MovieSceneTracks"
+			// ... add other public dependencies that you statically link with here ...
+		});
 
-        PrivateDependencyModuleNames.AddRange(new string[]
-        {
-            "GameplayTags"
-        });
+		PrivateDependencyModuleNames.AddRange(new string[]
+		{
+			"GameplayTags"
+		});
 
 
-        if (TargetRules.bBuildEditor == true)
-        {
-            PrivateDependencyModuleNames.AddRange(
-                new string[]
-                {
-                    "SlateCore",
-                    "Slate"
-                }
-            );
-        }
+		if (TargetRules.bBuildEditor == true)
+		{
+			PrivateDependencyModuleNames.AddRange(
+				new string[]
+				{
+					"SlateCore",
+					"Slate"
+				}
+			);
+		}
 
-        if (TargetRules.bBuildDeveloperTools || (Target.Configuration != UnrealTargetConfiguration.Shipping && Target.Configuration != UnrealTargetConfiguration.Test))
-        {
-            PrivateDependencyModuleNames.Add("GameplayDebugger");
-            Definitions.Add("WITH_GAMEPLAY_DEBUGGER=1");
-        }
-        else
-        {
-            Definitions.Add("WITH_GAMEPLAY_DEBUGGER=0");
-        }
-    }
+		if (TargetRules.bBuildDeveloperTools || (Target.Configuration != UnrealTargetConfiguration.Shipping && Target.Configuration != UnrealTargetConfiguration.Test))
+		{
+			PrivateDependencyModuleNames.Add("GameplayDebugger");
+			Definitions.Add("WITH_GAMEPLAY_DEBUGGER=1");
+		}
+		else
+		{
+			Definitions.Add("WITH_GAMEPLAY_DEBUGGER=0");
+		}
+	}
 }

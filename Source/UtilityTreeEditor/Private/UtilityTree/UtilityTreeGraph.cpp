@@ -8,7 +8,7 @@
 // UUtilityTreeGraph
 
 UUtilityTreeGraph::UUtilityTreeGraph(const FObjectInitializer& ObjectInitializer)
-    : Super(ObjectInitializer)
+	: Super(ObjectInitializer)
 {
 }
 

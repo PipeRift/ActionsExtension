@@ -11,35 +11,35 @@ const FFaction FFaction::NoFaction(NO_FACTION);
 
 bool FFaction::GetFactionInfo(FFactionInfo& Info) const
 {
-    UAIExtensionSettings* Settings = GetMutableDefault<UAIExtensionSettings>();
-    check(Settings);
+	UAIExtensionSettings* Settings = GetMutableDefault<UAIExtensionSettings>();
+	check(Settings);
 
-    if (Settings->Factions.IsValidIndex(Id)) {
-        Info = Settings->Factions[Id];
-        return true;
-    }
+	if (Settings->Factions.IsValidIndex(Id)) {
+		Info = Settings->Factions[Id];
+		return true;
+	}
 
-    //If the faction is not found, return default faction info.
-    return false;
+	//If the faction is not found, return default faction info.
+	return false;
 }
 
 const ETeamAttitude::Type FFaction::GetAttitudeTowards(const FFaction& Other) const {
-    const UAIExtensionSettings* Settings = GetDefault<UAIExtensionSettings>();
+	const UAIExtensionSettings* Settings = GetDefault<UAIExtensionSettings>();
 
-    const FFactionRelation* FoundRelationPtr = Settings->Relations.FindByKey(FFactionRelation(*this, Other));
-    if (FoundRelationPtr == NULL) {
-        //Relation not found, use default
-        FFactionInfo Info;
-        if (GetFactionInfo(Info))
-        {
-            if (*this == Other)
-            {
-                return Info.DefaultAttitudeToItself;
-            }
-            return Info.DefaultAttitudeToOthers;
-        }
-        return ETeamAttitude::Neutral;
-    }
+	const FFactionRelation* FoundRelationPtr = Settings->Relations.FindByKey(FFactionRelation(*this, Other));
+	if (FoundRelationPtr == NULL) {
+		//Relation not found, use default
+		FFactionInfo Info;
+		if (GetFactionInfo(Info))
+		{
+			if (*this == Other)
+			{
+				return Info.DefaultAttitudeToItself;
+			}
+			return Info.DefaultAttitudeToOthers;
+		}
+		return ETeamAttitude::Neutral;
+	}
 
-    return FoundRelationPtr->Attitude;
+	return FoundRelationPtr->Attitude;
 }

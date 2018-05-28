@@ -13,11 +13,11 @@
 UENUM()
 enum class EBTState : uint8
 {
-    RUNNING  UMETA(DisplayName = "Running"),
-    SUCCESS  UMETA(DisplayName = "Success"),
-    FAILURE  UMETA(DisplayName = "Failure"),
-    ERROR    UMETA(DisplayName = "Error"),
-    NOT_RUN  UMETA(DisplayName = "Not Run")
+	RUNNING  UMETA(DisplayName = "Running"),
+	SUCCESS  UMETA(DisplayName = "Success"),
+	FAILURE  UMETA(DisplayName = "Failure"),
+	ERROR	UMETA(DisplayName = "Error"),
+	NOT_RUN  UMETA(DisplayName = "Not Run")
 };
 
 /**
@@ -26,29 +26,29 @@ enum class EBTState : uint8
 UCLASS(Blueprintable)
 class AIEXTENSION_API UTask_BehaviourTree : public UAction
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    UPROPERTY()
-    EBTState BTState;
+	UPROPERTY()
+	EBTState BTState;
 
-    UTask_BehaviourTree(const FObjectInitializer& ObjectInitializer);
+	UTask_BehaviourTree(const FObjectInitializer& ObjectInitializer);
 
-    virtual void OnActivation() override;
-    virtual void TaskTick(float DeltaTime) override;
+	virtual void OnActivation() override;
+	virtual void TaskTick(float DeltaTime) override;
 
-    UFUNCTION(BlueprintImplementableEvent, Category = BehaviourTree)
-    void Root();
+	UFUNCTION(BlueprintImplementableEvent, Category = BehaviourTree)
+	void Root();
 
-    UFUNCTION(BlueprintCallable, Category = BehaviourTree)
-    void Success();
-    UFUNCTION(BlueprintCallable, Category = BehaviourTree)
-    void Failure(bool bError);
+	UFUNCTION(BlueprintCallable, Category = BehaviourTree)
+	void Success();
+	UFUNCTION(BlueprintCallable, Category = BehaviourTree)
+	void Failure(bool bError);
 
 private:
 
-    void SetState(EBTState NewState);
+	void SetState(EBTState NewState);
 
-    UPROPERTY()
-    UAction* LastExecutedNode;
+	UPROPERTY()
+	UAction* LastExecutedNode;
 };

@@ -7,7 +7,7 @@
 // UUtilityTreeBlueprint
 
 UUtilityTreeBlueprint::UUtilityTreeBlueprint(const FObjectInitializer& ObjectInitializer)
-    : Super(ObjectInitializer)
+	: Super(ObjectInitializer)
 {
 }
 
@@ -15,74 +15,74 @@ UUtilityTreeBlueprint::UUtilityTreeBlueprint(const FObjectInitializer& ObjectIni
 #if WITH_EDITOR
 FUTParentNodeAssetOverride* UUtilityTreeBlueprint::GetAssetOverrideForNode(FGuid NodeGuid, bool bIgnoreSelf) const
 {
-    TArray<UBlueprint*> Hierarchy;
-    GetBlueprintHierarchyFromClass(GetUTBlueprintGeneratedClass(), Hierarchy);
+	TArray<UBlueprint*> Hierarchy;
+	GetBlueprintHierarchyFromClass(GetUTBlueprintGeneratedClass(), Hierarchy);
 
-    for (int32 Idx = bIgnoreSelf ? 1 : 0; Idx < Hierarchy.Num(); ++Idx)
-    {
-        if (UUtilityTreeBlueprint* UTBlueprint = Cast<UUtilityTreeBlueprint>(Hierarchy[Idx]))
-        {
-            FUTParentNodeAssetOverride* Override = UTBlueprint->ParentAssetOverrides.FindByPredicate([NodeGuid](const FUTParentNodeAssetOverride& Other)
-            {
-                return Other.ParentNodeGuid == NodeGuid;
-            });
+	for (int32 Idx = bIgnoreSelf ? 1 : 0; Idx < Hierarchy.Num(); ++Idx)
+	{
+		if (UUtilityTreeBlueprint* UTBlueprint = Cast<UUtilityTreeBlueprint>(Hierarchy[Idx]))
+		{
+			FUTParentNodeAssetOverride* Override = UTBlueprint->ParentAssetOverrides.FindByPredicate([NodeGuid](const FUTParentNodeAssetOverride& Other)
+			{
+				return Other.ParentNodeGuid == NodeGuid;
+			});
 
-            if (Override)
-            {
-                return Override;
-            }
-        }
-    }
+			if (Override)
+			{
+				return Override;
+			}
+		}
+	}
 
-    return nullptr;
+	return nullptr;
 }
 
 bool UUtilityTreeBlueprint::GetAssetOverrides(TArray<FUTParentNodeAssetOverride*>& OutOverrides)
 {
-    TArray<UBlueprint*> Hierarchy;
-    GetBlueprintHierarchyFromClass(GetUTBlueprintGeneratedClass(), Hierarchy);
+	TArray<UBlueprint*> Hierarchy;
+	GetBlueprintHierarchyFromClass(GetUTBlueprintGeneratedClass(), Hierarchy);
 
-    for (UBlueprint* Blueprint : Hierarchy)
-    {
-        if (UUtilityTreeBlueprint* UTBlueprint = Cast<UUtilityTreeBlueprint>(Blueprint))
-        {
-            for (FUTParentNodeAssetOverride& Override : UTBlueprint->ParentAssetOverrides)
-            {
-                bool OverrideExists = OutOverrides.ContainsByPredicate([Override](const FUTParentNodeAssetOverride* Other)
-                {
-                    return Override.ParentNodeGuid == Other->ParentNodeGuid;
-                });
+	for (UBlueprint* Blueprint : Hierarchy)
+	{
+		if (UUtilityTreeBlueprint* UTBlueprint = Cast<UUtilityTreeBlueprint>(Blueprint))
+		{
+			for (FUTParentNodeAssetOverride& Override : UTBlueprint->ParentAssetOverrides)
+			{
+				bool OverrideExists = OutOverrides.ContainsByPredicate([Override](const FUTParentNodeAssetOverride* Other)
+				{
+					return Override.ParentNodeGuid == Other->ParentNodeGuid;
+				});
 
-                if (!OverrideExists)
-                {
-                    OutOverrides.Add(&Override);
-                }
-            }
-        }
-    }
+				if (!OverrideExists)
+				{
+					OutOverrides.Add(&Override);
+				}
+			}
+		}
+	}
 
-    return OutOverrides.Num() > 0;
+	return OutOverrides.Num() > 0;
 }
 
 class UUTBlueprintGeneratedClass* UUtilityTreeBlueprint::GetUTBlueprintGeneratedClass() const
 {
-    return Cast<UUTBlueprintGeneratedClass>(*GeneratedClass);
+	return Cast<UUTBlueprintGeneratedClass>(*GeneratedClass);
 }
 
 UUtilityTreeBlueprint* UUtilityTreeBlueprint::FindRootUtilityTreeBlueprint(UUtilityTreeBlueprint* DerivedBlueprint)
 {
-    UUtilityTreeBlueprint* ParentBP = NULL;
+	UUtilityTreeBlueprint* ParentBP = NULL;
 
-    // Determine if there is an utility tree blueprint in the ancestry of this class
-    for (UClass* ParentClass = DerivedBlueprint->ParentClass; ParentClass && (UObject::StaticClass() != ParentClass); ParentClass = ParentClass->GetSuperClass())
-    {
-        if (UUtilityTreeBlueprint* TestBP = Cast<UUtilityTreeBlueprint>(ParentClass->ClassGeneratedBy))
-        {
-            ParentBP = TestBP;
-        }
-    }
+	// Determine if there is an utility tree blueprint in the ancestry of this class
+	for (UClass* ParentClass = DerivedBlueprint->ParentClass; ParentClass && (UObject::StaticClass() != ParentClass); ParentClass = ParentClass->GetSuperClass())
+	{
+		if (UUtilityTreeBlueprint* TestBP = Cast<UUtilityTreeBlueprint>(ParentClass->ClassGeneratedBy))
+		{
+			ParentBP = TestBP;
+		}
+	}
 
-    return ParentBP;
+	return ParentBP;
 }
 
 #endif

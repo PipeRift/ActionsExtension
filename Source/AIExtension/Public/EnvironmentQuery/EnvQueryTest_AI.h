@@ -11,9 +11,9 @@
 UCLASS(Abstract)
 class AIEXTENSION_API UEnvQueryTest_AI : public UEnvQueryTest
 {
-    GENERATED_UCLASS_BODY()
+	GENERATED_UCLASS_BODY()
 
 protected:
-    virtual void RunTest(FEnvQueryInstance& QueryInstance) const override;
-    virtual void RunAITest(AAIGeneric* AI, FEnvQueryInstance& QueryInstance) const;
+	virtual void RunTest(FEnvQueryInstance& QueryInstance) const override;
+	virtual void RunAITest(AAIGeneric* AI, FEnvQueryInstance& QueryInstance) const;
 };

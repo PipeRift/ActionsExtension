@@ -13,146 +13,146 @@
 DEFINE_LOG_CATEGORY(TaskLog);
 
 UAction::UAction(const FObjectInitializer& ObjectInitializer)
-    : Super(ObjectInitializer)
+	: Super(ObjectInitializer)
 {
-    TickTimeElapsed = 0;
+	TickTimeElapsed = 0;
 
-    State = EActionState::NOT_RUN;
+	State = EActionState::NOT_RUN;
 
-    // SETUP PROPERTIES
-    bWantsToTick = false;
-    TickRate = 0.15f;
+	// SETUP PROPERTIES
+	bWantsToTick = false;
+	TickRate = 0.15f;
 }
 
 void UAction::Activate()
 {
-    IActionOwnerInterface* const Parent = GetParentInterface();
-    if (!Parent) {
-        UE_LOG(TaskLog, Error, TEXT("Task's Outer must have a TaskOwnerInterface! Detroying for safety."));
-        Destroy();
-        return;
-    }
+	IActionOwnerInterface* const Parent = GetParentInterface();
+	if (!Parent) {
+		UE_LOG(TaskLog, Error, TEXT("Task's Outer must have a TaskOwnerInterface! Detroying for safety."));
+		Destroy();
+		return;
+	}
 
-    if (!IsValid() || IsRunning())
-        return;
+	if (!IsValid() || IsRunning())
+		return;
 
-    //Registry this children task in the owner
-    const bool bSuccess = Parent->AddChildren(this);
-    if (!bSuccess) {
-        GetActionOwnerComponent()->AddChildren(this);
-    }
+	//Registry this children task in the owner
+	const bool bSuccess = Parent->AddChildren(this);
+	if (!bSuccess) {
+		GetActionOwnerComponent()->AddChildren(this);
+	}
 
-    State = EActionState::RUNNING;
-    
-    OnActivation();
+	State = EActionState::RUNNING;
+	
+	OnActivation();
 }
 
 const bool UAction::AddChildren(UAction* NewChildren)
 {
-    return ChildrenTasks.AddUnique(NewChildren) != INDEX_NONE;
+	return ChildrenTasks.AddUnique(NewChildren) != INDEX_NONE;
 }
 
 const bool UAction::RemoveChildren(UAction* Children)
 {
-    return ChildrenTasks.Remove(Children) > 0;
+	return ChildrenTasks.Remove(Children) > 0;
 }
 
 void UAction::ReceiveActivate_Implementation() {
-    //Finish by default
-    Finish(true);
+	//Finish by default
+	Finish(true);
 }
 
 
 void UAction::Finish(bool bSuccess) {
-    if (!IsRunning() || IsPendingKill())
-        return;
+	if (!IsRunning() || IsPendingKill())
+		return;
 
-    State = bSuccess ? EActionState::SUCCESS : EActionState::FAILURE;
-    OnFinish(State);
-    Destroy();
+	State = bSuccess ? EActionState::SUCCESS : EActionState::FAILURE;
+	OnFinish(State);
+	Destroy();
 }
 
 void UAction::Abort() {
-    if (!IsRunning() || IsPendingKill())
-        return;
+	if (!IsRunning() || IsPendingKill())
+		return;
 
-    OnFinish(State = EActionState::ABORTED);
+	OnFinish(State = EActionState::ABORTED);
 
-    Destroy();
+	Destroy();
 }
 
 
 void UAction::Cancel()
 {
-    if (IsPendingKill())
-        return;
+	if (IsPendingKill())
+		return;
 
-    if(!IsRunning())
-    {
-        Destroy();
-        return;
-    }
+	if(!IsRunning())
+	{
+		Destroy();
+		return;
+	}
 
-    OnFinish(State = EActionState::CANCELED);
-    
-    Destroy();
+	OnFinish(State = EActionState::CANCELED);
+	
+	Destroy();
 }
 
 void UAction::Destroy()
 {
-    if (IsPendingKill())
-        return;
+	if (IsPendingKill())
+		return;
 
-    //Mark for destruction
-    MarkPendingKill();
+	//Mark for destruction
+	MarkPendingKill();
 
-    //Cancel and destroy all children tasks
-    for (auto* Children : ChildrenTasks)
-    {
-        if (Children) {
-            Children->Cancel();
-        }   
-    }
+	//Cancel and destroy all children tasks
+	for (auto* Children : ChildrenTasks)
+	{
+		if (Children) {
+			Children->Cancel();
+		}   
+	}
 }
 
 void UAction::Tick(float DeltaTime)
 {
-    if (TickRate > 0) {
-        TickTimeElapsed += DeltaTime;
-        if (TickTimeElapsed < TickRate)
-            return;
+	if (TickRate > 0) {
+		TickTimeElapsed += DeltaTime;
+		if (TickTimeElapsed < TickRate)
+			return;
 
-        // Delayed Tick
-        TaskTick(TickTimeElapsed);
-        ReceiveTick(TickTimeElapsed);
+		// Delayed Tick
+		TaskTick(TickTimeElapsed);
+		ReceiveTick(TickTimeElapsed);
 
-        TickTimeElapsed = 0;
-    } else {
-        //Normal Tick
-        TaskTick(DeltaTime);
-        ReceiveTick(DeltaTime);
-    }
+		TickTimeElapsed = 0;
+	} else {
+		//Normal Tick
+		TaskTick(DeltaTime);
+		ReceiveTick(DeltaTime);
+	}
 }
 
 void UAction::OnFinish(const EActionState Reason)
 {
-    OnTaskFinished.Broadcast(Reason);
+	OnTaskFinished.Broadcast(Reason);
 
-    const UObject* const Parent = GetParent();
+	const UObject* const Parent = GetParent();
 
-    // If we're in the process of being garbage collected it is unsafe to call out to blueprints
-    if (Parent && !Parent->HasAnyFlags(RF_BeginDestroyed) && !Parent->IsUnreachable())
-    {
-        ReceiveFinished(Reason);
-    }
+	// If we're in the process of being garbage collected it is unsafe to call out to blueprints
+	if (Parent && !Parent->HasAnyFlags(RF_BeginDestroyed) && !Parent->IsUnreachable())
+	{
+		ReceiveFinished(Reason);
+	}
 }
 
 AActor* UAction::GetActionOwnerActor()
 {
-    return GetActionOwnerComponent()->GetOwner();
+	return GetActionOwnerComponent()->GetOwner();
 }
 
 UActionManagerComponent* UAction::GetActionOwnerComponent()
 {
-    return GetParentInterface()->GetActionOwnerComponent();
+	return GetParentInterface()->GetActionOwnerComponent();
 }

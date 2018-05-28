@@ -6,6 +6,6 @@
 
 bool UBTD_IsAlive::PerformConditionCheckAI(AAIController* OwnerController)
 {
-    const auto AIGen = Cast<AAIGeneric>(OwnerController);
-    return IsValid(AIGen);
+	const auto AIGen = Cast<AAIGeneric>(OwnerController);
+	return IsValid(AIGen);
 }

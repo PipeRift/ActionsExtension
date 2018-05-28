@@ -15,42 +15,42 @@ class UAIExtensionSettings;
 USTRUCT(BlueprintType)
 struct AIEXTENSION_API FFactionRelation
 {
-    GENERATED_USTRUCT_BODY()
-    
-    FFactionRelation() : 
-        FactionA(FFaction::NoFaction), FactionB(FFaction::NoFaction), Attitude(ETeamAttitude::Neutral)
-    {}
+	GENERATED_USTRUCT_BODY()
+	
+	FFactionRelation() : 
+		FactionA(FFaction::NoFaction), FactionB(FFaction::NoFaction), Attitude(ETeamAttitude::Neutral)
+	{}
 
-    FFactionRelation(FFaction A, FFaction B, ETeamAttitude::Type InAttitude = ETeamAttitude::Neutral) :
-        FactionA(A), FactionB(B), Attitude(InAttitude)
-    {}
-
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "A"))
-    FFaction FactionA;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "B"))
-    FFaction FactionB;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    TEnumAsByte<ETeamAttitude::Type> Attitude;
+	FFactionRelation(FFaction A, FFaction B, ETeamAttitude::Type InAttitude = ETeamAttitude::Neutral) :
+		FactionA(A), FactionB(B), Attitude(InAttitude)
+	{}
 
 
-    bool IsValid() const
-    {
-        return !FactionA.IsNone() && !FactionB.IsNone();
-    }
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "A"))
+	FFaction FactionA;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "B"))
+	FFaction FactionB;
 
-    FORCEINLINE bool operator==(const FFactionRelation& Other) const {
-        return (FactionA == Other.FactionA && FactionB == Other.FactionB) ||
-               (FactionA == Other.FactionB && FactionB == Other.FactionA);
-    }
-    FORCEINLINE bool operator!=(const FFactionRelation& Other) const { return !(*this == Other); }
-    
-    friend uint32 GetTypeHash(const FFactionRelation& InRelation)
-    {
-        return GetTypeHash(InRelation.FactionA) ^ GetTypeHash(InRelation.FactionB);
-        /*return GetTypeHash(InRelation.Guid);*/
-    }
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TEnumAsByte<ETeamAttitude::Type> Attitude;
+
+
+	bool IsValid() const
+	{
+		return !FactionA.IsNone() && !FactionB.IsNone();
+	}
+
+	FORCEINLINE bool operator==(const FFactionRelation& Other) const {
+		return (FactionA == Other.FactionA && FactionB == Other.FactionB) ||
+			   (FactionA == Other.FactionB && FactionB == Other.FactionA);
+	}
+	FORCEINLINE bool operator!=(const FFactionRelation& Other) const { return !(*this == Other); }
+	
+	friend uint32 GetTypeHash(const FFactionRelation& InRelation)
+	{
+		return GetTypeHash(InRelation.FactionA) ^ GetTypeHash(InRelation.FactionB);
+		/*return GetTypeHash(InRelation.Guid);*/
+	}
 };
 
 /**
@@ -59,37 +59,37 @@ struct AIEXTENSION_API FFactionRelation
 USTRUCT(BlueprintType)
 struct AIEXTENSION_API FFactionInfo
 {
-    GENERATED_USTRUCT_BODY()
+	GENERATED_USTRUCT_BODY()
 
 public:
-    FFactionInfo()
-        : Name(NO_FACTION_NAME)
-        , Color(FColor::Cyan)
-        , DefaultAttitudeToItself(ETeamAttitude::Friendly)
-        , DefaultAttitudeToOthers(ETeamAttitude::Neutral)
-    {}
+	FFactionInfo()
+		: Name(NO_FACTION_NAME)
+		, Color(FColor::Cyan)
+		, DefaultAttitudeToItself(ETeamAttitude::Friendly)
+		, DefaultAttitudeToOthers(ETeamAttitude::Neutral)
+	{}
 
-    FFactionInfo(FString InName, FColor InColor = FColor::Cyan)
-        : Name(InName)
-        , Color(InColor)
-        , DefaultAttitudeToItself(ETeamAttitude::Friendly)
-        , DefaultAttitudeToOthers(ETeamAttitude::Neutral)
-    {}
+	FFactionInfo(FString InName, FColor InColor = FColor::Cyan)
+		: Name(InName)
+		, Color(InColor)
+		, DefaultAttitudeToItself(ETeamAttitude::Friendly)
+		, DefaultAttitudeToOthers(ETeamAttitude::Neutral)
+	{}
 
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Faction)
-    FString Name;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Faction)
+	FString Name;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Faction)
-    TEnumAsByte<ETeamAttitude::Type> DefaultAttitudeToItself;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Faction)
+	TEnumAsByte<ETeamAttitude::Type> DefaultAttitudeToItself;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Faction)
-    TEnumAsByte<ETeamAttitude::Type> DefaultAttitudeToOthers;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Faction)
+	TEnumAsByte<ETeamAttitude::Type> DefaultAttitudeToOthers;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Faction)
-    FColor Color;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Faction)
+	FColor Color;
 
-    const FFaction GetFaction();
+	const FFaction GetFaction();
 
-    void SetRelation(const FFaction& OtherFaction, const ETeamAttitude::Type Attitude);
+	void SetRelation(const FFaction& OtherFaction, const ETeamAttitude::Type Attitude);
 };

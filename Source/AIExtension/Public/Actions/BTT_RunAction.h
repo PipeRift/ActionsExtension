@@ -17,37 +17,37 @@
 UCLASS()
 class AIEXTENSION_API UBTT_RunAction : public UBTTaskNode, public IActionOwnerInterface
 {
-    GENERATED_BODY()    
-    
+	GENERATED_BODY()	
+	
 public:
-    UBTT_RunAction();
+	UBTT_RunAction();
 
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Node, meta = (DisplayName = "Action"))
-    TSubclassOf<UAction> ActionClass;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Node, meta = (DisplayName = "Action"))
+	TSubclassOf<UAction> ActionClass;
 
-    UPROPERTY()
-    TScriptInterface<IActionOwnerInterface> ActionInterface;
+	UPROPERTY()
+	TScriptInterface<IActionOwnerInterface> ActionInterface;
 
-    UPROPERTY()
-    UAction* Action;
+	UPROPERTY()
+	UAction* Action;
 
-    UPROPERTY(Transient)
-    UBehaviorTreeComponent* OwnerComp;
-
-
-    virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& InOwnerComp, uint8* NodeMemory) override;
-    virtual EBTNodeResult::Type AbortTask(UBehaviorTreeComponent& InOwnerComp, uint8* NodeMemory) override;
-    virtual void DescribeRuntimeValues(const UBehaviorTreeComponent& InOwnerComp, uint8* NodeMemory, EBTDescriptionVerbosity::Type Verbosity, TArray<FString>& Values) const override;
-    virtual FString GetStaticDescription() const override;
+	UPROPERTY(Transient)
+	UBehaviorTreeComponent* OwnerComp;
 
 
-    // Begin ITaskOwnerInterface interface
-    virtual const bool AddChildren(UAction* NewChildren) override;
-    virtual const bool RemoveChildren(UAction* Children) override;
-    virtual UActionManagerComponent* GetActionOwnerComponent() override;
-    // End ITaskOwnerInterface interface
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& InOwnerComp, uint8* NodeMemory) override;
+	virtual EBTNodeResult::Type AbortTask(UBehaviorTreeComponent& InOwnerComp, uint8* NodeMemory) override;
+	virtual void DescribeRuntimeValues(const UBehaviorTreeComponent& InOwnerComp, uint8* NodeMemory, EBTDescriptionVerbosity::Type Verbosity, TArray<FString>& Values) const override;
+	virtual FString GetStaticDescription() const override;
 
-    UFUNCTION()
-    void OnRunActionFinished(const EActionState Reason);
+
+	// Begin ITaskOwnerInterface interface
+	virtual const bool AddChildren(UAction* NewChildren) override;
+	virtual const bool RemoveChildren(UAction* Children) override;
+	virtual UActionManagerComponent* GetActionOwnerComponent() override;
+	// End ITaskOwnerInterface interface
+
+	UFUNCTION()
+	void OnRunActionFinished(const EActionState Reason);
 };

@@ -14,28 +14,28 @@
 UCLASS(config = Game, defaultconfig)
 class AIEXTENSION_API UAIExtensionSettings : public UObject
 {
-    GENERATED_BODY()
-    
+	GENERATED_BODY()
+	
 public:
 
-    UAIExtensionSettings(const FObjectInitializer& ObjectInitializer)
-        : Super(ObjectInitializer)
-    {
-        Factions.Add(FFactionInfo("Default", FColor::Blue));
-    }
+	UAIExtensionSettings(const FObjectInitializer& ObjectInitializer)
+		: Super(ObjectInitializer)
+	{
+		Factions.Add(FFactionInfo("Default", FColor::Blue));
+	}
 
-    UPROPERTY(config, EditAnywhere, Category = Custom)
-    TArray<FFactionInfo> Factions;
+	UPROPERTY(config, EditAnywhere, Category = Custom)
+	TArray<FFactionInfo> Factions;
 
-    UPROPERTY(config, EditAnywhere, Category = Custom)
-    TArray<FFactionRelation> Relations; //Moved from Set, serializing caused problems (4.16)
+	UPROPERTY(config, EditAnywhere, Category = Custom)
+	TArray<FFactionRelation> Relations; //Moved from Set, serializing caused problems (4.16)
 
 protected:
 
 #if WITH_EDITOR
-    virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
-    virtual bool CanEditChange(const UProperty* InProperty) const override;
+	virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
+	virtual bool CanEditChange(const UProperty* InProperty) const override;
 
-    void SanitizeRelations(EPropertyChangeType::Type ChangeType, int32 RelationIndex = INDEX_NONE);
+	void SanitizeRelations(EPropertyChangeType::Type ChangeType, int32 RelationIndex = INDEX_NONE);
 #endif
 };

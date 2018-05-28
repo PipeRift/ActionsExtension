@@ -14,22 +14,22 @@
 UCLASS()
 class AIEXTENSION_API UBTTask_Notify : public UBTTaskNode
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
-    UBTTask_Notify();
-
-
-    /** The name of the event to trigger */
-    UPROPERTY(EditAnywhere, Category = Notify)
-    FName EventName;
-
-    /** The event parameters */
-    UPROPERTY(EditAnywhere, Category = Notify, meta = (ShowOnlyInnerProperties))
-    FMovieSceneEventParameters Parameters;
+	UBTTask_Notify();
 
 
-    virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+	/** The name of the event to trigger */
+	UPROPERTY(EditAnywhere, Category = Notify)
+	FName EventName;
 
-    virtual FString GetStaticDescription() const override;
+	/** The event parameters */
+	UPROPERTY(EditAnywhere, Category = Notify, meta = (ShowOnlyInnerProperties))
+	FMovieSceneEventParameters Parameters;
+
+
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+
+	virtual FString GetStaticDescription() const override;
 
 };

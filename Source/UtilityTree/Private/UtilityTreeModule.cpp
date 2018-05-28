@@ -13,19 +13,19 @@ DEFINE_LOG_CATEGORY(LogUtility)
 
 void FUtilityTreeModule::StartupModule()
 {
-    UE_LOG(LogUtility, Warning, TEXT("UtilityTree: Log Started"));
+	UE_LOG(LogUtility, Warning, TEXT("UtilityTree: Log Started"));
 
-    RegisterSettings();
+	RegisterSettings();
 }
 
 void FUtilityTreeModule::ShutdownModule()
 {
-    UE_LOG(LogUtility, Warning, TEXT("UtilityTree: Log Ended"));
-    
-    if (UObjectInitialized())
-    {
-        UnregisterSettings();
-    }
+	UE_LOG(LogUtility, Warning, TEXT("UtilityTree: Log Ended"));
+	
+	if (UObjectInitialized())
+	{
+		UnregisterSettings();
+	}
 }
 
 void FUtilityTreeModule::RegisterSettings()
@@ -38,9 +38,9 @@ void FUtilityTreeModule::UnregisterSettings()
 
 bool FUtilityTreeModule::HandleSettingsSaved()
 {
-    return true;
+	return true;
 }
 
 #undef LOCTEXT_NAMESPACE
-    
+	
 IMPLEMENT_MODULE(FUtilityTreeModule, UtilityTree)

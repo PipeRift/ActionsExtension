@@ -12,17 +12,17 @@
 UCLASS(Abstract, HideCategories = (Condition))
 class BTUTILITYPLUGIN_API UBTDecorator_UtilityFunction : public UBTDecorator
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    UBTDecorator_UtilityFunction(const FObjectInitializer& ObjectInitializer);
+	UBTDecorator_UtilityFunction(const FObjectInitializer& ObjectInitializer);
 
-    /** wrapper for node instancing: CalculateUtilityValue */
-    float WrappedCalculateUtility(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const;
+	/** wrapper for node instancing: CalculateUtilityValue */
+	float WrappedCalculateUtility(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const;
 
 protected:
-    /** Calculates the utility value of the associated behavior node. */
-    virtual float CalculateUtilityValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const;
+	/** Calculates the utility value of the associated behavior node. */
+	virtual float CalculateUtilityValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const;
 };
 
 

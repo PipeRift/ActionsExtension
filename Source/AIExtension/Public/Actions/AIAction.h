@@ -13,12 +13,12 @@
 UCLASS(Blueprintable)
 class AIEXTENSION_API UAIAction : public UAction
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 protected:
 
-    UPROPERTY(BlueprintReadOnly, Category = "Action")
-    AAIGeneric* AI;
+	UPROPERTY(BlueprintReadOnly, Category = "Action")
+	AAIGeneric* AI;
 
-    virtual void OnActivation() override;
+	virtual void OnActivation() override;
 };

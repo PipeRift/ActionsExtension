@@ -10,58 +10,58 @@
 #define LOCTEXT_NAMESPACE "EnvQueryGenerator"
 
 UEnvQueryGenerator_Context::UEnvQueryGenerator_Context(const FObjectInitializer& ObjectInitializer) :
-    Super(ObjectInitializer)
+	Super(ObjectInitializer)
 {
-    ItemType = UEnvQueryItemType_Actor::StaticClass();
+	ItemType = UEnvQueryItemType_Actor::StaticClass();
 
-    Source = nullptr;
+	Source = nullptr;
 }
 
 void UEnvQueryGenerator_Context::GenerateItems(FEnvQueryInstance& QueryInstance) const
 {
-    if (Source == nullptr)
-    {
-        return;
-    }
+	if (Source == nullptr)
+	{
+		return;
+	}
 
-    UObject* QueryOwner = QueryInstance.Owner.Get();
-    if (QueryOwner == nullptr)
-    {
-        return;
-    }
+	UObject* QueryOwner = QueryInstance.Owner.Get();
+	if (QueryOwner == nullptr)
+	{
+		return;
+	}
 
-    UWorld* World = GEngine->GetWorldFromContextObject(QueryOwner, EGetWorldErrorMode::ReturnNull);
-    if (World == nullptr)
-    {
-        return;
-    }
+	UWorld* World = GEngine->GetWorldFromContextObject(QueryOwner, EGetWorldErrorMode::ReturnNull);
+	if (World == nullptr)
+	{
+		return;
+	}
 
-    TArray<AActor*> ContextActors;
-    QueryInstance.PrepareContext(Source, ContextActors);
+	TArray<AActor*> ContextActors;
+	QueryInstance.PrepareContext(Source, ContextActors);
 
-    QueryInstance.AddItemData<UEnvQueryItemType_Actor>(ContextActors);
+	QueryInstance.AddItemData<UEnvQueryItemType_Actor>(ContextActors);
 }
 
 FText UEnvQueryGenerator_Context::GetDescriptionTitle() const
 {
-    FFormatNamedArguments Args;
-    Args.Add(TEXT("Title"), Super::GetDescriptionTitle());
+	FFormatNamedArguments Args;
+	Args.Add(TEXT("Title"), Super::GetDescriptionTitle());
 
-    if (Source != nullptr)
-    {
-        Args.Add(TEXT("SourceContext"), UEnvQueryTypes::DescribeContext(Source));
+	if (Source != nullptr)
+	{
+		Args.Add(TEXT("SourceContext"), UEnvQueryTypes::DescribeContext(Source));
 
-        return FText::Format(LOCTEXT("ContextTitle", "{Title}: generate from {SourceContext}"), Args);
-    }
-    else
-    {
-        return FText::Format(LOCTEXT("ContextTitle", "{Title}: Not generating"), Args);
-    }
+		return FText::Format(LOCTEXT("ContextTitle", "{Title}: generate from {SourceContext}"), Args);
+	}
+	else
+	{
+		return FText::Format(LOCTEXT("ContextTitle", "{Title}: Not generating"), Args);
+	}
 };
 
 FText UEnvQueryGenerator_Context::GetDescriptionDetails() const
 {
-    return LOCTEXT("ContextDescription", "");
+	return LOCTEXT("ContextDescription", "");
 }
 
 #undef LOCTEXT_NAMESPACE

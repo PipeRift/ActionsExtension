@@ -13,12 +13,12 @@
 UCLASS()
 class AIEXTENSION_API UBTD_OrderEquals : public UBTDecorator
 {
-    GENERATED_BODY()    
-    
+	GENERATED_BODY()	
+	
 public:
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Node")
-    TSubclassOf<USquadOrder> Compare;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Node")
+	TSubclassOf<USquadOrder> Compare;
 
-    UFUNCTION(BlueprintCallable)
-    bool PerformConditionCheckAI(class AAIController* OwnerController);
+	UFUNCTION(BlueprintCallable)
+	bool PerformConditionCheckAI(class AAIController* OwnerController);
 };
