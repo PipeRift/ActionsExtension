@@ -24,7 +24,7 @@
 #include "UtilityTree/UtilityTreeGraphSchema.h"
 #include "UtilityTree/AIGraphNode_Root.h"
 
-//#include "UtilityTreeBlueprintPostCompileValidation.h" 
+//#include "UtilityTreeBlueprintPostCompileValidation.h"
 
 #define LOCTEXT_NAMESPACE "UTBlueprintCompiler"
 
@@ -35,7 +35,7 @@ bool FUTBlueprintCompiler::FEffectiveConstantRecord::Apply(UObject* Object)
 {
 	uint8* StructPtr = nullptr;
 	uint8* PropertyPtr = nullptr;
-	
+
 	/*if(NodeVariableProperty->Struct == FUTNode_SubInstance::StaticStruct())
 	{
 		PropertyPtr = ConstantProperty->ContainerPtrToValuePtr<uint8>(Object);
@@ -130,7 +130,7 @@ void FUTBlueprintCompiler::CreateEvaluationHandlerStruct(UAIGraphNode_Base* Visu
 	}
 
 	HandlerFunctionNames.Add(Record.HandlerFunctionName);
-	
+
 	// Add a custom event in the graph
 	UK2Node_CustomEvent* EntryNode = SpawnIntermediateEventNode<UK2Node_CustomEvent>(VisualUTNode, nullptr, ConsolidatedEventGraph);
 	EntryNode->bInternalEvent = true;
@@ -157,8 +157,7 @@ void FUTBlueprintCompiler::CreateEvaluationHandlerStruct(UAIGraphNode_Base* Visu
 	for (auto TargetPinIt = AssignmentNode->Pins.CreateIterator(); TargetPinIt; ++TargetPinIt)
 	{
 		UEdGraphPin* TargetPin = *TargetPinIt;
-		FString PropertyNameStr = TargetPin->PinName;
-		FName PropertyName(*PropertyNameStr);
+		FName PropertyName{ TargetPin->PinName };
 
 		// Does it get serviced by this handler?
 		if (FUTNodeSinglePropertyHandler* SourceInfo = Record.ServicedProperties.Find(PropertyName))
@@ -171,7 +170,7 @@ void FUTBlueprintCompiler::CreateEvaluationHandlerStruct(UAIGraphNode_Base* Visu
 				FetchArrayNode->StructType = Record.NodeVariableProperty->Struct;
 				FetchArrayNode->AllocatePinsForSingleMemberGet(PropertyName);
 
-				UEdGraphPin* ArrayVariableNode = FetchArrayNode->FindPin(PropertyNameStr);
+				UEdGraphPin* ArrayVariableNode = FetchArrayNode->FindPin(PropertyName);
 
 				if (SourceInfo->CopyRecords.Num() > 0)
 				{
@@ -215,7 +214,7 @@ void FUTBlueprintCompiler::CreateEvaluationHandlerStruct(UAIGraphNode_Base* Visu
 				{
 					UEdGraphPin* DestPin = SourceInfo->CopyRecords[0].DestPin;
 
-					PropertiesBeingSet.Add(FName(*DestPin->PinName));
+					PropertiesBeingSet.Add(DestPin->PinName);
 					TargetPin->CopyPersistentDataFromOldPin(*DestPin);
 					MessageLog.NotifyIntermediatePinCreation(TargetPin, DestPin);
 					DestPin->BreakAllPinLinks();
@@ -296,10 +295,7 @@ void FUTBlueprintCompiler::CreateEvaluationHandlerInstance(UAIGraphNode_Base* Vi
 					continue;
 				}
 
-				FString PropertyNameStr = TargetPin->PinName;
-				FName PinPropertyName(*PropertyNameStr);
-
-				if(PinPropertyName == PropertyName)
+				if(TargetPin->PinName == PropertyName)
 				{
 					// This is us, wire up the variable
 					UEdGraphPin* DestPin = CopyRecord.DestPin;
@@ -329,7 +325,7 @@ void FUTBlueprintCompiler::ProcessUtilityTreeNode(UAIGraphNode_Base* VisualUTNod
 	}
 
 	// Make sure the visual node has a runtime node template
-	const UScriptStruct* NodeType = VisualUTNode->GetFNodeType();
+	UScriptStruct* NodeType = VisualUTNode->GetFNodeType();
 	if (NodeType == NULL)
 	{
 		MessageLog.Error(TEXT("@@ has no utility tree node member"), VisualUTNode);
@@ -413,7 +409,7 @@ void FUTBlueprintCompiler::ProcessUtilityTreeNode(UAIGraphNode_Base* VisualUTNod
 
 			VisualUTNode->GetPinAssociatedProperty(NodeType, SourcePin, /*out*/ SourcePinProperty, /*out*/ SourceArrayIndex);
 
-			
+
 			if (SourcePinProperty != NULL)
 			{
 				if (SourcePin->LinkedTo.Num() == 0)
@@ -472,7 +468,7 @@ void FUTBlueprintCompiler::ProcessUtilityTreeNode(UAIGraphNode_Base* VisualUTNod
 					pRecord->NodeVariableProperty = NewProperty;
 					pRecord->EvaluationHandlerProperty = StructProp;
 				}
-				
+
 			}
 		}
 	}
@@ -487,7 +483,7 @@ void FUTBlueprintCompiler::ProcessUtilityTreeNode(UAIGraphNode_Base* VisualUTNod
 		{
 			// build fast path copy records here
 			// we need to do this at this point as they rely on traversing the original wire path
-			// to determine source data. After we call CreateEvaluationHandlerStruct (etc) the original 
+			// to determine source data. After we call CreateEvaluationHandlerStruct (etc) the original
 			// graph is modified to hook up to the evaluation handler custom functions & pins are no longer
 			// available
 			Record.BuildFastPathCopyRecords();
@@ -622,7 +618,7 @@ void FUTBlueprintCompiler::GetLinkedUTNodes_TraversePin(UEdGraphPin* InPin, TArr
 		{
 			continue;
 		}
-		
+
 		UEdGraphNode* OwningNode = LinkedPin->GetOwningNode();
 
 		if(UK2Node_Knot* InnerKnot = Cast<UK2Node_Knot>(OwningNode))
@@ -821,7 +817,7 @@ void FUTBlueprintCompiler::CopyTermDefaultsToDefaultObject(UObject* DefaultObjec
 
 		UAIGraphNode_Base* LinkingNode = Record.GetLinkingNode();
 		UAIGraphNode_Base* LinkedNode = Record.GetLinkedNode();
-		
+
 		// @TODO this is quick solution for crash - if there were previous errors and some nodes were not added, they could still end here -
 		// this check avoids that and since there are already errors, compilation won't be successful.
 		// but I'd prefer stoping compilation earlier to avoid getting here in first place
@@ -833,7 +829,7 @@ void FUTBlueprintCompiler::CopyTermDefaultsToDefaultObject(UObject* DefaultObjec
 
 			Record.PatchLinkIndex(DestinationPtr, LinkedNodeIndex, SourceNodeIndex);
 		}
-	}   
+	}
 
 	// And patch evaluation function entry names
 	for (auto EvalLinkIt = ValidEvaluationHandlerList.CreateIterator(); EvalLinkIt; ++EvalLinkIt)
@@ -1015,7 +1011,7 @@ void FUTBlueprintCompiler::PostCompile()
 			check(Handler.CopyRecords.Num() > 0);
 			check(Handler.CopyRecords[0].DestPin != nullptr);
 			UAIGraphNode_Base* Node = CastChecked<UAIGraphNode_Base>(Handler.CopyRecords[0].DestPin->GetOwningNode());
-			UAIGraphNode_Base* TrueNode = MessageLog.FindSourceObjectTypeChecked<UAIGraphNode_Base>(Node);	
+			UAIGraphNode_Base* TrueNode = MessageLog.FindSourceObjectTypeChecked<UAIGraphNode_Base>(Node);
 
 			FAIExposedValueHandler* HandlerPtr = EvaluationHandler.EvaluationHandlerProperty->ContainerPtrToValuePtr<FAIExposedValueHandler>(EvaluationHandler.NodeVariableProperty->ContainerPtrToValuePtr<void>(DefaultUtilityTree));
 			TrueNode->BlueprintUsage = HandlerPtr->BoundFunction != NAME_None ? EUTBlueprintUsage::UsesBlueprint : EUTBlueprintUsage::DoesNotUseBlueprint;
@@ -1056,7 +1052,7 @@ void FUTBlueprintCompiler::DumpUTDebugData()
 
 	int32 RootIndex = INDEX_NONE;
 	NewUTBlueprintClass->UTNodeProperties.Find(NewUTBlueprintClass->RootUTNodeProperty, /*out*/ RootIndex);
-	
+
 	uint8* CDOBase = (uint8*)NewUTBlueprintClass->ClassDefaultObject;
 
 	MessageLog.Note(*FString::Printf(TEXT("Anim Root is #%d"), RootIndex));
@@ -1226,9 +1222,9 @@ void FUTBlueprintCompiler::FEvaluationHandlerRecord::BuildFastPathCopyRecords()
 static FName RecoverSplitStructPinName(UEdGraphPin* OutputPin)
 {
 	check(OutputPin->ParentPin);
-	
-	const FString& PinName = OutputPin->PinName;
-	const FString& ParentPinName = OutputPin->ParentPin->PinName;
+
+	const FString& PinName = OutputPin->PinName.ToString();
+	const FString& ParentPinName = OutputPin->ParentPin->PinName.ToString();
 
 	return FName(*PinName.Replace(*(ParentPinName + TEXT("_")), TEXT("")));
 }
@@ -1322,7 +1318,7 @@ bool FUTBlueprintCompiler::FEvaluationHandlerRecord::CheckForStructMemberAccess(
 				if(CheckForVariableGet(CopyRecord, InputPin))
 				{
 					check(CopyRecord.SourcePropertyName != NAME_None);	// this should have been filled in by CheckForVariableGet() above
-					CopyRecord.SourceSubStructPropertyName = *SourcePin->PinName;
+					CopyRecord.SourceSubStructPropertyName = *SourcePin->PinName.ToString();
 					return true;
 				}
 			}
@@ -1338,7 +1334,7 @@ bool FUTBlueprintCompiler::FEvaluationHandlerRecord::CheckForStructMemberAccess(
 					if(CheckForVariableGet(CopyRecord, InputPin))
 					{
 						check(CopyRecord.SourcePropertyName != NAME_None);	// this should have been filled in by CheckForVariableGet() above
-						CopyRecord.SourceSubStructPropertyName = *SourcePin->PinName;
+						CopyRecord.SourceSubStructPropertyName = *SourcePin->PinName.ToString();
 						return true;
 					}
 				}
@@ -1382,7 +1378,7 @@ bool FUTBlueprintCompiler::FEvaluationHandlerRecord::CheckForMemberOnlyAccess(FP
 						{
 							if(!LinkedVariableGetNode->IsNodePure() || !LinkedVariableGetNode->VariableReference.IsSelfContext())
 							{
-								// only local variable access is allowed for leaf nodes 
+								// only local variable access is allowed for leaf nodes
 								CopyRecord.InvalidateFastPath();
 							}
 						}

@@ -8,14 +8,14 @@
 
 #include "ActionNodeHelpers.h"
 
-void ActionNodeHelpers::RegisterActionClassActions(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass)
+void ActionNodeHelpers::RegisterActionClassActions(FBlueprintActionDatabaseRegistrar& InActionRegister, UClass* NodeClass)
 {
 	UClass* TaskType = UAction::StaticClass();
 
 	int32 RegisteredCount = 0;
-	if (const UObject* RegistrarTarget = InActionRegistar.GetActionKeyFilter())
+	if (const UObject* RegistrerTarget = InActionRegister.GetActionKeyFilter())
 	{
-		if (const UClass* TargetClass = Cast<UClass>(RegistrarTarget))
+		if (const UClass* TargetClass = Cast<UClass>(RegistrerTarget))
 		{
 			if (!TargetClass->HasAnyClassFlags(CLASS_Abstract) && !TargetClass->IsChildOf(TaskType))
 			{
@@ -23,12 +23,12 @@ void ActionNodeHelpers::RegisterActionClassActions(FBlueprintActionDatabaseRegis
 				UBlueprintNodeSpawner* NewAction = UBlueprintNodeSpawner::Create(NodeClass);
 				check(NewAction != nullptr);
 
-				TWeakObjectPtr<UClass> TargetClassPtr = TargetClass;
+				TWeakObjectPtr<UClass> TargetClassPtr = const_cast<UClass*>(TargetClass);
 				NewAction->CustomizeNodeDelegate = UBlueprintNodeSpawner::FCustomizeNodeDelegate::CreateStatic(SetNodeFunc, TargetClassPtr);
 
 				if (NewAction)
 				{
-					RegisteredCount += (int32)InActionRegistar.AddBlueprintAction(TargetClass, NewAction);
+					RegisteredCount += (int32)InActionRegister.AddBlueprintAction(TargetClass, NewAction);
 				}
 			}
 		}
@@ -43,7 +43,7 @@ void ActionNodeHelpers::RegisterActionClassActions(FBlueprintActionDatabaseRegis
 				continue;
 			}
 
-			RegisteredCount += RegistryActionClassAction(InActionRegistar, NodeClass, Class);
+			RegisteredCount += RegistryActionClassAction(InActionRegister, NodeClass, Class);
 		}
 
 		//Registry blueprint classes
@@ -56,7 +56,7 @@ void ActionNodeHelpers::RegisterActionClassActions(FBlueprintActionDatabaseRegis
 				UClass* Class = BPClass.LoadSynchronous();
 				if (Class)
 				{
-					RegisteredCount += RegistryActionClassAction(InActionRegistar, NodeClass, Class);
+					RegisteredCount += RegistryActionClassAction(InActionRegister, NodeClass, Class);
 				}
 			}
 		}

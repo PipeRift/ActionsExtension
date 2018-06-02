@@ -13,7 +13,7 @@ protected:
 	class UAIGraphNode_Base* BaseNode;
 	TArray<UEdGraphPin*>* OldPins;
 
-	TMap<FString, UEdGraphPin*> OldPinMap;
+	TMap<FName, UEdGraphPin*> OldPinMap;
 
 public:
 	FUTBlueprintNodeOptionalPinManager(class UAIGraphNode_Base* Node, TArray<UEdGraphPin*>* InOldPins);

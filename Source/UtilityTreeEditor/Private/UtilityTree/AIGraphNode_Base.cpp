@@ -49,7 +49,7 @@ void UAIGraphNode_Base::CreateOutputPins()
 	if (!IsSinkNode())
 	{
 		const UUtilityTreeGraphSchema* Schema = GetDefault<UUtilityTreeGraphSchema>();
-		CreatePin(EGPD_Output, Schema->PC_Struct, FString(), FAILink::StaticStruct(), TEXT("Pose"));
+		CreatePin(EGPD_Output, Schema->PC_Struct, FAILink::StaticStruct(), { "Pose" });
 	}
 }
 
@@ -140,14 +140,14 @@ void UAIGraphNode_Base::GetNodeAttributes( TArray<TKeyValuePair<FString, FString
 
 void UAIGraphNode_Base::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
 {
-	// actions get registered under specific object-keys; the idea is that 
-	// actions might have to be updated (or deleted) if their object-key is  
-	// mutated (or removed)... here we use the node's class (so if the node 
+	// actions get registered under specific object-keys; the idea is that
+	// actions might have to be updated (or deleted) if their object-key is
+	// mutated (or removed)... here we use the node's class (so if the node
 	// type disappears, then the action should go with it)
 	UClass* ActionKey = GetClass();
-	// to keep from needlessly instantiating a UBlueprintNodeSpawner, first   
+	// to keep from needlessly instantiating a UBlueprintNodeSpawner, first
 	// check to make sure that the registrar is looking for actions of this type
-	// (could be regenerating actions for a specific asset, and therefore the 
+	// (could be regenerating actions for a specific asset, and therefore the
 	// registrar would only accept actions corresponding to that asset)
 	if (ActionRegistrar.IsOpenForRegistration(ActionKey))
 	{
@@ -168,11 +168,11 @@ void UAIGraphNode_Base::GetPinAssociatedProperty(const UScriptStruct* NodeType, 
 	OutIndex = INDEX_NONE;
 
 	//@TODO: Name-based hackery, avoid the roundtrip and better indicate when it's an array pose pin
-	int32 UnderscoreIndex = InputPin->PinName.Find(TEXT("_"), ESearchCase::CaseSensitive);
+	int32 UnderscoreIndex = InputPin->PinName.ToString().Find(TEXT("_"), ESearchCase::CaseSensitive);
 	if (UnderscoreIndex != INDEX_NONE)
 	{
-		FString ArrayName = InputPin->PinName.Left(UnderscoreIndex);
-		int32 ArrayIndex = FCString::Atoi(*(InputPin->PinName.Mid(UnderscoreIndex + 1)));
+		FString ArrayName = InputPin->PinName.ToString().Left(UnderscoreIndex);
+		int32 ArrayIndex = FCString::Atoi(*(InputPin->PinName.ToString().Mid(UnderscoreIndex + 1)));
 
 		if (UArrayProperty* ArrayProperty = FindField<UArrayProperty>(NodeType, *ArrayName))
 		{
@@ -180,11 +180,11 @@ void UAIGraphNode_Base::GetPinAssociatedProperty(const UScriptStruct* NodeType, 
 			OutIndex = ArrayIndex;
 		}
 	}
-	
+
 	// If the array check failed or we have no underscores
 	if(OutProperty == nullptr)
 	{
-		if (UProperty* Property = FindField<UProperty>(NodeType, *(InputPin->PinName)))
+		if (UProperty* Property = FindField<UProperty>(NodeType, *(InputPin->PinName.ToString())))
 		{
 			OutProperty = Property;
 			OutIndex = INDEX_NONE;
@@ -199,11 +199,11 @@ FAILinkMappingRecord UAIGraphNode_Base::GetLinkIDLocation(const UScriptStruct* N
 		if (UAIGraphNode_Base* LinkedNode = Cast<UAIGraphNode_Base>(FBlueprintEditorUtils::FindFirstCompilerRelevantNode(SourcePin->LinkedTo[0])))
 		{
 			//@TODO: Name-based hackery, avoid the roundtrip and better indicate when it's an array pose pin
-			int32 UnderscoreIndex = SourcePin->PinName.Find(TEXT("_"), ESearchCase::CaseSensitive);
+			int32 UnderscoreIndex = SourcePin->PinName.ToString().Find(TEXT("_"), ESearchCase::CaseSensitive);
 			if (UnderscoreIndex != INDEX_NONE)
 			{
-				FString ArrayName = SourcePin->PinName.Left(UnderscoreIndex);
-				int32 ArrayIndex = FCString::Atoi(*(SourcePin->PinName.Mid(UnderscoreIndex + 1)));
+				FString ArrayName = SourcePin->PinName.ToString().Left(UnderscoreIndex);
+				int32 ArrayIndex = FCString::Atoi(*(SourcePin->PinName.ToString().Mid(UnderscoreIndex + 1)));
 
 				if (UArrayProperty* ArrayProperty = FindField<UArrayProperty>(NodeType, *ArrayName))
 				{
@@ -218,7 +218,7 @@ FAILinkMappingRecord UAIGraphNode_Base::GetLinkIDLocation(const UScriptStruct* N
 			}
 			else
 			{
-				if (UStructProperty* Property = FindField<UStructProperty>(NodeType, *(SourcePin->PinName)))
+				if (UStructProperty* Property = FindField<UStructProperty>(NodeType, *(SourcePin->PinName.ToString())))
 				{
 					if (Property->Struct->IsChildOf(FAILinkBase::StaticStruct()))
 					{

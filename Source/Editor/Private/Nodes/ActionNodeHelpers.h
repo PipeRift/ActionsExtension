@@ -14,7 +14,7 @@
 class UK2Node_Action;
 
 struct ActionNodeHelpers {
-	static void RegisterActionClassActions(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass);
+	static void RegisterActionClassActions(FBlueprintActionDatabaseRegistrar& InActionRegister, UClass* NodeClass);
 
 	static void SetNodeFunc(UEdGraphNode* NewNode, bool /*bIsTemplateNode*/, TWeakObjectPtr<UClass> ClassPtr);
 

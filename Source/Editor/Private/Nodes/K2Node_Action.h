@@ -115,9 +115,9 @@ private:
 protected:
 	struct AIEXTENSIONEDITOR_API FHelper
 	{
-		static FString WorldContextPinName;
-		static FString ClassPinName;
-		static FString OwnerPinName;
+		static FName WorldContextPinName;
+		static FName ClassPinName;
+		static FName OwnerPinName;
 
 		struct FOutputPinAndLocalVariable
 		{

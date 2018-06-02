@@ -1,7 +1,7 @@
 // Copyright 2015-2018 Piperift. All Rights Reserved.
- 
+
 #include "AIExtensionEditorPrivatePCH.h"
- 
+
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "KismetCompiler.h"
 #include "BlueprintNodeSpawner.h"
@@ -18,13 +18,13 @@
 #include "Action.h"
 
 #include "K2Node_Action.h"
- 
+
 #define LOCTEXT_NAMESPACE "AIExtensionEditor"
 
 
-FString UK2Node_Action::FHelper::WorldContextPinName(TEXT("WorldContextObject"));
-FString UK2Node_Action::FHelper::ClassPinName(TEXT("Class"));
-FString UK2Node_Action::FHelper::OwnerPinName(TEXT("Owner"));
+FName UK2Node_Action::FHelper::WorldContextPinName(TEXT("WorldContextObject"));
+FName UK2Node_Action::FHelper::ClassPinName(TEXT("Class"));
+FName UK2Node_Action::FHelper::OwnerPinName(TEXT("Owner"));
 
 
 
@@ -43,20 +43,20 @@ void UK2Node_Action::AllocateDefaultPins()
 	const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>();
 
 	// Add execution pins
-	CreatePin(EGPD_Input, K2Schema->PC_Exec, TEXT(""), NULL, false, false, K2Schema->PN_Execute);
-	CreatePin(EGPD_Output, K2Schema->PC_Exec, TEXT(""), NULL, false, false, K2Schema->PN_Then);
+	CreatePin(EGPD_Input, K2Schema->PC_Exec, K2Schema->PN_Execute);
+	CreatePin(EGPD_Output, K2Schema->PC_Exec, K2Schema->PN_Then);
 
 	// Action Owner
-	CreatePin(EGPD_Input, K2Schema->PC_Interface, TEXT(""), UActionOwnerInterface::StaticClass(), false, false, FHelper::OwnerPinName);
+	CreatePin(EGPD_Input, K2Schema->PC_Interface, UActionOwnerInterface::StaticClass(), FHelper::OwnerPinName);
 
 	//If we are not using a predefined class
 	if (!UsePrestatedClass()) {
 		// Add blueprint pin
-		UEdGraphPin* ClassPin = CreatePin(EGPD_Input, K2Schema->PC_Class, TEXT(""), GetClassPinBaseClass(), false, false, FHelper::ClassPinName);
+		UEdGraphPin* ClassPin = CreatePin(EGPD_Input, K2Schema->PC_Class, GetClassPinBaseClass(), FHelper::ClassPinName);
 	}
 
 	// Result pin
-	UEdGraphPin* ResultPin = CreatePin(EGPD_Output, K2Schema->PC_Object, TEXT(""), GetClassPinBaseClass(), false, false, K2Schema->PN_ReturnValue);
+	UEdGraphPin* ResultPin = CreatePin(EGPD_Output, K2Schema->PC_Object, GetClassPinBaseClass(), K2Schema->PN_ReturnValue);
 
 	//Update class pins if we are using a prestated node
 	if (UsePrestatedClass())
@@ -170,7 +170,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 
 	/* Retrieve Pins */
 	//Exec
-	UEdGraphPin* ExecPin = this->GetExecPin();	   // Exec pins are those big arrows, connected with thick white lines.   
+	UEdGraphPin* ExecPin = this->GetExecPin();	   // Exec pins are those big arrows, connected with thick white lines.
 	UEdGraphPin* ThenPin = this->GetThenPin();	   // Then pin is the same as exec pin, just on the other side (the out arrow).
 
 	//Inputs
@@ -368,7 +368,7 @@ void UK2Node_Action::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* O
 
 	const UObject* const ClassDefaultObject = InClass->GetDefaultObject(false);
 
-	
+
 	for (TFieldIterator<UProperty> PropertyIt(InClass, EFieldIteratorFlags::IncludeSuper); PropertyIt; ++PropertyIt)
 	{
 		UProperty* Property = *PropertyIt;
@@ -383,7 +383,7 @@ void UK2Node_Action::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* O
 				Property->HasAllPropertyFlags(CPF_BlueprintVisible) &&
 				!bIsDelegate)
 			{
-				UEdGraphPin* Pin = CreatePin(EGPD_Input, TEXT(""), TEXT(""), NULL, false, false, Property->GetName());
+				UEdGraphPin* Pin = CreatePin(EGPD_Input, FName(), Property->GetFName());
 				const bool bPinGood = (Pin != NULL) && K2Schema->ConvertPropertyToPinType(Property, Pin->PinType);
 
 				if (OutClassPins && Pin)
@@ -413,12 +413,16 @@ void UK2Node_Action::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* O
 					UEdGraphPin* Pin;
 					if (DelegateSignatureFunction->NumParms < 1)
 					{
-						Pin = CreatePin(EGPD_Output, K2Schema->PC_Exec, TEXT(""), NULL, false, false, Delegate->GetName());
+						Pin = CreatePin(EGPD_Output, K2Schema->PC_Exec, Delegate->GetFName());
 					}
 					else
 					{
-						Pin = CreatePin(EGPD_Input, K2Schema->PC_Delegate, TEXT(""), NULL, false, true, Delegate->GetName(), true);
-						Pin->PinFriendlyName = FText::Format(NSLOCTEXT("K2Node", "PinFriendlyDelegatetName", "{0} Event"), FText::FromString(Delegate->GetName()));
+						UEdGraphNode::FCreatePinParams Params{};
+						Params.bIsConst = true;
+						Params.bIsReference = true;
+
+						Pin = CreatePin(EGPD_Input, K2Schema->PC_Delegate, Delegate->GetFName(), Params);
+						Pin->PinFriendlyName = FText::Format(NSLOCTEXT("K2Node", "PinFriendlyDelegatetName", "{0} Event"), FText::FromName(Delegate->GetFName()));
 
 						//Update PinType with the delegate's signature
 						FMemberReference::FillSimpleMemberReference<UFunction>(DelegateSignatureFunction, Pin->PinType.PinSubCategoryMemberReference);
@@ -664,7 +668,7 @@ bool UK2Node_Action::FHelper::CopyEventSignature(UK2Node_CustomEvent* CENode, UF
 		{
 			FEdGraphPinType PinType;
 			bResult &= Schema->ConvertPropertyToPinType(Param, /*out*/ PinType);
-			bResult &= (NULL != CENode->CreateUserDefinedPin(Param->GetName(), PinType, EGPD_Output));
+			bResult &= (NULL != CENode->CreateUserDefinedPin(Param->GetFName(), PinType, EGPD_Output));
 		}
 	}
 	return bResult;
