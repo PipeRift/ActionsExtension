@@ -1,6 +1,6 @@
 // Copyright 2015-2018 Piperift. All Rights Reserved.
 
-#include "AIExtensionEditorPrivatePCH.h"
+#include "K2Node_Action.h"
 
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "KismetCompiler.h"
@@ -17,10 +17,8 @@
 #include "ActionFunctionLibrary.h"
 #include "Action.h"
 
-#include "K2Node_Action.h"
 
 #define LOCTEXT_NAMESPACE "AIExtensionEditor"
-
 
 FName UK2Node_Action::FHelper::WorldContextPinName(TEXT("WorldContextObject"));
 FName UK2Node_Action::FHelper::ClassPinName(TEXT("Class"));

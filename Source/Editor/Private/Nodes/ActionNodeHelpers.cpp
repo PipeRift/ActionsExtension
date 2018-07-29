@@ -1,12 +1,11 @@
 // Copyright 2015-2018 Piperift. All Rights Reserved.
 
-#include "AIExtensionEditorPrivatePCH.h"
+#include "ActionNodeHelpers.h"
 
 #include "K2Node_Action.h"
 #include "ARFilter.h"
 #include "AssetRegistryModule.h"
 
-#include "ActionNodeHelpers.h"
 
 void ActionNodeHelpers::RegisterActionClassActions(FBlueprintActionDatabaseRegistrar& InActionRegister, UClass* NodeClass)
 {

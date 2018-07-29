@@ -20,7 +20,7 @@
 
 
 UCLASS(Blueprintable)
-class AIEXTENSIONEDITOR_API UK2Node_Action : public UK2Node
+class ACTIONSEDITOR_API UK2Node_Action : public UK2Node
 {
 	GENERATED_UCLASS_BODY()
 
@@ -73,7 +73,7 @@ protected:
 	/** Returns if the node uses Owner input */
 	virtual bool UseOwner() const { return true; }
 	virtual bool UsePrestatedClass() const { return PrestatedClass != nullptr; }
- 
+
 	/** Gets the default node title when no class is selected */
 	virtual FText GetBaseNodeTitle() const;
 	/** Gets the node title when a class has been selected. */
@@ -113,7 +113,7 @@ private:
 
 
 protected:
-	struct AIEXTENSIONEDITOR_API FHelper
+	struct ACTIONSEDITOR_API FHelper
 	{
 		static FName WorldContextPinName;
 		static FName ClassPinName;

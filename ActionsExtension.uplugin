@@ -1,0 +1,29 @@
+{
+	"FileVersion": 3,
+	"Version": 7,
+	"VersionName": "0.6",
+	"FriendlyName": "Actions Extension",
+	"Description": "A plugin that adds asynchronous objects to ue4 called Actions",
+	"Category": "Piperift",
+	"CreatedBy": "Piperift",
+	"CreatedByURL": "http://piperift.com/",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "info@piperift.com",
+	"EngineVersion": "4.19.0",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"Installed": false,
+  "Modules": [
+    {
+      "Name": "Actions",
+      "Type": "Runtime",
+      "LoadingPhase": "PreDefault"
+    },
+    {
+      "Name": "ActionsEditor",
+      "Type": "Editor",
+      "LoadingPhase": "PostEngineInit"
+    }
+  ]
+}
