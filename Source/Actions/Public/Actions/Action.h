@@ -70,7 +70,7 @@ public:
 	void Destroy();
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	virtual UActionManagerComponent* GetActionOwnerComponent() override;
+	virtual UActionManagerComponent* GetActionOwnerComponent() const override;
 
 
 	//~ Begin Ticking

@@ -92,7 +92,7 @@ const bool UBTT_RunAction::RemoveChildren(UAction* Children)
 	return (*ActionInterface).RemoveChildren(Children);
 }
 
-UActionManagerComponent* UBTT_RunAction::GetActionOwnerComponent()
+UActionManagerComponent* UBTT_RunAction::GetActionOwnerComponent() const
 {
 	return ActionInterface->GetActionOwnerComponent();
 }

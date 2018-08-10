@@ -56,8 +56,8 @@ const bool UActionManagerComponent::RemoveChildren(UAction* Children)
 	return ChildrenTasks.Remove(Children) > 0;
 }
 
-UActionManagerComponent* UActionManagerComponent::GetActionOwnerComponent()
+UActionManagerComponent* UActionManagerComponent::GetActionOwnerComponent() const
 {
-	return this;
+	return const_cast<UActionManagerComponent*>(this);
 }
 

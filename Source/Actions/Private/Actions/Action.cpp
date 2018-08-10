@@ -151,7 +151,7 @@ AActor* UAction::GetActionOwnerActor()
 	return GetActionOwnerComponent()->GetOwner();
 }
 
-UActionManagerComponent* UAction::GetActionOwnerComponent()
+UActionManagerComponent* UAction::GetActionOwnerComponent() const
 {
 	return GetParentInterface()->GetActionOwnerComponent();
 }

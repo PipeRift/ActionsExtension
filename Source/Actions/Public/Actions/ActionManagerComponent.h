@@ -22,14 +22,14 @@ protected:
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-public:	
+public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	
+
 	// Begin ITaskOwnerInterface interface
 	virtual const bool AddChildren(UAction* NewChildren) override;
 	virtual const bool RemoveChildren(UAction* Children) override;
-	virtual UActionManagerComponent* GetActionOwnerComponent() override;
+	virtual UActionManagerComponent* GetActionOwnerComponent() const override;
 	// End ITaskOwnerInterface interface
 
 protected:

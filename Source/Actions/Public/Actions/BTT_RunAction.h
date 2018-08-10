@@ -45,7 +45,7 @@ public:
 	// Begin ITaskOwnerInterface interface
 	virtual const bool AddChildren(UAction* NewChildren) override;
 	virtual const bool RemoveChildren(UAction* Children) override;
-	virtual UActionManagerComponent* GetActionOwnerComponent() override;
+	virtual UActionManagerComponent* GetActionOwnerComponent() const override;
 	// End ITaskOwnerInterface interface
 
 	UFUNCTION()
