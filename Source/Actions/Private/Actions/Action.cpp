@@ -18,7 +18,7 @@ UAction::UAction(const FObjectInitializer& ObjectInitializer)
 
 	State = EActionState::NOT_RUN;
 
-	// SETUP PROPERTIES
+	// Default Properties
 	bWantsToTick = false;
 	TickRate = 0.15f;
 }
@@ -38,11 +38,17 @@ void UAction::Activate()
 	//Registry this children task in the owner
 	const bool bSuccess = Parent->AddChildren(this);
 	if (!bSuccess) {
-		GetActionOwnerComponent()->AddChildren(this);
+		UActionManagerComponent* Manager = GetActionOwnerComponent();
+		if (!Manager)
+		{
+			Destroy();
+			return;
+		}
+
+		Manager->AddChildren(this);
 	}
 
 	State = EActionState::RUNNING;
-
 	OnActivation();
 }
 
@@ -61,7 +67,6 @@ void UAction::ReceiveActivate_Implementation() {
 	Finish(true);
 }
 
-
 void UAction::Finish(bool bSuccess) {
 	if (!IsRunning() || IsPendingKill())
 		return;
@@ -70,16 +75,6 @@ void UAction::Finish(bool bSuccess) {
 	OnFinish(State);
 	Destroy();
 }
-
-void UAction::Abort() {
-	if (!IsRunning() || IsPendingKill())
-		return;
-
-	OnFinish(State = EActionState::ABORTED);
-
-	Destroy();
-}
-
 
 void UAction::Cancel()
 {
@@ -93,7 +88,6 @@ void UAction::Cancel()
 	}
 
 	OnFinish(State = EActionState::CANCELED);
-
 	Destroy();
 }
 
@@ -122,20 +116,20 @@ void UAction::Tick(float DeltaTime)
 			return;
 
 		// Delayed Tick
-		TaskTick(TickTimeElapsed);
+		ActionTick(TickTimeElapsed);
 		ReceiveTick(TickTimeElapsed);
 
 		TickTimeElapsed = 0;
 	} else {
 		//Normal Tick
-		TaskTick(DeltaTime);
+		ActionTick(DeltaTime);
 		ReceiveTick(DeltaTime);
 	}
 }
 
 void UAction::OnFinish(const EActionState Reason)
 {
-	OnTaskFinished.Broadcast(Reason);
+	OnFinishedDelegate.Broadcast(Reason);
 
 	const UObject* const Parent = GetParent();
 

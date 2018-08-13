@@ -49,7 +49,7 @@ EBTNodeResult::Type UBTT_RunAction::ExecuteTask(UBehaviorTreeComponent& InOwnerC
 	Action = UActionFunctionLibrary::CreateAction(ActionInterface, ActionClass, true);
 	check(Action);
 
-	Action->OnTaskFinished.AddDynamic(this, &UBTT_RunAction::OnRunActionFinished);
+	Action->OnFinishedDelegate.AddDynamic(this, &UBTT_RunAction::OnRunActionFinished);
 
 	OwnerComp = &InOwnerComp;
 	return Action? EBTNodeResult::InProgress : EBTNodeResult::Failed;

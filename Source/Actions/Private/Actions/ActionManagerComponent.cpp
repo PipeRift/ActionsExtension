@@ -4,46 +4,31 @@
 #include "Action.h"
 
 
-// Sets default values for this component's properties
 UActionManagerComponent::UActionManagerComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
-
-// Called when the game starts
 void UActionManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
-
+	ChildrenTasks.Empty();
 }
-
 
 void UActionManagerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 
-	for (auto* Children : ChildrenTasks)
-	{
-		if(Children) {
-			//Cancel task
-			Children->Cancel();
-		}
-	}
+	CancelAllActions();
 }
 
-// Called every frame
-void UActionManagerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UActionManagerComponent::CancelAllActions()
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+	for (auto* Children : ChildrenTasks)
+	{
+		if (Children)
+			Children->Cancel();
+	}
 }
 
 const bool UActionManagerComponent::AddChildren(UAction* NewChildren)
