@@ -9,14 +9,14 @@
 #include "ActionManagerComponent.h"
 #include "GameplayTaskOwnerInterface.h"
 
-DEFINE_LOG_CATEGORY(TaskLog);
+DEFINE_LOG_CATEGORY(ActionLog);
 
 UAction::UAction(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	TickTimeElapsed = 0;
 
-	State = EActionState::NOT_RUN;
+	State = EActionState::PREPARING;
 
 	// Default Properties
 	bWantsToTick = false;
@@ -25,19 +25,30 @@ UAction::UAction(const FObjectInitializer& ObjectInitializer)
 
 void UAction::Activate()
 {
+	if (!IsValid() || State != EActionState::PREPARING)
+	{
+		UE_LOG(ActionLog, Warning, TEXT("Action is already running or pending destruction."));
+		return;
+	}
+
 	IActionOwnerInterface* const Parent = GetParentInterface();
 	if (!Parent) {
-		UE_LOG(TaskLog, Error, TEXT("Task's Outer must have a TaskOwnerInterface! Detroying for safety."));
+		UE_LOG(ActionLog, Error, TEXT("Action must have a valid parent (Action or ActionManager). Detroying for safety."));
 		Destroy();
 		return;
 	}
 
-	if (!IsValid() || IsRunning())
+	if(!CanActivate())
+	{
+		UE_LOG(ActionLog, Error, TEXT("Could not activate. CanActivate() Failed."));
+		Destroy();
 		return;
+	}
 
 	//Registry this children task in the owner
 	const bool bSuccess = Parent->AddChildren(this);
-	if (!bSuccess) {
+	if (!bSuccess)
+	{
 		UActionManagerComponent* Manager = GetActionOwnerComponent();
 		if (!Manager)
 		{
@@ -65,6 +76,10 @@ const bool UAction::RemoveChildren(UAction* Children)
 void UAction::ReceiveActivate_Implementation() {
 	//Finish by default
 	Finish(true);
+}
+
+bool UAction::EventCanActivate_Implementation() {
+	return true;
 }
 
 void UAction::Finish(bool bSuccess) {

@@ -11,7 +11,10 @@
 #include "Action.generated.h"
 
 
-DECLARE_LOG_CATEGORY_EXTERN(TaskLog, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(ActionLog, Log, All);
+
+class UActionManagerComponent;
+
 
 /**
  * Result of a node execution
@@ -19,19 +22,15 @@ DECLARE_LOG_CATEGORY_EXTERN(TaskLog, Log, All);
 UENUM(Blueprintable)
 enum class EActionState : uint8
 {
-	RUNNING  UMETA(DisplayName = "Running"),
-	SUCCESS  UMETA(DisplayName = "Success"),
-	FAILURE  UMETA(DisplayName = "Failure"),
-	CANCELED UMETA(DisplayName = "Canceled"),
-	NOT_RUN  UMETA(DisplayName = "Not Run")
+	PREPARING UMETA(DisplayName = "Preparing"),
+	RUNNING   UMETA(DisplayName = "Running"),
+	SUCCESS   UMETA(DisplayName = "Success"),
+	FAILURE   UMETA(DisplayName = "Failure"),
+	CANCELED  UMETA(DisplayName = "Canceled")
 };
-
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FActionActivatedDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FActionFinishedDelegate, const EActionState, Reason);
-
-
-class UActionManagerComponent;
 
 
 /**
@@ -105,11 +104,15 @@ public:
 
 protected:
 
-	virtual bool CanActivation() { return true; }
+	virtual bool CanActivate() { return EventCanActivate(); }
 	virtual void OnActivation() {
 		OnActivationDelegate.Broadcast();
 		ReceiveActivate();
 	}
+
+	/** Event called when finishing this task. */
+	UFUNCTION(BlueprintNativeEvent, meta = (DisplayName = "Can Activate"))
+	bool EventCanActivate();
 
 private:
 
