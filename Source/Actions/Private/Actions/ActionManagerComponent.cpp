@@ -19,15 +19,26 @@ void UActionManagerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 
-	CancelAllActions();
+	CancelAll();
 }
 
-void UActionManagerComponent::CancelAllActions()
+void UActionManagerComponent::CancelAll()
 {
 	for (auto* Children : ChildrenTasks)
 	{
 		if (Children)
 			Children->Cancel();
+	}
+}
+
+void UActionManagerComponent::CancelByPredicate(TFunctionRef<bool(const UAction*)> Predicate)
+{
+	for (auto* Children : ChildrenTasks)
+	{
+		if (Children && Predicate(Children)) {
+			//Cancel task
+			Children->Cancel();
+		}
 	}
 }
 

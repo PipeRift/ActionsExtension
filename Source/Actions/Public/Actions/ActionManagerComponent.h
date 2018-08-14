@@ -26,7 +26,10 @@ protected:
 public:
 
 	UFUNCTION(BlueprintCallable, Category = ActionsManager)
-	void CancelAllActions();
+	void CancelAll();
+
+	void CancelByPredicate(TFunctionRef<bool(const UAction*)> Predicate);
+
 
 	// Begin ITaskOwnerInterface interface
 	virtual const bool AddChildren(UAction* NewChildren) override;
