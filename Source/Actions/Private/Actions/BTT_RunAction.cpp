@@ -2,7 +2,7 @@
 
 #include "BTT_RunAction.h"
 
-#include "ActionFunctionLibrary.h"
+#include "ActionLibrary.h"
 #include "ActionManagerComponent.h"
 
 
@@ -46,7 +46,7 @@ EBTNodeResult::Type UBTT_RunAction::ExecuteTask(UBehaviorTreeComponent& InOwnerC
 		return EBTNodeResult::Failed;
 	}
 
-	Action = UActionFunctionLibrary::CreateAction(ActionInterface, ActionClass, true);
+	Action = UActionLibrary::CreateAction(ActionInterface, ActionClass, true);
 	check(Action);
 
 	Action->OnFinishedDelegate.AddDynamic(this, &UBTT_RunAction::OnRunActionFinished);

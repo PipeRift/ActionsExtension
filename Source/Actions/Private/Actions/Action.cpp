@@ -25,7 +25,9 @@ UAction::UAction(const FObjectInitializer& ObjectInitializer)
 
 void UAction::Activate()
 {
-	if (!IsValid() || State != EActionState::PREPARING)
+	UObject const * const Outer = GetOuter();
+	if ((!IsPendingKill() && IsValid(Outer) && Outer->Implements<UActionOwnerInterface>()) ||
+		State != EActionState::PREPARING)
 	{
 		UE_LOG(ActionLog, Warning, TEXT("Action is already running or pending destruction."));
 		return;
@@ -163,4 +165,24 @@ AActor* UAction::GetActionOwnerActor()
 UActionManagerComponent* UAction::GetActionOwnerComponent() const
 {
 	return GetParentInterface()->GetActionOwnerComponent();
+}
+
+UAction* UAction::Create(const TScriptInterface<IActionOwnerInterface>& Owner, const TSubclassOf<class UAction> Type, bool bAutoActivate /*= false*/)
+{
+	if (!Owner.GetObject())
+		return nullptr;
+
+	if (!Type.Get() || Type == UAction::StaticClass())
+		return nullptr;
+
+	if (!bAutoActivate)
+	{
+		return NewObject<UAction>(Owner.GetObject(), Type);
+	}
+	else
+	{
+		UAction* Action = NewObject<UAction>(Owner.GetObject(), Type);
+		Action->Activate();
+		return Action;
+	}
 }

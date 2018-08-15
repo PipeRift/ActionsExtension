@@ -22,8 +22,8 @@ class UActionManagerComponent;
 UENUM(Blueprintable)
 enum class EActionState : uint8
 {
-	PREPARING UMETA(DisplayName = "Preparing"),
-	RUNNING   UMETA(DisplayName = "Running"),
+	PREPARING UMETA(DisplayName = "Preparing", Hidden),
+	RUNNING   UMETA(DisplayName = "Running", Hidden),
 	SUCCESS   UMETA(DisplayName = "Success"),
 	FAILURE   UMETA(DisplayName = "Failure"),
 	CANCELED  UMETA(DisplayName = "Canceled")
@@ -145,26 +145,22 @@ public:
 
 	// INLINES
 
-	const bool IsValid() const {
-		UObject const * const Outer = GetOuter();
-		return !IsPendingKill() && Outer->Implements<UActionOwnerInterface>();
-	}
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
+	FORCEINLINE bool IsRunning() const { return State == EActionState::RUNNING; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
-	FORCEINLINE bool IsRunning() const { return IsValid() && State == EActionState::RUNNING; }
+	FORCEINLINE bool Succeeded() const { return State == EActionState::SUCCESS; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
-	FORCEINLINE bool Succeeded() const { return IsValid() && State == EActionState::SUCCESS; }
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
-	FORCEINLINE bool Failed() const	{ return IsValid() && State == EActionState::FAILURE; }
+	FORCEINLINE bool Failed() const	{ return State == EActionState::FAILURE; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
 	FORCEINLINE EActionState GetState() const { return State; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = Action)
 	FORCEINLINE UObject* const GetParent() const {
-		return IsValid() ? GetOuter() : nullptr;
+		UObject* const Outer = GetOuter();
+		return (Outer && Outer->Implements<UActionOwnerInterface>())? Outer : nullptr;
 	}
 
 	FORCEINLINE IActionOwnerInterface* GetParentInterface() const {
@@ -180,9 +176,19 @@ public:
 	}
 
 	static FORCEINLINE FString StateToString(EActionState Value) {
-		const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("ETaskState"), true);
+		const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EActionState"), true);
 		if (!EnumPtr)
 			return FString("Invalid");
 		return EnumPtr->GetNameByValue((int64)Value).ToString();
 	}
+
+
+	/** STATIC */
+
+	template<typename ActionType>
+	static ActionType* Create(const TScriptInterface<IActionOwnerInterface>& Owner, bool bAutoActivate = false) {
+		return Cast<ActionType>(Create(Owner, ActionType::StaticClass(), bAutoActivate));
+	}
+
+	static UAction* Create(const TScriptInterface<IActionOwnerInterface>& Owner, const TSubclassOf<class UAction> Type, bool bAutoActivate = false);
 };

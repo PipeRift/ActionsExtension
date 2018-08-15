@@ -14,7 +14,7 @@
 
 #include "ActionNodeHelpers.h"
 
-#include "ActionFunctionLibrary.h"
+#include "ActionLibrary.h"
 #include "Action.h"
 
 
@@ -159,7 +159,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	check(SourceGraph && Schema);
 
 	//Get static function
-	static FName Create_FunctionName = GET_FUNCTION_NAME_CHECKED(UActionFunctionLibrary, CreateAction);
+	static FName Create_FunctionName = GET_FUNCTION_NAME_CHECKED(UActionLibrary, CreateAction);
 	static FName Activate_FunctionName = GET_FUNCTION_NAME_CHECKED(UAction, Activate);
 
 	//Set function parameter names
@@ -213,7 +213,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	// create 'UActionFunctionLibrary::CreateAction' call node
 	UK2Node_CallFunction* CreateActionNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
 	//Attach function
-	CreateActionNode->FunctionReference.SetExternalMember(Create_FunctionName, UActionFunctionLibrary::StaticClass());
+	CreateActionNode->FunctionReference.SetExternalMember(Create_FunctionName, UActionLibrary::StaticClass());
 	CreateActionNode->AllocateDefaultPins();
 
 	//allocate nodes for created widget.
