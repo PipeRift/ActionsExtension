@@ -26,10 +26,10 @@ UAction::UAction(const FObjectInitializer& ObjectInitializer)
 void UAction::Activate()
 {
 	UObject const * const Outer = GetOuter();
-	if ((!IsPendingKill() && IsValid(Outer) && Outer->Implements<UActionOwnerInterface>()) ||
+	if (IsPendingKill() || !IsValid(Outer) || !Outer->Implements<UActionOwnerInterface>() ||
 		State != EActionState::PREPARING)
 	{
-		UE_LOG(ActionLog, Warning, TEXT("Action is already running or pending destruction."));
+		UE_LOG(ActionLog, Warning, TEXT("Action '%s' is already running or pending destruction."), *GetName());
 		return;
 	}
 
@@ -67,17 +67,12 @@ void UAction::Activate()
 
 const bool UAction::AddChildren(UAction* NewChildren)
 {
-	return ChildrenTasks.AddUnique(NewChildren) != INDEX_NONE;
+	return ChildrenActions.AddUnique(NewChildren) != INDEX_NONE;
 }
 
 const bool UAction::RemoveChildren(UAction* Children)
 {
-	return ChildrenTasks.Remove(Children) > 0;
-}
-
-void UAction::ReceiveActivate_Implementation() {
-	//Finish by default
-	Finish(true);
+	return ChildrenActions.Remove(Children) > 0;
 }
 
 bool UAction::EventCanActivate_Implementation() {
@@ -90,6 +85,7 @@ void UAction::Finish(bool bSuccess) {
 
 	State = bSuccess ? EActionState::SUCCESS : EActionState::FAILURE;
 	OnFinish(State);
+	GetParentInterface()->RemoveChildren(this);
 	Destroy();
 }
 
@@ -117,7 +113,7 @@ void UAction::Destroy()
 	MarkPendingKill();
 
 	//Cancel and destroy all children tasks
-	for (auto* Children : ChildrenTasks)
+	for (auto* Children : ChildrenActions)
 	{
 		if (Children) {
 			Children->Cancel();
@@ -182,6 +178,29 @@ UAction* UAction::Create(const TScriptInterface<IActionOwnerInterface>& Owner, c
 	else
 	{
 		UAction* Action = NewObject<UAction>(Owner.GetObject(), Type);
+		Action->Activate();
+		return Action;
+	}
+}
+
+UAction* UAction::Create(const TScriptInterface<IActionOwnerInterface>& Owner, UAction* Template, bool bAutoActivate /*= false*/)
+{
+	if (!Owner.GetObject() || !Template)
+		return nullptr;
+
+	UClass* const Type = Template->GetClass();
+	check(Type);
+
+	if (Type == UAction::StaticClass())
+		return nullptr;
+
+	if (!bAutoActivate)
+	{
+		return NewObject<UAction>(Owner.GetObject(), Type, NAME_None, RF_NoFlags, Template);
+	}
+	else
+	{
+		UAction* Action = NewObject<UAction>(Owner.GetObject(), Type, NAME_None, RF_NoFlags, Template);
 		Action->Activate();
 		return Action;
 	}

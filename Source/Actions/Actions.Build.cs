@@ -5,10 +5,10 @@ using UnrealBuildTool;
 public class Actions : ModuleRules
 {
 	public Actions(ReadOnlyTargetRules TargetRules) : base(TargetRules)
-    {
-        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+	{
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicIncludePaths.Add( "Actions/Public" );
+		PublicIncludePaths.Add( "Actions/Public" );
 		PrivateIncludePaths.Add( "Actions/Private" );
 
 		PublicDependencyModuleNames.AddRange(new string[] {

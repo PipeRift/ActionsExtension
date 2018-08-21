@@ -22,9 +22,8 @@ class ACTIONS_API UBTT_RunAction : public UBTTaskNode, public IActionOwnerInterf
 public:
 	UBTT_RunAction();
 
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Node, meta = (DisplayName = "Action"))
-	TSubclassOf<UAction> ActionClass;
+	UPROPERTY(Instanced, EditAnywhere, BlueprintReadWrite, Category = "Node", meta = (DisplayName = "Action"))
+	UAction* ActionType;
 
 	UPROPERTY()
 	TScriptInterface<IActionOwnerInterface> ActionInterface;

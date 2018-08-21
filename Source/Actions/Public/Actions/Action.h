@@ -7,6 +7,7 @@
 #include <UObject/ScriptInterface.h>
 #include <Tickable.h>
 
+#include "ActionsModule.h"
 #include "ActionOwnerInterface.h"
 #include "Action.generated.h"
 
@@ -36,7 +37,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FActionFinishedDelegate, const EActi
 /**
  *
  */
-UCLASS(Blueprintable, meta = (ExposedAsyncProxy))
+UCLASS(Blueprintable, EditInlineNew, meta = (ExposedAsyncProxy))
 class ACTIONS_API UAction : public UObject, public FTickableGameObject, public IActionOwnerInterface
 {
 	GENERATED_UCLASS_BODY()
@@ -47,14 +48,14 @@ public:
 	EActionState State;
 
 	UPROPERTY()
-	TArray<UAction*> ChildrenTasks;
+	TArray<UAction*> ChildrenActions;
 
 	//~ Begin Ticking
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Action)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Action)
 	bool bWantsToTick;
 
 	//Tick length in seconds. 0 is default tick rate
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Action)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Action)
 	float TickRate;
 
 private:
@@ -80,10 +81,13 @@ public:
 	void Succeed() { Finish(true); }
 
 	UFUNCTION(BlueprintCallable, Category = Action, meta = (AdvancedDisplay = "Message"))
-	void Fail(FName Error = NAME_None) { Finish(false); }
+	void Fail(FName Error = NAME_None) {
+		UE_LOG(LogActions, Log, TEXT("Action '%s' failed: %s"), *GetName(), *Error.ToString());
+		Finish(false);
+	}
 
 	/** Event called when play begins for this actor. */
-	UFUNCTION(BlueprintNativeEvent, meta = (DisplayName = "Activate"))
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Activate"))
 	void ReceiveActivate();
 
 	/** Event called when tick is received for this tickable object . */
@@ -191,4 +195,5 @@ public:
 	}
 
 	static UAction* Create(const TScriptInterface<IActionOwnerInterface>& Owner, const TSubclassOf<class UAction> Type, bool bAutoActivate = false);
+	static UAction* Create(const TScriptInterface<IActionOwnerInterface>& Owner, class UAction* Template, bool bAutoActivate = false);
 };

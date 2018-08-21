@@ -3,6 +3,10 @@
 #include "ActionsModule.h"
 #include "ActionsSettings.h"
 
+#if WITH_GAMEPLAY_DEBUGGER
+#include "GameplayDebugger.h"
+#include "Actions/GameplayDebugger_Actions.h"
+#endif // WITH_GAMEPLAY_DEBUGGER
 
 DEFINE_LOG_CATEGORY(LogActions)
 
@@ -13,6 +17,13 @@ void FActionsModule::StartupModule()
 	UE_LOG(LogActions, Log, TEXT("ActionsExtension: Log Started"));
 
 	RegisterSettings();
+
+	// Register Gameplay debugger
+#if WITH_GAMEPLAY_DEBUGGER
+	IGameplayDebugger& GameplayDebuggerModule = IGameplayDebugger::Get();
+	GameplayDebuggerModule.RegisterCategory("Actions", IGameplayDebugger::FOnGetCategory::CreateStatic(&FGameplayDebugger_Actions::MakeInstance), EGameplayDebuggerCategoryState::EnabledInGameAndSimulate);
+	GameplayDebuggerModule.NotifyCategoriesChanged();
+#endif
 }
 
 void FActionsModule::ShutdownModule()

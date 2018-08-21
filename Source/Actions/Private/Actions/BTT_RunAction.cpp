@@ -7,18 +7,13 @@
 
 
 UBTT_RunAction::UBTT_RunAction()
-{
-	ActionClass = UAction::StaticClass();
-}
+{}
 
 EBTNodeResult::Type UBTT_RunAction::ExecuteTask(UBehaviorTreeComponent& InOwnerComp, uint8* NodeMemory)
 {
-	if(!ActionClass.Get()) {
+	if(!ActionType) {
 		return EBTNodeResult::Failed;
 	}
-
-	//TODO: Implement TaskRunner
-	//UTaskFunctionLibrary::CreateTask()
 
 	AActor* OwnerActor = InOwnerComp.GetTypedOuter<AActor>();
 	check(OwnerActor);
@@ -46,7 +41,7 @@ EBTNodeResult::Type UBTT_RunAction::ExecuteTask(UBehaviorTreeComponent& InOwnerC
 		return EBTNodeResult::Failed;
 	}
 
-	Action = UActionLibrary::CreateAction(ActionInterface, ActionClass, true);
+	Action = UAction::Create(ActionInterface, ActionType, true);
 	check(Action);
 
 	Action->OnFinishedDelegate.AddDynamic(this, &UBTT_RunAction::OnRunActionFinished);
@@ -77,7 +72,8 @@ void UBTT_RunAction::DescribeRuntimeValues(const UBehaviorTreeComponent& InOwner
 
 FString UBTT_RunAction::GetStaticDescription() const
 {
-	const FString ActionName = (*ActionClass)? ActionClass->GetName() : "None";
+	FString ActionName = (ActionType)? ActionType->GetClass()->GetName() : "None";
+	ActionName.RemoveFromEnd("_C", ESearchCase::CaseSensitive);
 	return FString::Printf(TEXT("Action: %s"), *ActionName);
 }
 

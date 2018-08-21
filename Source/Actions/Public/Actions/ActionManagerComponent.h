@@ -6,8 +6,12 @@
 #include "ActionOwnerInterface.h"
 #include "ActionManagerComponent.generated.h"
 
+#if WITH_GAMEPLAY_DEBUGGER
+class FGameplayDebugger_Actions;
+#endif // WITH_GAMEPLAY_DEBUGGER
 
-UCLASS(Blueprintable, ClassGroup = (Tasks), meta = (BlueprintSpawnableComponent))
+
+UCLASS(BlueprintType, ClassGroup = (Actions), meta = (BlueprintSpawnableComponent))
 class ACTIONS_API UActionManagerComponent : public UActorComponent, public IActionOwnerInterface
 {
 	GENERATED_BODY()
@@ -37,8 +41,14 @@ public:
 	virtual UActionManagerComponent* GetActionOwnerComponent() const override;
 	// End ITaskOwnerInterface interface
 
+
+#if WITH_GAMEPLAY_DEBUGGER
+	void DescribeSelfToGameplayDebugger(const FName& BaseName, FGameplayDebugger_Actions& Debugger) const;
+	void DescribeActionToGameplayDebugger(const UAction* Action, FGameplayDebugger_Actions& Debugger, int8 Indent) const;
+#endif // WITH_GAMEPLAY_DEBUGGER
+
 protected:
 
 	UPROPERTY(SaveGame)
-	TArray<UAction*> ChildrenTasks;
+	TArray<UAction*> ChildrenActions;
 };

@@ -12,6 +12,7 @@
 #include "K2Node_CallFunction.h"
 #include "K2Node_AssignmentStatement.h"
 
+#include "ActionsEditor.h"
 #include "ActionNodeHelpers.h"
 
 #include "ActionLibrary.h"
@@ -65,7 +66,7 @@ void UK2Node_Action::AllocateDefaultPins()
 
 FLinearColor UK2Node_Action::GetNodeTitleColor() const
 {
-	return Super::GetNodeTitleColor();
+	return FColor{ 27, 240, 247 };
 }
 
 FText UK2Node_Action::GetNodeTitle(ENodeTitleType::Type TitleType) const
@@ -408,27 +409,34 @@ void UK2Node_Action::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* O
 				if (Delegate)
 				{
 					UFunction* DelegateSignatureFunction = Delegate->SignatureFunction;
-					UEdGraphPin* Pin;
-					if (DelegateSignatureFunction->NumParms < 1)
+					if (DelegateSignatureFunction)
 					{
-						Pin = CreatePin(EGPD_Output, K2Schema->PC_Exec, Delegate->GetFName());
+						UEdGraphPin* Pin;
+						if (DelegateSignatureFunction->NumParms < 1)
+						{
+							Pin = CreatePin(EGPD_Output, K2Schema->PC_Exec, Delegate->GetFName());
+						}
+						else
+						{
+							UEdGraphNode::FCreatePinParams Params{};
+							Params.bIsConst = true;
+							Params.bIsReference = true;
+
+							Pin = CreatePin(EGPD_Input, K2Schema->PC_Delegate, Delegate->GetFName(), Params);
+							Pin->PinFriendlyName = FText::Format(NSLOCTEXT("K2Node", "PinFriendlyDelegatetName", "{0} Event"), FText::FromName(Delegate->GetFName()));
+
+							//Update PinType with the delegate's signature
+							FMemberReference::FillSimpleMemberReference<UFunction>(DelegateSignatureFunction, Pin->PinType.PinSubCategoryMemberReference);
+						}
+
+						if (OutClassPins && Pin)
+						{
+							OutClassPins->Add(Pin);
+						}
 					}
 					else
 					{
-						UEdGraphNode::FCreatePinParams Params{};
-						Params.bIsConst = true;
-						Params.bIsReference = true;
-
-						Pin = CreatePin(EGPD_Input, K2Schema->PC_Delegate, Delegate->GetFName(), Params);
-						Pin->PinFriendlyName = FText::Format(NSLOCTEXT("K2Node", "PinFriendlyDelegatetName", "{0} Event"), FText::FromName(Delegate->GetFName()));
-
-						//Update PinType with the delegate's signature
-						FMemberReference::FillSimpleMemberReference<UFunction>(DelegateSignatureFunction, Pin->PinType.PinSubCategoryMemberReference);
-					}
-
-					if (OutClassPins && Pin)
-					{
-						OutClassPins->Add(Pin);
+						UE_LOG(LogActionsEd, Error, TEXT("Delegate '%s' may be corrumped"), *Delegate->GetName());
 					}
 				}
 			}
