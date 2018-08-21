@@ -11,7 +11,7 @@
 	"MarketplaceURL": "",
 	"SupportURL": "info@piperift.com",
 	"EngineVersion": "4.19.0",
-	"CanContainContent": true,
+	"CanContainContent": false,
 	"IsBetaVersion": true,
 	"Installed": false,
   "Modules": [
