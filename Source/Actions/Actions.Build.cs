@@ -8,9 +8,6 @@ public class Actions : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicIncludePaths.Add( "Actions/Public" );
-		PrivateIncludePaths.Add( "Actions/Private" );
-
 		PublicDependencyModuleNames.AddRange(new string[] {
 			"Core",
 			"CoreUObject",

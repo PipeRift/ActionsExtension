@@ -7,11 +7,7 @@ public class ActionsEditor : ModuleRules
 	public ActionsEditor(ReadOnlyTargetRules TargetRules) : base(TargetRules)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-
-		PublicIncludePaths.Add( "Editor/Public" );
-
-		PrivateIncludePaths.Add( "Editor/Private" );
-
+        
 		PublicDependencyModuleNames.AddRange(new string[] {
 			"Core",
 			"InputCore"
