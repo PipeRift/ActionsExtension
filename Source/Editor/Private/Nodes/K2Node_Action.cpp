@@ -13,13 +13,12 @@
 #include "K2Node_AssignmentStatement.h"
 
 #include "ActionsEditor.h"
-#include "ActionNodeHelpers.h"
 
 #include "ActionLibrary.h"
 #include "Action.h"
 
 
-#define LOCTEXT_NAMESPACE "AIExtensionEditor"
+#define LOCTEXT_NAMESPACE "ActionEditor"
 
 FName UK2Node_Action::FHelper::WorldContextPinName(TEXT("WorldContextObject"));
 FName UK2Node_Action::FHelper::ClassPinName(TEXT("Class"));
@@ -316,8 +315,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 void UK2Node_Action::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& OldPins)
 {
 	AllocateDefaultPins();
-	UClass* UseSpawnClass = GetClassToSpawn(&OldPins);
-	if (UseSpawnClass != NULL)
+	if (UClass* UseSpawnClass = GetClassToSpawn(&OldPins))
 	{
 		CreatePinsForClass(UseSpawnClass);
 	}
@@ -336,16 +334,21 @@ void UK2Node_Action::GetNodeAttributes(TArray<TKeyValuePair<FString, FString>>& 
 
 void UK2Node_Action::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
 {
-	//Registry subclasses creation
-	UClass* NodeClass = GetClass();
-	ActionNodeHelpers::RegisterActionClassActions(ActionRegistrar, NodeClass);
-
-	//Registry base creation
-	if (ActionRegistrar.IsOpenForRegistration(NodeClass))
+	// actions get registered under specific object-keys; the idea is that
+	// actions might have to be updated (or deleted) if their object-key is
+	// mutated (or removed)... here we use the node's class (so if the node
+	// type disappears, then the action should go with it)
+	UClass* ActionKey = GetClass();
+	// to keep from needlessly instantiating a UBlueprintNodeSpawner, first
+	// check to make sure that the registrar is looking for actions of this type
+	// (could be regenerating actions for a specific asset, and therefore the
+	// registrar would only accept actions corresponding to that asset)
+	if (ActionRegistrar.IsOpenForRegistration(ActionKey))
 	{
-		UBlueprintNodeSpawner* NodeSpawner = UBlueprintNodeSpawner::Create(NodeClass);
+		UBlueprintNodeSpawner* NodeSpawner = UBlueprintNodeSpawner::Create(GetClass());
 		check(NodeSpawner != nullptr);
-		ActionRegistrar.AddBlueprintAction(NodeClass, NodeSpawner);
+
+		ActionRegistrar.AddBlueprintAction(ActionKey, NodeSpawner);
 	}
 }
 
