@@ -14,8 +14,6 @@
 #include "K2Node_CustomEvent.h"
 #include "K2Node_TemporaryVariable.h"
 
-#include "ActionOwnerInterface.h"
-
 #include "K2Node_Action.generated.h"
 
 
@@ -23,6 +21,10 @@ UCLASS(Blueprintable)
 class ACTIONSEDITOR_API UK2Node_Action : public UK2Node
 {
 	GENERATED_UCLASS_BODY()
+
+	static FName ClassPinName;
+	static FName OwnerPinName;
+
 
 	//~ Begin UEdGraphNode Interface.
 	virtual void AllocateDefaultPins() override;
@@ -32,8 +34,9 @@ class ACTIONSEDITOR_API UK2Node_Action : public UK2Node
 	virtual FText GetTooltipText() const override;
 	virtual bool HasExternalDependencies(TArray<class UStruct*>* OptionalOutput) const override;
 	virtual bool IsCompatibleWithGraph(const UEdGraph* TargetGraph) const override;
-	virtual void PinConnectionListChanged(UEdGraphPin* Pin);
+	virtual void PinConnectionListChanged(UEdGraphPin* Pin) override;
 	virtual void GetPinHoverText(const UEdGraphPin& Pin, FString& HoverTextOut) const override;
+	virtual class FNodeHandlingFunctor* CreateNodeHandler(class FKismetCompilerContext& CompilerContext) const override;
 	virtual void ExpandNode(class FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
 	// End UEdGraphNode interface.
 
@@ -56,19 +59,20 @@ protected:
 	/** Get the then output pin */
 	UEdGraphPin* GetThenPin() const;
 	/** Get the blueprint input pin */
-	UEdGraphPin* GetClassPin(const TArray<UEdGraphPin*>* InPinsToSearch = NULL) const;
-	/** Get the world context input pin, can return NULL */
-	UEdGraphPin* GetWorldContextPin(bool bChecked = true) const;
+	UEdGraphPin* GetClassPin(const TArray<UEdGraphPin*>* InPinsToSearch = nullptr) const;
 	/** Get the result output pin */
 	UEdGraphPin* GetResultPin() const;
 	/** Get the result input pin */
 	UEdGraphPin* GetOwnerPin() const;
 
 	/** Get the class that we are going to spawn, if it's defined as default value */
-	UClass* GetClassToSpawn(const TArray<UEdGraphPin*>* InPinsToSearch = NULL) const;
+	UClass* GetClassToSpawn(const TArray<UEdGraphPin*>* InPinsToSearch = nullptr) const;
 
 	/** Returns if the node uses World Object Context input */
 	virtual bool UseWorldContext() const;
+
+	/** Returns if the node has World Context */
+	virtual bool HasWorldContext() const;
 
 	/** Returns if the node uses Owner input */
 	virtual bool UseOwner() const { return true; }
@@ -115,9 +119,6 @@ private:
 protected:
 	struct ACTIONSEDITOR_API FHelper
 	{
-		static FName WorldContextPinName;
-		static FName ClassPinName;
-		static FName OwnerPinName;
 
 		struct FOutputPinAndLocalVariable
 		{

@@ -5,7 +5,7 @@
 
 #if WITH_GAMEPLAY_DEBUGGER
 #include "GameplayDebugger.h"
-#include "Actions/GameplayDebugger_Actions.h"
+#include "GameplayDebugger_Actions.h"
 #endif // WITH_GAMEPLAY_DEBUGGER
 
 DEFINE_LOG_CATEGORY(LogActions)
