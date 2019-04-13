@@ -89,6 +89,12 @@ UK2Node_Action::UK2Node_Action(const FObjectInitializer& ObjectInitializer)
 }
 
 
+void UK2Node_Action::PostLoad()
+{
+	Super::PostLoad();
+	BindBlueprintCompile();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // UEdGraphNode Interface
 
@@ -116,7 +122,10 @@ void UK2Node_Action::AllocateDefaultPins()
 
 	//Update class pins if we are using a prestated node
 	if (UsePrestatedClass())
+	{
 		OnClassPinChanged();
+		BindBlueprintCompile();
+	}
 
 	Super::AllocateDefaultPins();
 }
@@ -132,7 +141,7 @@ FText UK2Node_Action::GetNodeTitle(ENodeTitleType::Type TitleType) const
 	{
 		return GetBaseNodeTitle();
 	}
-	else if (auto ClassToSpawn = GetClassToSpawn())
+	else if (auto ClassToSpawn = GetActionClass())
 	{
 		if (CachedNodeTitle.IsOutOfDate(this))
 		{
@@ -143,14 +152,16 @@ FText UK2Node_Action::GetNodeTitle(ENodeTitleType::Type TitleType) const
 		}
 		return CachedNodeTitle;
 	}
-	return NSLOCTEXT("K2Node", "ConstructObject_Title_NONE", "Create NONE");
+	return NSLOCTEXT("K2Node", "Action_Title_None", "No Action");
 }
 
 void UK2Node_Action::PinDefaultValueChanged(UEdGraphPin* ChangedPin)
 {
+	// Class changed
 	if (ChangedPin && (ChangedPin->PinName == ClassPinName))
 	{
 		OnClassPinChanged();
+		BindBlueprintCompile();
 	}
 }
 
@@ -161,7 +172,7 @@ FText UK2Node_Action::GetTooltipText() const
 
 bool UK2Node_Action::HasExternalDependencies(TArray<class UStruct*>* OptionalOutput) const
 {
-	UClass* SourceClass = GetClassToSpawn();
+	UClass* SourceClass = GetActionClass();
 	const UBlueprint* SourceBlueprint = GetBlueprint();
 	const bool bResult = (SourceClass != nullptr) && (SourceClass->ClassGeneratedBy != SourceBlueprint);
 	if (bResult && OptionalOutput)
@@ -311,11 +322,11 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	// create 'set var' nodes
 
 	// Set all properties of the object
-	UEdGraphPin* LastThenPin = FKismetCompilerUtilities::GenerateAssignmentNodes(CompilerContext, SourceGraph, CreateActionNode, this, CreateAction_Result, GetClassToSpawn());
+	UEdGraphPin* LastThenPin = FKismetCompilerUtilities::GenerateAssignmentNodes(CompilerContext, SourceGraph, CreateActionNode, this, CreateAction_Result, GetActionClass());
 
 
 	// FOR EACH DELEGATE DEFINE EVENT, CONNECT IT TO DELEGATE AND IMPLEMENT A CHAIN OF ASSIGMENTS
-	for (TFieldIterator<UMulticastDelegateProperty> PropertyIt(GetClassToSpawn(), EFieldIteratorFlags::IncludeSuper); PropertyIt && bIsErrorFree; ++PropertyIt)
+	for (TFieldIterator<UMulticastDelegateProperty> PropertyIt(GetActionClass(), EFieldIteratorFlags::IncludeSuper); PropertyIt && bIsErrorFree; ++PropertyIt)
 	{
 		UMulticastDelegateProperty* Property = *PropertyIt;
 
@@ -376,7 +387,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 void UK2Node_Action::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& OldPins)
 {
 	AllocateDefaultPins();
-	if (UClass* UseSpawnClass = GetClassToSpawn(&OldPins))
+	if (UClass* UseSpawnClass = GetActionClass(&OldPins))
 	{
 		CreatePinsForClass(UseSpawnClass);
 	}
@@ -385,7 +396,7 @@ void UK2Node_Action::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& Ol
 
 void UK2Node_Action::GetNodeAttributes(TArray<TKeyValuePair<FString, FString>>& OutNodeAttributes) const
 {
-	UClass* ClassToSpawn = GetClassToSpawn();
+	UClass* ClassToSpawn = GetActionClass();
 	const FString ClassToSpawnStr = ClassToSpawn ? ClassToSpawn->GetName() : TEXT("InvalidClass");
 	OutNodeAttributes.Add(TKeyValuePair<FString, FString>(TEXT("Type"), TEXT("CreateAction")));
 	OutNodeAttributes.Add(TKeyValuePair<FString, FString>(TEXT("Class"), GetClass()->GetName()));
@@ -404,6 +415,7 @@ void UK2Node_Action::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionReg
 		UBlueprintNodeSpawner* NodeSpawner = UBlueprintNodeSpawner::Create(GetClass());
 		check(NodeSpawner != nullptr);
 
+		NodeSpawner->DefaultMenuSignature.Keywords = LOCTEXT("MenuKeywords", "Create Action");
 		ActionRegistrar.AddBlueprintAction(ActionKey, NodeSpawner);
 	}
 }
@@ -507,7 +519,7 @@ void UK2Node_Action::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* O
 	ResultPin->PinType.PinSubCategoryObject = InClass;
 }
 
-bool UK2Node_Action::IsSpawnVarPin(UEdGraphPin* Pin)
+bool UK2Node_Action::IsActionVarPin(UEdGraphPin* Pin)
 {
 	const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>();
 
@@ -564,7 +576,7 @@ UEdGraphPin* UK2Node_Action::GetOwnerPin() const
 	return Pin;
 }
 
-UClass* UK2Node_Action::GetClassToSpawn(const TArray<UEdGraphPin*>* InPinsToSearch /*=nullptr*/) const
+UClass* UK2Node_Action::GetActionClass(const TArray<UEdGraphPin*>* InPinsToSearch /*=nullptr*/) const
 {
 	UClass* UseSpawnClass = nullptr;
 
@@ -591,6 +603,22 @@ UClass* UK2Node_Action::GetClassToSpawn(const TArray<UEdGraphPin*>* InPinsToSear
 	return UseSpawnClass;
 }
 
+UBlueprint* UK2Node_Action::GetActionBlueprint() const
+{
+	UClass* ClassToSpawn = GetActionClass();
+
+	if (!ClassToSpawn)
+		return nullptr;
+
+	FString ClassPath = ClassToSpawn->GetPathName();
+	ClassPath.RemoveFromEnd(TEXT("_C"), ESearchCase::CaseSensitive);
+	const FString BPPath = FString::Printf(TEXT("Blueprint'%s'"), *ClassPath);
+
+	return Cast<UBlueprint>(
+		StaticFindObject(UBlueprint::StaticClass(), nullptr, *BPPath)
+	);
+}
+
 bool UK2Node_Action::UseWorldContext() const
 {
 	auto BP = GetBlueprint();
@@ -610,7 +638,7 @@ FText UK2Node_Action::GetBaseNodeTitle() const
 
 FText UK2Node_Action::GetNodeTitleFormat() const
 {
-	return LOCTEXT("Action_ClassTitle", "Action: {ClassName}");
+	return LOCTEXT("Action_ClassTitle", "{ClassName}");
 }
 
 //which class can be used with this node to create objects. All childs of class can be used.
@@ -644,7 +672,7 @@ void UK2Node_Action::OnClassPinChanged()
 
 	for (UEdGraphPin* OldPin : OldPins)
 	{
-		if (IsSpawnVarPin(OldPin))
+		if (IsActionVarPin(OldPin))
 		{
 			Pins.Remove(OldPin);
 			OldClassPins.Add(OldPin);
@@ -654,7 +682,7 @@ void UK2Node_Action::OnClassPinChanged()
 	CachedNodeTitle.MarkDirty();
 
 	TArray<UEdGraphPin*> NewClassPins;
-	if (UClass* UseSpawnClass = GetClassToSpawn())
+	if (UClass* UseSpawnClass = GetActionClass())
 	{
 		CreatePinsForClass(UseSpawnClass, &NewClassPins);
 	}
@@ -681,6 +709,29 @@ void UK2Node_Action::OnClassPinChanged()
 
 	// Mark dirty
 	FBlueprintEditorUtils::MarkBlueprintAsModified(GetBlueprint());
+}
+
+void UK2Node_Action::OnBlueprintCompiled(UBlueprint* CompiledBP)
+{
+	if (BindedActionBlueprint == CompiledBP)
+	{
+		OnClassPinChanged();
+	}
+}
+
+void UK2Node_Action::BindBlueprintCompile()
+{
+	if (BindedActionBlueprint)
+	{
+		BindedActionBlueprint->OnCompiled().RemoveAll(this);
+		BindedActionBlueprint = nullptr;
+	}
+
+	if (UBlueprint * BPToSpawn = GetActionBlueprint())
+	{
+		BPToSpawn->OnCompiled().AddUObject(this, &UK2Node_Action::OnBlueprintCompiled);
+		BindedActionBlueprint = BPToSpawn;
+	}
 }
 
 bool UK2Node_Action::FHelper::ValidDataPin(const UEdGraphPin* Pin, EEdGraphPinDirection Direction, const UEdGraphSchema_K2* Schema)

@@ -1,9 +1,10 @@
 {
 	"FileVersion": 3,
-	"Version": 7,
-	"VersionName": "0.6",
+	"Version": 8,
+	"VersionName": "1.0",
 	"FriendlyName": "Actions Extension",
-	"Description": "A plugin that adds asynchronous objects to ue4 called Actions",
+	"Description": "A plugin that adds asynchronous tasks called Actions to UE4",
+  "MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/2924990b22c1452aa20a21af60c4aa12",
 	"Category": "Piperift",
 	"CreatedBy": "Piperift",
 	"CreatedByURL": "http://piperift.com/",
@@ -12,8 +13,6 @@
 	"SupportURL": "info@piperift.com",
 	"EngineVersion": "4.22.0",
 	"CanContainContent": false,
-	"IsBetaVersion": true,
-	"Installed": false,
   "Modules": [
     {
       "Name": "Actions",

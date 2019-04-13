@@ -25,6 +25,7 @@ class ACTIONSEDITOR_API UK2Node_Action : public UK2Node
 	static FName ClassPinName;
 	static FName OwnerPinName;
 
+	virtual void PostLoad() override;
 
 	//~ Begin UEdGraphNode Interface.
 	virtual void AllocateDefaultPins() override;
@@ -54,7 +55,7 @@ protected:
 	void CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* OutClassPins = nullptr);
 
 	/** See if this is a spawn variable pin, or a 'default' pin */
-	virtual bool IsSpawnVarPin(UEdGraphPin* Pin);
+	virtual bool IsActionVarPin(UEdGraphPin* Pin);
 
 	/** Get the then output pin */
 	UEdGraphPin* GetThenPin() const;
@@ -66,7 +67,10 @@ protected:
 	UEdGraphPin* GetOwnerPin() const;
 
 	/** Get the class that we are going to spawn, if it's defined as default value */
-	UClass* GetClassToSpawn(const TArray<UEdGraphPin*>* InPinsToSearch = nullptr) const;
+	UClass* GetActionClass(const TArray<UEdGraphPin*>* InPinsToSearch = nullptr) const;
+
+	/** Get the class that we are going to spawn, if it's defined as default value */
+	UBlueprint* GetActionBlueprint() const;
 
 	/** Returns if the node uses World Object Context input */
 	virtual bool UseWorldContext() const;
@@ -97,6 +101,7 @@ protected:
 	/** Refresh pins when class was changed */
 	void OnClassPinChanged();
 
+	void OnBlueprintCompiled(UBlueprint*);
 
 
 	/** Output pin visibility control */
@@ -111,11 +116,16 @@ public:
 	UClass* PrestatedClass;
 
 private:
+	/** Blueprint that is binded OnCompile */
+	UPROPERTY()
+	UBlueprint* BindedActionBlueprint;
+
 	/** Constructing FText strings can be costly, so we cache the node's title */
 	FNodeTextCache CachedNodeTitle;
 
 
 
+	void BindBlueprintCompile();
 protected:
 	struct ACTIONSEDITOR_API FHelper
 	{
