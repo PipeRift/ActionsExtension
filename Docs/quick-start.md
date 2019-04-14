@@ -28,7 +28,7 @@ Then we **open the blueprint** we created and add the following functions on Act
 
 ![Simple action](usage/img/simple_action.png)
 
-{% hint style='error' %} Make sure your actions call **Succeed** or **Fail**. Otherwise the action will run until its owner is destroyed or the game closes. {% endhint %}
+{% hint style='danger' %} Make sure your actions call **Succeed** or **Fail**. Otherwise the action will run until its owner is destroyed or the game closes. {% endhint %}
 
 ## Calling The action
 

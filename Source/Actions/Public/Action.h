@@ -44,28 +44,29 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FActionFinishedDelegate, const EActi
 UCLASS(Blueprintable, EditInlineNew, meta = (ExposedAsyncProxy))
 class ACTIONS_API UAction : public UObject
 {
-	GENERATED_UCLASS_BODY()
+	GENERATED_BODY()
 
 	friend UAction;
 
+
 public:
 
-	UPROPERTY(SaveGame)
-	EActionState State;
-
-	UPROPERTY(SaveGame)
-	TSet<UAction*> ChildrenActions;
-
-	//~ Begin Ticking
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Action)
-	bool bWantsToTick;
+	bool bWantsToTick = false;
 
 protected:
 
 	//Tick length in seconds. 0 is default tick rate
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Action, BlueprintGetter="GetTickRate")
-	float TickRate;
-	//~ End Ticking
+	float TickRate = 0.15f;
+
+private:
+
+	UPROPERTY(Transient)
+	EActionState State = EActionState::PREPARING;
+
+	UPROPERTY(SaveGame)
+	TSet<UAction*> ChildrenActions;
 
 public:
 
@@ -78,37 +79,17 @@ public:
 	FActionFinishedDelegate OnFinishedDelegate;
 
 
-	UFUNCTION(BlueprintCallable, Category = Action)
+	/** Called to active an action if not already. */
 	void Activate();
 
-	UFUNCTION(BlueprintCallable, Category = Action, meta = (KeyWords = "Finish"))
-	void Succeed() { Finish(true); }
-
-	UFUNCTION(BlueprintCallable, Category = Action, meta = (KeyWords = "Finish"))
-	void Fail(FName Error = NAME_None)
-	{
-		UE_LOG(LogActions, Log, TEXT("Action '%s' failed: %s"), *GetName(), *Error.ToString());
-		Finish(false);
-	}
-
-	/** Event called when play begins for this actor. */
-	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Activate"))
-	void ReceiveActivate();
-
-	/** Event called when tick is received for this tickable object . */
-	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Tick"))
-	void ReceiveTick(float DeltaTime);
-
-	/** Event called when finishing this task. */
-	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Finished"))
-	void ReceiveFinished(const EActionState Reason);
-
-	/** Used Internally. Called when the task is stopped from running by its owner */
+	/** Internal Use Only.
+	 * Called when the action is stopped from running by its owner
+	 */
 	void Cancel();
 
-	virtual void OnFinish(const EActionState Reason);
-
-
+	/** Internal Use Only.
+	 * Called by the subsystem when TickRate exceeds
+	 */
 	void DoTick(float DeltaTime)
 	{
 		Tick(DeltaTime);
@@ -118,16 +99,15 @@ public:
 protected:
 
 	virtual bool CanActivate() { return EventCanActivate(); }
+
 	virtual void OnActivation() {
 		OnActivationDelegate.Broadcast();
 		ReceiveActivate();
 	}
 
-	/** Event called when finishing this task. */
-	UFUNCTION(BlueprintNativeEvent, meta = (DisplayName = "Can Activate"))
-	bool EventCanActivate();
-
 	virtual void Tick(float DeltaTime) {}
+
+	virtual void OnFinish(const EActionState Reason);
 
 private:
 
@@ -141,7 +121,39 @@ private:
 
 public:
 
-	// INLINES
+	UFUNCTION(BlueprintCallable, Category = Action, meta = (KeyWords = "Finish"))
+	void Succeed() { Finish(true); }
+
+	UFUNCTION(BlueprintCallable, Category = Action, meta = (KeyWords = "Finish"))
+	void Fail(FName Error = NAME_None)
+	{
+		UE_LOG(LogActions, Log, TEXT("Action '%s' failed: %s"), *GetName(), *Error.ToString());
+		Finish(false);
+	}
+
+
+	/** Events */
+protected:
+
+	/** Event called to check if an action can activate. */
+	UFUNCTION(BlueprintNativeEvent, meta = (DisplayName = "Can Activate"))
+	bool EventCanActivate();
+
+	/** Called when this action is activated */
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Activate"))
+	void ReceiveActivate();
+
+	/** Called when tick is received based on TickRate */
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Tick"))
+	void ReceiveTick(float DeltaTime);
+
+	/** Called when this action finishes */
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Finished"))
+	void ReceiveFinished(const EActionState Reason);
+
+
+	/** Helpers */
+public:
 
 	FORCEINLINE bool CanTick() const
 	{
@@ -207,11 +219,38 @@ public:
 
 	/** STATIC */
 
+
+	/**
+	 * Creates a new action. Templated version
+	 * @param ActionType
+	 * @param Owner of the action. If destroyed, the action will follow.
+	 * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
+	 */
 	template<typename ActionType>
 	static ActionType* Create(UObject* Owner, bool bAutoActivate = false) {
 		return Cast<ActionType>(Create(Owner, ActionType::StaticClass(), bAutoActivate));
 	}
 
+	/**
+	 * Creates a new action
+	 * @param Owner of the action. If destroyed, the action will follow.
+	 * @param Type of the action to create
+	 * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
+	 */
 	static UAction* Create(UObject* Owner, const TSubclassOf<class UAction> Type, bool bAutoActivate = false);
+
+	/**
+	 * Creates a new action
+	 * @param Owner of the action. If destroyed, the action will follow.
+	 * @param Template whose properties and class are used to create the action.
+	 * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
+	 */
 	static UAction* Create(UObject* Owner, class UAction* Template, bool bAutoActivate = false);
+
+
+
+#if WITH_GAMEPLAY_DEBUGGER
+	void DescribeSelfToGameplayDebugger(class FGameplayDebugger_Actions& Debugger, int8 Indent) const;
+#endif // WITH_GAMEPLAY_DEBUGGER
+
 };

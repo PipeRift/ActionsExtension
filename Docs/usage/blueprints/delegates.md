@@ -2,7 +2,7 @@ Exposing Delegates
 
 **Actions can expose Event Dispatchers to action calls.**
 
-- If the event dispatcher has any parameter, it will show up as a simple execution pin
+- If the event dispatcher has any parameter, it will show up as an event pin
 - If it has no parameters, an execution pin will show up
 
 So as an example, if we have the following two events:

@@ -1,6 +1,6 @@
 # Exposing Variables
 
-Most of the times, when we have an action we want to feed it with variables to customize its behavior, and as you will see, it's very easy to do so.
+Most of the times, when we have an action, we want to feed it with variables to customize its behavior, and as you will see, it's very easy to do so.
 
 First open your Action blueprint and add a new variable of any type
 
@@ -12,7 +12,7 @@ Mark the variable as Editable
 
 Finally, check "**Expose on Spawn**" as true
 
-![1555192055972](E:\Piperift\TestBench\Plugins\ActionsExtension\Docs\usage\blueprints\img\expose_on_spawn.png)
+![Expose on Spawn](img/expose_on_spawn.png)
 
 This variable will now show up on all action nodes.
 

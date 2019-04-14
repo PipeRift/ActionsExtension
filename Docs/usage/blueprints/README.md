@@ -8,26 +8,30 @@ You can find it by right clicking on a graph and searching for **"Action"**:
 
 ![Add Action](../img/level_blueprint_add_action.png)
 
-Then we assign the action class we want to use.
+Then we have to assign the action class we want to use.
 
 ![Set Action](../img/set_action_type.png)
 
-After this, all its variables and delegates will show up for you to use and the action is ready to execute.
+After this, **all its variables and delegates will show up** for you to use and the action is ready to execute.
 
 ## Create  an Action
 
-Lets start by creating a very simple action.
-
-First we go to the **content browser, right click, Blueprint Class**
+To create an action, we have to go to <br>**content browser -> right click -> Blueprint Class**
 
 ![Right Click on content browser](../img/context_blueprint.png)
 
-Then we **select Action class** (or any other child class of Action)
+Then we **select "Action" class** or one of Action's children
 
 ![Select Action class](../img/popup_blueprint.png)
 
-Then we **open the blueprint** we created and add the following functions on Activate. This will be called when the action starts its execution, then wait 1 second, and finish.
+Then we **open the blueprint** we created.
 
-![Simple action](../img/simple_action.png)
+All actions have 3 main events:
 
-{% hint style='error' %} Make sure your actions call **Succeed** or **Fail**. Otherwise the action will run until its owner is destroyed or the game closes. {% endhint %}
+- **Activate**: When it gets created
+- **Tick**: When it ticks, if it is enabled. TickRate is applied.
+- **Finish**: When the action finished and why (*Success, Fail or Cancel*)
+
+
+
+{% hint style='danger' %} Make sure your actions call **Succeed** or **Fail**. Otherwise the action will run until its owner is destroyed or the game closes. {% endhint %}

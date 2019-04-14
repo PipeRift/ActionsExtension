@@ -222,47 +222,11 @@ void UActionsSubsystem::DescribeObjectToGameplayDebugger(const UObject* Object, 
 		{
 			if (IsValid(Action))
 			{
-				DescribeActionToGameplayDebugger(Action, Debugger, 1);
+				Action->DescribeSelfToGameplayDebugger(Debugger, 1);
 			}
 		}
 	}
 
 	Debugger.AddTextLine(TEXT(""));
-}
-
-void UActionsSubsystem::DescribeActionToGameplayDebugger(const UAction* Action, FGameplayDebugger_Actions& Debugger, int8 Indent) const
-{
-	check(Action);
-
-	FString ColorText = TEXT("");
-	switch (Action->GetState())
-	{
-	case EActionState::RUNNING:
-		ColorText = TEXT("{cyan}");
-		break;
-	case EActionState::SUCCESS:
-		ColorText = TEXT("{green}");
-		break;
-	default:
-		ColorText = TEXT("{red}");
-	}
-
-	FString IndentString = "";
-	for (int32 I = 0; I < Indent; ++I)
-	{
-		IndentString += "  ";
-	}
-
-	const FString CanceledSuffix = Action->GetState() == EActionState::CANCELED ? TEXT("CANCELLED") : TEXT("");
-
-	if (Action->IsRunning())
-	{
-		Debugger.AddTextLine(FString::Printf(TEXT("%s%s>%s %s"), *IndentString, *ColorText, *Action->GetName(), *CanceledSuffix));
-
-		for (const auto* ChildAction : Action->ChildrenActions)
-		{
-			DescribeActionToGameplayDebugger(ChildAction, Debugger, Indent + 1);
-		}
-	}
 }
 #endif // WITH_GAMEPLAY_DEBUGGER

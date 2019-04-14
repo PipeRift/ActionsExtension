@@ -7,18 +7,12 @@
 #include "Engine/World.h"
 
 #include "GameplayTaskOwnerInterface.h"
+#if WITH_GAMEPLAY_DEBUGGER
+#include "GameplayDebugger_Actions.h"
+#endif // WITH_GAMEPLAY_DEBUGGER
 
 DEFINE_LOG_CATEGORY(ActionLog);
 
-UAction::UAction(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-{
-	State = EActionState::PREPARING;
-
-	// Default Properties
-	bWantsToTick = false;
-	TickRate = 0.15f;
-}
 
 void UAction::Activate()
 {
@@ -138,16 +132,16 @@ void UAction::OnFinish(const EActionState Reason)
 
 UObject* UAction::GetOwner() const
 {
-	UObject* Owner = nullptr;
+	UObject* Outer = nullptr;
 	const UAction* Current = this;
 
 	// #TODO: Ensure this works
 	while (Current)
 	{
-		Owner = Current->GetParent();
-		Current = Current->GetParentAction();
+		Outer = Current->GetOuter();
+		Current = Cast<UAction>(Outer);
 	}
-	return Owner;
+	return Outer;
 }
 
 AActor* UAction::GetOwnerActor() const
@@ -165,16 +159,12 @@ UAction* UAction::Create(UObject* Owner, const TSubclassOf<class UAction> Type, 
 	if (!IsValid(Owner) || !Type.Get() || Type == UAction::StaticClass())
 		return nullptr;
 
-	if (!bAutoActivate)
+	UAction* Action = NewObject<UAction>(Owner, Type);
+	if (bAutoActivate)
 	{
-		return NewObject<UAction>(Owner, Type);
-	}
-	else
-	{
-		UAction* Action = NewObject<UAction>(Owner, Type);
 		Action->Activate();
-		return Action;
 	}
+	return Action;
 }
 
 UAction* UAction::Create(UObject* Owner, UAction* Template, bool bAutoActivate /*= false*/)
@@ -188,14 +178,54 @@ UAction* UAction::Create(UObject* Owner, UAction* Template, bool bAutoActivate /
 	if (Type == UAction::StaticClass())
 		return nullptr;
 
-	if (!bAutoActivate)
+	UAction* Action = NewObject<UAction>(Owner, Type, NAME_None, RF_NoFlags, Template);
+	if (bAutoActivate)
 	{
-		return NewObject<UAction>(Owner, Type, NAME_None, RF_NoFlags, Template);
-	}
-	else
-	{
-		UAction* Action = NewObject<UAction>(Owner, Type, NAME_None, RF_NoFlags, Template);
 		Action->Activate();
-		return Action;
+	}
+	return Action;
+}
+
+
+#if WITH_GAMEPLAY_DEBUGGER
+void UAction::DescribeSelfToGameplayDebugger(FGameplayDebugger_Actions& Debugger, int8 Indent) const
+{
+	FString ColorText = TEXT("");
+	switch (State)
+	{
+	case EActionState::RUNNING:
+		ColorText = TEXT("{cyan}");
+		break;
+	case EActionState::SUCCESS:
+		ColorText = TEXT("{green}");
+		break;
+	default:
+		ColorText = TEXT("{red}");
+	}
+
+	FString IndentString = "";
+	for (int32 I = 0; I < Indent; ++I)
+	{
+		IndentString += "  ";
+	}
+
+	const FString CanceledSuffix = (State == EActionState::CANCELED) ? TEXT("CANCELLED") : FString{};
+
+	if (IsRunning())
+	{
+		Debugger.AddTextLine(FString::Printf(TEXT("%s%s>%s %s"), *IndentString, *ColorText, *GetName(), *CanceledSuffix));
+
+		for (const auto* ChildAction : ChildrenActions)
+		{
+			if (ChildAction)
+			{
+				ChildAction->DescribeSelfToGameplayDebugger(Debugger, Indent + 1);
+			}
+			else
+			{
+				ensureMsgf(false, TEXT("Invalid child on action %s while debugging"), *GetName());
+			}
+		}
 	}
 }
+#endif // WITH_GAMEPLAY_DEBUGGER

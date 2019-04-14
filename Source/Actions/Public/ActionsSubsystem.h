@@ -9,9 +9,6 @@
 
 
 class UAction;
-#if WITH_GAMEPLAY_DEBUGGER
-class FGameplayDebugger_Actions;
-#endif // WITH_GAMEPLAY_DEBUGGER
 
 
 USTRUCT()
@@ -121,8 +118,7 @@ private:
 public:
 
 #if WITH_GAMEPLAY_DEBUGGER
-	void DescribeObjectToGameplayDebugger(const UObject* Object, const FName& BaseName, FGameplayDebugger_Actions& Debugger) const;
-	void DescribeActionToGameplayDebugger(const UAction* Action, FGameplayDebugger_Actions& Debugger, int8 Indent) const;
+	void DescribeObjectToGameplayDebugger(const UObject* Object, const FName& BaseName, class FGameplayDebugger_Actions& Debugger) const;
 #endif // WITH_GAMEPLAY_DEBUGGER
 
 
