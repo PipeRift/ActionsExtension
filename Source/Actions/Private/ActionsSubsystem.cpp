@@ -152,7 +152,7 @@ void UActionsSubsystem::CancelAll()
 	RootActions.Reset();
 }
 
-void UActionsSubsystem::CancelAllByObject(UObject* Object)
+void UActionsSubsystem::CancelAllByOwner(UObject* Object)
 {
 	const FSetElementId RootId = RootActions.FindId(Object);
 	if (RootId.IsValidId())
@@ -170,7 +170,7 @@ void UActionsSubsystem::CancelByPredicate(TFunctionRef<bool(const UAction*)> Pre
 	}
 }
 
-void UActionsSubsystem::CancelByObjectPredicate(UObject* Object, TFunctionRef<bool(const UAction*)> Predicate)
+void UActionsSubsystem::CancelByOwnerPredicate(UObject* Object, TFunctionRef<bool(const UAction*)> Predicate)
 {
 	if(FRootAction* const RootAction = RootActions.Find(Object))
 	{
@@ -210,13 +210,13 @@ void UActionsSubsystem::AddActionToTickGroup(UAction* Child)
 }
 
 #if WITH_GAMEPLAY_DEBUGGER
-void UActionsSubsystem::DescribeObjectToGameplayDebugger(const UObject* Object, const FName& BaseName, FGameplayDebugger_Actions& Debugger) const
+void UActionsSubsystem::DescribeOwnerToGameplayDebugger(const UObject* Owner, const FName& BaseName, FGameplayDebugger_Actions& Debugger) const
 {
 	static const FString StateColorText = TEXT("{green}");
 
-	Debugger.AddTextLine(FString::Printf(TEXT("%s%s: %s"), *StateColorText, *BaseName.ToString(), *Object->GetName()));
+	Debugger.AddTextLine(FString::Printf(TEXT("%s%s: %s"), *StateColorText, *BaseName.ToString(), *Owner->GetName()));
 
-	if (const FRootAction* const RootAction = RootActions.Find(Object))
+	if (const FRootAction* const RootAction = RootActions.Find(Owner))
 	{
 		for (const auto* Action : RootAction->Actions)
 		{

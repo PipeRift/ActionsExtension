@@ -10,7 +10,9 @@
 
 class UAction;
 
-
+/**
+ * Contains a list of actions with the same TickRate
+ */
 USTRUCT()
 struct FActionsTickGroup
 {
@@ -41,6 +43,10 @@ public:
 	friend const uint32 GetTypeHash(const FActionsTickGroup& InGroup) { return GetTypeHash(InGroup.TickRate); }
 };
 
+/**
+ * Represents a dependency of an objects with all its actions
+ * Used to cancel actions whose owner is destroyed
+ */
 USTRUCT()
 struct FRootAction
 {
@@ -67,6 +73,11 @@ struct FRootAction
 	friend uint32 GetTypeHash(const FRootAction& InAction) { return GetTypeHash(InAction.Owner); }
 };
 
+/**
+ * Actions Subsystem
+ * Keeps track of all running actions and their lifetime.
+ * It also does a global tick based on tick rate for all actions.
+ */
 UCLASS()
 class ACTIONS_API UActionsSubsystem : public UGameInstanceSubsystem, public FTickableGameObject
 {
@@ -103,12 +114,20 @@ public:
 	//~ End Tickable GameObject Interface
 
 
+	/** Cancel ALL current actions of the game. Use with care! */
 	void CancelAll();
 
-	void CancelAllByObject(UObject* Object);
+	/** Cancel all actions executing inside an object
+	 * @param Owner of the actions to cancel
+	 */
+	UFUNCTION(BlueprintCallable, Category = ActionSubsystem)
+	void CancelAllByOwner(UObject* Object);
 
+	/** Cancel all actions matching a predicate */
 	void CancelByPredicate(TFunctionRef<bool(const UAction*)> Predicate);
-	void CancelByObjectPredicate(UObject* Object, TFunctionRef<bool(const UAction*)> Predicate);
+
+	/** Cancel all actions with matching owner and predicate */
+	void CancelByOwnerPredicate(UObject* Object, TFunctionRef<bool(const UAction*)> Predicate);
 
 private:
 
@@ -118,7 +137,7 @@ private:
 public:
 
 #if WITH_GAMEPLAY_DEBUGGER
-	void DescribeObjectToGameplayDebugger(const UObject* Object, const FName& BaseName, class FGameplayDebugger_Actions& Debugger) const;
+	void DescribeOwnerToGameplayDebugger(const UObject* Owner, const FName& BaseName, class FGameplayDebugger_Actions& Debugger) const;
 #endif // WITH_GAMEPLAY_DEBUGGER
 
 

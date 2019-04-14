@@ -48,8 +48,38 @@ void UAction::Activate()
 	OnActivation();
 }
 
-bool UAction::EventCanActivate_Implementation() {
-	return true;
+void UAction::Cancel()
+{
+	if (IsPendingKill())
+		return;
+
+	if (!IsRunning())
+	{
+		Destroy();
+		return;
+	}
+
+	OnFinish(State = EActionState::CANCELED);
+	Destroy();
+}
+
+void UAction::OnFinish(const EActionState Reason)
+{
+	// Stop any timers or latent actions for the action
+	if (UWorld * World = GetWorld())
+	{
+		World->GetLatentActionManager().RemoveActionsForObject(this);
+		World->GetTimerManager().ClearAllTimersForObject(this);
+	}
+
+	OnFinishedDelegate.Broadcast(Reason);
+
+	const UObject* Parent = GetParent();
+	// If we're in the process of being garbage collected it is unsafe to call out to blueprints
+	if (Parent && !Parent->HasAnyFlags(RF_BeginDestroyed) && !Parent->IsUnreachable())
+	{
+		ReceiveFinished(Reason);
+	}
 }
 
 void UAction::Finish(bool bSuccess) {
@@ -65,21 +95,6 @@ void UAction::Finish(bool bSuccess) {
 		ParentAction->RemoveChildren(this);
 	}
 
-	Destroy();
-}
-
-void UAction::Cancel()
-{
-	if (IsPendingKill())
-		return;
-
-	if(!IsRunning())
-	{
-		Destroy();
-		return;
-	}
-
-	OnFinish(State = EActionState::CANCELED);
 	Destroy();
 }
 
@@ -111,23 +126,9 @@ void UAction::RemoveChildren(UAction* Child)
 	ChildrenActions.Remove(Child);
 }
 
-void UAction::OnFinish(const EActionState Reason)
+bool UAction::ReceiveCanActivate_Implementation()
 {
-	// Stop any timers or latent actions for the action
-	if (UWorld * World = GetWorld())
-	{
-		World->GetLatentActionManager().RemoveActionsForObject(this);
-		World->GetTimerManager().ClearAllTimersForObject(this);
-	}
-
-	OnFinishedDelegate.Broadcast(Reason);
-
-	const UObject* Parent = GetParent();
-	// If we're in the process of being garbage collected it is unsafe to call out to blueprints
-	if (Parent && !Parent->HasAnyFlags(RF_BeginDestroyed) && !Parent->IsUnreachable())
-	{
-		ReceiveFinished(Reason);
-	}
+	return true;
 }
 
 UObject* UAction::GetOwner() const
@@ -153,39 +154,6 @@ AActor* UAction::GetOwnerActor() const
 	}
 	return Cast<AActor>(Owner);
 }
-
-UAction* UAction::Create(UObject* Owner, const TSubclassOf<class UAction> Type, bool bAutoActivate /*= false*/)
-{
-	if (!IsValid(Owner) || !Type.Get() || Type == UAction::StaticClass())
-		return nullptr;
-
-	UAction* Action = NewObject<UAction>(Owner, Type);
-	if (bAutoActivate)
-	{
-		Action->Activate();
-	}
-	return Action;
-}
-
-UAction* UAction::Create(UObject* Owner, UAction* Template, bool bAutoActivate /*= false*/)
-{
-	if (!IsValid(Owner) || !Template)
-		return nullptr;
-
-	UClass* const Type = Template->GetClass();
-	check(Type);
-
-	if (Type == UAction::StaticClass())
-		return nullptr;
-
-	UAction* Action = NewObject<UAction>(Owner, Type, NAME_None, RF_NoFlags, Template);
-	if (bAutoActivate)
-	{
-		Action->Activate();
-	}
-	return Action;
-}
-
 
 #if WITH_GAMEPLAY_DEBUGGER
 void UAction::DescribeSelfToGameplayDebugger(FGameplayDebugger_Actions& Debugger, int8 Indent) const
@@ -229,3 +197,35 @@ void UAction::DescribeSelfToGameplayDebugger(FGameplayDebugger_Actions& Debugger
 	}
 }
 #endif // WITH_GAMEPLAY_DEBUGGER
+
+UAction* UAction::Create(UObject* Owner, const TSubclassOf<class UAction> Type, bool bAutoActivate /*= false*/)
+{
+	if (!IsValid(Owner) || !Type.Get() || Type == UAction::StaticClass())
+		return nullptr;
+
+	UAction* Action = NewObject<UAction>(Owner, Type);
+	if (bAutoActivate)
+	{
+		Action->Activate();
+	}
+	return Action;
+}
+
+UAction* UAction::Create(UObject* Owner, UAction* Template, bool bAutoActivate /*= false*/)
+{
+	if (!IsValid(Owner) || !Template)
+		return nullptr;
+
+	UClass* const Type = Template->GetClass();
+	check(Type);
+
+	if (Type == UAction::StaticClass())
+		return nullptr;
+
+	UAction* Action = NewObject<UAction>(Owner, Type, NAME_None, RF_NoFlags, Template);
+	if (bAutoActivate)
+	{
+		Action->Activate();
+	}
+	return Action;
+}
