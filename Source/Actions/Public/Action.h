@@ -88,6 +88,7 @@ public:
 	/************************************************************************/
 
 	/** Called to active an action if not already. */
+	UFUNCTION(BlueprintCallable, Category = "Action", BlueprintInternalUseOnly)
 	void Activate();
 
 	/** Internal Use Only. Called when the action is stopped from running by its owner */
