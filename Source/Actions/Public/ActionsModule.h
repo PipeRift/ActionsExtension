@@ -1,7 +1,7 @@
 // Copyright 2015-2019 Piperift. All Rights Reserved.
 #pragma once
 
-#include <ModuleInterface.h>
+#include <Modules/ModuleInterface.h>
 
 #if WITH_EDITOR
 #include "Developer/AssetTools/Public/IAssetTools.h"
