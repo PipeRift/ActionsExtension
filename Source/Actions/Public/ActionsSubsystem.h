@@ -19,6 +19,7 @@ struct FActionsTickGroup
 	UPROPERTY()
 	float TickRate = 0.f;
 
+	UPROPERTY(Transient)
 	float TickTimeElapsed = 0.f;
 
 	UPROPERTY()
