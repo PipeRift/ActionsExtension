@@ -32,18 +32,18 @@ void FGameplayDebugger_Actions::CollectData(APlayerController* OwnerPC, AActor* 
 	auto* Subsystem = GI->GetSubsystem<UActionsSubsystem>();
 	check(Subsystem);
 
-	Subsystem->DescribeObjectToGameplayDebugger(OwnerPC, TEXT("Player Controller"), *this);
+	Subsystem->DescribeOwnerToGameplayDebugger(OwnerPC, TEXT("Player Controller"), *this);
 
 	if (DebugActor)
 	{
-		Subsystem->DescribeObjectToGameplayDebugger(DebugActor, TEXT("Actor"), *this);
+		Subsystem->DescribeOwnerToGameplayDebugger(DebugActor, TEXT("Actor"), *this);
 
 		if (const APawn* DebugPawn = Cast<APawn>(DebugActor))
 		{
 			const AController* DebugController = DebugPawn->GetController();
 			if (DebugController && OwnerPC != DebugController)
 			{
-				Subsystem->DescribeObjectToGameplayDebugger(DebugController, TEXT("Controller"), *this);
+				Subsystem->DescribeOwnerToGameplayDebugger(DebugController, TEXT("Controller"), *this);
 			}
 		}
 	}

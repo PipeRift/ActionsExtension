@@ -48,7 +48,9 @@ class ACTIONS_API UAction : public UObject
 
 	friend UAction;
 
-
+	/************************************************************************/
+	/* PROPERTIES														    */
+	/************************************************************************/
 public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Action)
@@ -70,26 +72,29 @@ private:
 
 public:
 
-	// DELEGATES
+	/** Delegates */
 
+	// Notify when the action is activated
 	UPROPERTY()
 	FActionActivatedDelegate OnActivationDelegate;
 
+	// Notify when the action finished
 	UPROPERTY()
 	FActionFinishedDelegate OnFinishedDelegate;
 
 
+	/************************************************************************/
+	/* METHODS											     			    */
+	/************************************************************************/
+
 	/** Called to active an action if not already. */
+	UFUNCTION(BlueprintCallable, Category = "Action", BlueprintInternalUseOnly)
 	void Activate();
 
-	/** Internal Use Only.
-	 * Called when the action is stopped from running by its owner
-	 */
+	/** Internal Use Only. Called when the action is stopped from running by its owner */
 	void Cancel();
 
-	/** Internal Use Only.
-	 * Called by the subsystem when TickRate exceeds
-	 */
+	/** Internal Use Only. Called by the subsystem when TickRate exceeds */
 	void DoTick(float DeltaTime)
 	{
 		Tick(DeltaTime);
@@ -98,9 +103,10 @@ public:
 
 protected:
 
-	virtual bool CanActivate() { return EventCanActivate(); }
+	virtual bool CanActivate() { return ReceiveCanActivate(); }
 
-	virtual void OnActivation() {
+	virtual void OnActivation()
+	{
 		OnActivationDelegate.Broadcast();
 		ReceiveActivate();
 	}
@@ -137,7 +143,7 @@ protected:
 
 	/** Event called to check if an action can activate. */
 	UFUNCTION(BlueprintNativeEvent, meta = (DisplayName = "Can Activate"))
-	bool EventCanActivate();
+	bool ReceiveCanActivate();
 
 	/** Called when this action is activated */
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Activate"))
@@ -181,7 +187,8 @@ public:
 	UFUNCTION(BlueprintGetter)
 	FORCEINLINE float GetTickRate() const
 	{
-		return FMath::FloorToFloat(TickRate * 1000.f) * 0.001f;
+		// Reduce TickRate Precision to 0.1ms
+		return FMath::FloorToFloat(TickRate * 10000.f) * 0.0001f;
 	}
 
 	/** @return the object that executes the root action */
@@ -206,19 +213,22 @@ public:
 		return InOwner ? InOwner->GetWorld() : nullptr;
 	}
 
+#if WITH_GAMEPLAY_DEBUGGER
+	void DescribeSelfToGameplayDebugger(class FGameplayDebugger_Actions& Debugger, int8 Indent) const;
+#endif // WITH_GAMEPLAY_DEBUGGER
 
 private:
 
-	UActionsSubsystem* GetSubsystem() const {
-		UWorld* World = GetWorld();
-		UGameInstance* GI = World ? World->GetGameInstance() : nullptr;
+	UActionsSubsystem* GetSubsystem() const
+	{
+		const UWorld* World = GetWorld();
+		const UGameInstance* GI = World ? World->GetGameInstance() : nullptr;
 		return UGameInstance::GetSubsystem<UActionsSubsystem>(GI);
 	}
 
 public:
 
 	/** STATIC */
-
 
 	/**
 	 * Creates a new action. Templated version
@@ -227,7 +237,8 @@ public:
 	 * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
 	 */
 	template<typename ActionType>
-	static ActionType* Create(UObject* Owner, bool bAutoActivate = false) {
+	static ActionType* Create(UObject* Owner, bool bAutoActivate = false)
+	{
 		return Cast<ActionType>(Create(Owner, ActionType::StaticClass(), bAutoActivate));
 	}
 
@@ -246,11 +257,4 @@ public:
 	 * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
 	 */
 	static UAction* Create(UObject* Owner, class UAction* Template, bool bAutoActivate = false);
-
-
-
-#if WITH_GAMEPLAY_DEBUGGER
-	void DescribeSelfToGameplayDebugger(class FGameplayDebugger_Actions& Debugger, int8 Indent) const;
-#endif // WITH_GAMEPLAY_DEBUGGER
-
 };
