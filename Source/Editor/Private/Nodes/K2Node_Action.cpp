@@ -261,14 +261,15 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	}
 
 	UClass* SpawnClass;
-	if(UsePrestatedClass()) {
+	if(UsePrestatedClass())
+	{
 		SpawnClass = PrestatedClass;
 	}
 	else
 	{
 		SpawnClass = ClassPin ? Cast<UClass>(ClassPin->DefaultObject) : nullptr;
 		//Don't proceed if ClassPin is not defined or valid
-		if (ClassPin->LinkedTo.Num() == 0 && nullptr == SpawnClass)
+		if (!ClassPin || (ClassPin->LinkedTo.Num() == 0 && nullptr == SpawnClass))
 		{
 			CompilerContext.MessageLog.Error(*LOCTEXT("CreateActionNodeMissingClass_Error", "Create Action node @@ must have a class specified.").ToString(), this);
 			// we break exec links so this is the only error we get, don't want the CreateItemData node being considered and giving 'unexpected node' type warnings
@@ -300,10 +301,12 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	//Move pin if connected else, copy the value
 	if (!UsePrestatedClass() && ClassPin->LinkedTo.Num() > 0)
 	{
+		// Copy the 'blueprint' connection from the spawn node to 'UActionLibrary::CreateAction'
 		CompilerContext.MovePinLinksToIntermediate(*ClassPin, *CreateAction_Type);
 	}
 	else
 	{
+		// Copy blueprint literal onto 'UActionLibrary::CreateAction' call
 		CreateAction_Type->DefaultObject = SpawnClass;
 	}
 
@@ -324,8 +327,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	// Set all properties of the object
 	UEdGraphPin* LastThenPin = FKismetCompilerUtilities::GenerateAssignmentNodes(CompilerContext, SourceGraph, CreateActionNode, this, CreateAction_Result, GetActionClass());
 
-
-	// FOR EACH DELEGATE DEFINE EVENT, CONNECT IT TO DELEGATE AND IMPLEMENT A CHAIN OF ASSIGMENTS
+	// For each delegate, define an event, bind it to delegate and implement a chain of assignments
 	for (TFieldIterator<UMulticastDelegateProperty> PropertyIt(GetActionClass(), EFieldIteratorFlags::IncludeSuper); PropertyIt && bIsErrorFree; ++PropertyIt)
 	{
 		UMulticastDelegateProperty* Property = *PropertyIt;
@@ -344,7 +346,8 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 		}
 	}
 
-	if (!bIsErrorFree) {
+	if (!bIsErrorFree)
+	{
 		CompilerContext.MessageLog.Error(*LOCTEXT("CreateActionNodeMissingClass_Error", "There was a compile error while binding delegates.").ToString(), this);
 		// we break exec links so this is the only error we get, don't want the CreateAction node being considered and giving 'unexpected node' type warnings
 		BreakAllNodeLinks();
@@ -370,7 +373,8 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	CompilerContext.MovePinLinksToIntermediate(*ThenPin, *ActivateAction_Then);
 
 
-	if (!bIsErrorFree) {
+	if (!bIsErrorFree)
+	{
 		CompilerContext.MessageLog.Error(*LOCTEXT("CreateActionNodeMissingClass_Error", "There was a compile error while activating the action.").ToString(), this);
 		// we break exec links so this is the only error we get, don't want the CreateAction node being considered and giving 'unexpected node' type warnings
 		BreakAllNodeLinks();
