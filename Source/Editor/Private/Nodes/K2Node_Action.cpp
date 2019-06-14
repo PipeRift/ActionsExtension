@@ -25,63 +25,6 @@ FName UK2Node_Action::ClassPinName(TEXT("Class"));
 FName UK2Node_Action::OwnerPinName(UEdGraphSchema_K2::PN_Self);
 
 
-class FKCHandler_Action : public FNodeHandlingFunctor
-{
-public:
-	FKCHandler_Action(FKismetCompilerContext& InCompilerContext)
-		: FNodeHandlingFunctor(InCompilerContext) {}
-
-	virtual void RegisterNets(FKismetFunctionContext& Context, UEdGraphNode* Node) override
-	{
-		UK2Node_Action* SelfNode = CastChecked<UK2Node_Action>(Node);
-
-		UEdGraphPin* OwnerPin = SelfNode->FindPin(UK2Node_Action::OwnerPinName);
-		check(OwnerPin);
-
-		const bool bIsConnected = (OwnerPin->LinkedTo.Num() != 0);
-
-		// if this pin could use a default (it doesn't have a connection or default of its own)
-		if (!bIsConnected && OwnerPin->DefaultObject == nullptr)
-		{
-			if (FKismetCompilerUtilities::ValidateSelfCompatibility(OwnerPin, Context))
-			{
-				ensure(OwnerPin->PinType.PinSubCategoryObject != nullptr);
-				ensure(OwnerPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Object);
-
-				FBPTerminal * Term = Context.RegisterLiteral(OwnerPin);
-				Term->Type.PinSubCategory = UEdGraphSchema_K2::PN_Self;
-				Context.NetMap.Add(OwnerPin, Term);
-			}
-			else // Requires set
-			{
-				CompilerContext.MessageLog.Error(*NSLOCTEXT("KismetCompiler", "PinMustHaveConnection_Error", "Pin @@ must have a connection").ToString(), OwnerPin);
-			}
-		}
-
-		for (UEdGraphPin* Pin : Node->Pins)
-		{
-			if ((Pin->Direction != EGPD_Input) || (Pin->LinkedTo.Num() == 0))
-			{
-				continue;
-			}
-
-			// if we have an object plugged into an interface pin, let's create a
-			// term that'll be used as an intermediate, holding the result of a cast
-			// from object to interface
-			if (((Pin->PinType.PinCategory == UEdGraphSchema_K2::PC_Interface) && (Pin->LinkedTo[0]->PinType.PinCategory == UEdGraphSchema_K2::PC_Object)) ||
-				((Pin->PinType.PinCategory == UEdGraphSchema_K2::PC_Object) && (Pin->LinkedTo[0]->PinType.PinCategory == UEdGraphSchema_K2::PC_Interface)))
-			{
-				FBPTerminal* InterfaceTerm = Context.CreateLocalTerminal();
-				InterfaceTerm->CopyFromPin(Pin, Context.NetNameMap->MakeValidName(Pin) + TEXT("_CastInput"));
-				InterfaceTerm->Source = Node;
-			}
-		}
-
-		FNodeHandlingFunctor::RegisterNets(Context, Node);
-	}
-};
-
-
 UK2Node_Action::UK2Node_Action(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -216,11 +159,6 @@ void UK2Node_Action::GetPinHoverText(const UEdGraphPin& Pin, FString& HoverTextO
 	}
 
 	return Super::GetPinHoverText(Pin, HoverTextOut);
-}
-
-class FNodeHandlingFunctor* UK2Node_Action::CreateNodeHandler(class FKismetCompilerContext& CompilerContext) const
-{
-	return new FKCHandler_Action(CompilerContext);
 }
 
 //This will expand node for our custom object, with properties
@@ -731,7 +669,7 @@ void UK2Node_Action::BindBlueprintCompile()
 		BindedActionBlueprint = nullptr;
 	}
 
-	if (UBlueprint * BPToSpawn = GetActionBlueprint())
+	if (UBlueprint* BPToSpawn = GetActionBlueprint())
 	{
 		BPToSpawn->OnCompiled().AddUObject(this, &UK2Node_Action::OnBlueprintCompiled);
 		BindedActionBlueprint = BPToSpawn;

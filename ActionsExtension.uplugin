@@ -7,43 +7,43 @@
 	"Category": "Piperift",
 	"CreatedBy": "Piperift",
 	"CreatedByURL": "http://piperift.com/",
-  "MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/2924990b22c1452aa20a21af60c4aa12",
+	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/2924990b22c1452aa20a21af60c4aa12",
 	"DocsURL": "https://piperift.com/ActionsExtension",
 	"SupportURL": "info@piperift.com",
 	"EngineVersion": "4.22.0",
 	"CanContainContent": false,
-  "Modules": [
-    {
-      "Name": "Actions",
-      "Type": "Runtime",
-      "LoadingPhase": "PreDefault",
-      "WhitelistPlatforms": [
-            "Win64",
-            "Win32",
-            "Linux",
-            "HTML5",
-            "Android",
-            "PS4",
-            "XboxOne",
-            "Switch",
-            "Mac"
-        ]
-    },
-    {
-      "Name": "ActionsEditor",
-      "Type": "Editor",
-      "LoadingPhase": "PostEngineInit",
-      "WhitelistPlatforms": [
-            "Win64",
-            "Win32",
-            "Linux",
-            "HTML5",
-            "Android",
-            "PS4",
-            "XboxOne",
-            "Switch",
-            "Mac"
-        ]
-    }
-  ]
+	"Modules": [
+		{
+			"Name": "Actions",
+			"Type": "Runtime",
+			"LoadingPhase": "PreDefault",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Win32",
+				"Linux",
+				"HTML5",
+				"Android",
+				"PS4",
+				"XboxOne",
+				"Switch",
+				"Mac"
+			]
+		},
+		{
+			"Name": "ActionsEditor",
+			"Type": "Developer",
+			"LoadingPhase": "PostEngineInit",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Win32",
+				"Linux",
+				"HTML5",
+				"Android",
+				"PS4",
+				"XboxOne",
+				"Switch",
+				"Mac"
+			]
+		}
+	]
 }
