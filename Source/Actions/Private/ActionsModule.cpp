@@ -1,4 +1,4 @@
-// Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
+// Copyright 2015-2019 Piperift. All Rights Reserved.
 
 #include "ActionsModule.h"
 
@@ -6,6 +6,7 @@
 #include "GameplayDebugger.h"
 #include "GameplayDebugger_Actions.h"
 #endif // WITH_GAMEPLAY_DEBUGGER
+
 
 DEFINE_LOG_CATEGORY(LogActions)
 
