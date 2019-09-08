@@ -1,4 +1,5 @@
-# Actions Extension[![Version](https://img.shields.io/github/v/release/piperift/ActionsExtension?label=version)](https://github.com/PipeRift/ActionsExtension/releases)
+# Actions Extension
+[![Version](https://img.shields.io/github/v/release/piperift/ActionsExtension?label=version)](https://github.com/PipeRift/ActionsExtension/releases)
 ![UE4](https://img.shields.io/badge/UE4-4.22%2B-orange)
 [![Discord](https://img.shields.io/discord/288221302089711616?color=%237289da&label=discord)](https://discord.gg/nnsdr22)
 
