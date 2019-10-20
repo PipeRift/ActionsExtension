@@ -237,6 +237,8 @@ public:
 	template<typename ActionType>
 	static ActionType* Create(UObject* Owner, bool bAutoActivate = false)
 	{
+		static_assert(!TIsSame<ActionType, UAction>::Value, "Instantiating UAction is not allowed. Use a child class.");
+		static_assert(TIsDerivedFrom<ActionType, UAction>::IsDerived, "Provided class must inherit UAction.");
 		return Cast<ActionType>(Create(Owner, ActionType::StaticClass(), bAutoActivate));
 	}
 

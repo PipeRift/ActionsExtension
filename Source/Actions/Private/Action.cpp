@@ -201,7 +201,9 @@ void UAction::DescribeSelfToGameplayDebugger(FGameplayDebugger_Actions& Debugger
 UAction* UAction::Create(UObject* Owner, const TSubclassOf<class UAction> Type, bool bAutoActivate /*= false*/)
 {
 	if (!IsValid(Owner) || !Type.Get() || Type == UAction::StaticClass())
+	{
 		return nullptr;
+	}
 
 	UAction* Action = NewObject<UAction>(Owner, Type);
 	if (bAutoActivate)
@@ -214,13 +216,17 @@ UAction* UAction::Create(UObject* Owner, const TSubclassOf<class UAction> Type, 
 UAction* UAction::Create(UObject* Owner, UAction* Template, bool bAutoActivate /*= false*/)
 {
 	if (!IsValid(Owner) || !Template)
+	{
 		return nullptr;
+	}
 
 	UClass* const Type = Template->GetClass();
 	check(Type);
 
 	if (Type == UAction::StaticClass())
+	{
 		return nullptr;
+	}
 
 	UAction* Action = NewObject<UAction>(Owner, Type, NAME_None, RF_NoFlags, Template);
 	if (bAutoActivate)
