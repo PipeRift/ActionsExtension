@@ -44,6 +44,17 @@
 				"Switch",
 				"Mac"
 			]
+		},
+		{
+			"Name" : "ActionsTest",
+			"Type" : "Developer",
+			"LoadingPhase" : "PreDefault",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Win32",
+				"Linux",
+				"Mac"
+			]
 		}
 	]
 }
