@@ -74,6 +74,7 @@ struct FRootAction
 	friend uint32 GetTypeHash(const FRootAction& InAction) { return GetTypeHash(InAction.Owner); }
 };
 
+
 /**
  * Actions Subsystem
  * Keeps track of all running actions and their lifetime.

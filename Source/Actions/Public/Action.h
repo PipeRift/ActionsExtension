@@ -21,11 +21,11 @@ DECLARE_LOG_CATEGORY_EXTERN(ActionLog, Log, All);
 UENUM(Blueprintable)
 enum class EActionState : uint8
 {
-	PREPARING UMETA(DisplayName = "Preparing", Hidden),
-	RUNNING   UMETA(DisplayName = "Running", Hidden),
-	SUCCESS   UMETA(DisplayName = "Success"),
-	FAILURE   UMETA(DisplayName = "Failure"),
-	CANCELED  UMETA(DisplayName = "Canceled")
+	Preparing UMETA(Hidden),
+	Running   UMETA(Hidden),
+	Success,
+	Failure,
+	Cancelled
 };
 
 FORCEINLINE FString ToString(EActionState Value)
@@ -63,7 +63,7 @@ protected:
 private:
 
 	UPROPERTY(Transient)
-	EActionState State = EActionState::PREPARING;
+	EActionState State = EActionState::Preparing;
 
 	UPROPERTY(SaveGame)
 	TSet<UAction*> ChildrenActions;
@@ -165,13 +165,13 @@ public:
 	}
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE bool IsRunning() const { return !IsPendingKill() && State == EActionState::RUNNING; }
+	FORCEINLINE bool IsRunning() const { return !IsPendingKill() && State == EActionState::Running; }
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE bool Succeeded() const { return !IsPendingKill() && State == EActionState::SUCCESS; }
+	FORCEINLINE bool Succeeded() const { return !IsPendingKill() && State == EActionState::Success; }
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE bool Failed()    const { return !IsPendingKill() && State == EActionState::FAILURE; }
+	FORCEINLINE bool Failed()    const { return !IsPendingKill() && State == EActionState::Failure; }
 
 	UFUNCTION(BlueprintPure, Category = Action)
 	FORCEINLINE EActionState GetState() const { return State; }

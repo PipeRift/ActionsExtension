@@ -18,7 +18,7 @@ void UAction::Activate()
 {
 	UActionsSubsystem* Subsystem = GetSubsystem();
 
-	if (IsPendingKill() || !IsValid(GetOuter()) || State != EActionState::PREPARING)
+	if (IsPendingKill() || !IsValid(GetOuter()) || State != EActionState::Preparing)
 	{
 		UE_LOG(ActionLog, Warning, TEXT("Action '%s' is already running or pending destruction."), *GetName());
 		Destroy();
@@ -44,7 +44,7 @@ void UAction::Activate()
 
 	Subsystem->AddActionToTickGroup(this);
 
-	State = EActionState::RUNNING;
+	State = EActionState::Running;
 	OnActivation();
 }
 
@@ -59,7 +59,7 @@ void UAction::Cancel()
 		return;
 	}
 
-	OnFinish(State = EActionState::CANCELED);
+	OnFinish(State = EActionState::Cancelled);
 	Destroy();
 }
 
@@ -86,7 +86,7 @@ void UAction::Finish(bool bSuccess) {
 	if (!IsRunning() || IsPendingKill())
 		return;
 
-	State = bSuccess ? EActionState::SUCCESS : EActionState::FAILURE;
+	State = bSuccess ? EActionState::Success : EActionState::Failure;
 	OnFinish(State);
 
 	//Remove from parent action
@@ -161,10 +161,10 @@ void UAction::DescribeSelfToGameplayDebugger(FGameplayDebugger_Actions& Debugger
 	FString ColorText = TEXT("");
 	switch (State)
 	{
-	case EActionState::RUNNING:
+	case EActionState::Running:
 		ColorText = TEXT("{cyan}");
 		break;
-	case EActionState::SUCCESS:
+	case EActionState::Success:
 		ColorText = TEXT("{green}");
 		break;
 	default:
@@ -177,7 +177,7 @@ void UAction::DescribeSelfToGameplayDebugger(FGameplayDebugger_Actions& Debugger
 		IndentString += "  ";
 	}
 
-	const FString CanceledSuffix = (State == EActionState::CANCELED) ? TEXT("CANCELLED") : FString{};
+	const FString CanceledSuffix = (State == EActionState::Cancelled) ? TEXT("CANCELLED") : FString{};
 
 	if (IsRunning())
 	{
