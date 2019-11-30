@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include <CoreMinimal.h>
+#include <Engine/GameInstance.h>
+#include <Engine/World.h>
 #include <Subsystems/GameInstanceSubsystem.h>
 #include <Tickable.h>
 

@@ -3,6 +3,8 @@
 #pragma once
 
 #include <CoreMinimal.h>
+#include <Engine/GameInstance.h>
+#include <Engine/World.h>
 #include <UObject/ObjectMacros.h>
 #include <UObject/ScriptInterface.h>
 #include <Tickable.h>
