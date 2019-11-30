@@ -55,13 +55,13 @@ void UBTT_RunAction::OnRunActionFinished(const EActionState Reason)
 	{
 		switch (Reason)
 		{
-		case EActionState::SUCCESS:
+		case EActionState::Success:
 			FinishLatentTask(*OwnerComp, EBTNodeResult::Succeeded);
 			break;
-		case EActionState::FAILURE:
+		case EActionState::Failure:
 			FinishLatentTask(*OwnerComp, EBTNodeResult::Failed);
 			break;
-		case EActionState::CANCELED: //Do Nothing
+		case EActionState::Cancelled: //Do Nothing
 			break;
 		default:
 			FinishLatentTask(*OwnerComp, EBTNodeResult::Aborted);

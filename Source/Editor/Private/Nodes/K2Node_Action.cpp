@@ -2,15 +2,14 @@
 
 #include "K2Node_Action.h"
 
-#include "Kismet2/BlueprintEditorUtils.h"
-#include "KismetCompiler.h"
-#include "BlueprintNodeSpawner.h"
-#include "EditorCategoryUtils.h"
-#include "BlueprintNodeSpawner.h"
-#include "BlueprintFunctionNodeSpawner.h"
-#include "BlueprintActionDatabaseRegistrar.h"
-#include "K2Node_CallFunction.h"
-#include "K2Node_AssignmentStatement.h"
+#include <BlueprintNodeSpawner.h>
+#include <BlueprintFunctionNodeSpawner.h>
+#include <BlueprintActionDatabaseRegistrar.h>
+#include <EditorCategoryUtils.h>
+#include <K2Node_CallFunction.h>
+#include <K2Node_AssignmentStatement.h>
+#include <KismetCompiler.h>
+#include <Kismet2/BlueprintEditorUtils.h>
 
 #include "ActionsEditor.h"
 #include "ActionNodeHelpers.h"
@@ -21,12 +20,12 @@
 
 #define LOCTEXT_NAMESPACE "ActionEditor"
 
-FName UK2Node_Action::ClassPinName(TEXT("Class"));
-FName UK2Node_Action::OwnerPinName(UEdGraphSchema_K2::PN_Self);
+const FName UK2Node_Action::ClassPinName{ "__Class" };
+const FName UK2Node_Action::OwnerPinName{ UEdGraphSchema_K2::PN_Self };
 
 
-UK2Node_Action::UK2Node_Action(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+UK2Node_Action::UK2Node_Action()
+	: Super()
 {
 	NodeTooltip = LOCTEXT("NodeTooltip", "Creates a new action");
 }
@@ -58,6 +57,7 @@ void UK2Node_Action::AllocateDefaultPins()
 	if (!UsePrestatedClass()) {
 		// Add blueprint pin
 		UEdGraphPin* ClassPin = CreatePin(EGPD_Input, K2Schema->PC_Class, GetClassPinBaseClass(), ClassPinName);
+		ClassPin->PinFriendlyName = LOCTEXT("PinClassName", "Class");
 	}
 
 	// Result pin
@@ -190,7 +190,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	//Outputs
 	UEdGraphPin* ResultPin = GetResultPin();   // Result pin, which will output our spawned object.
 
-	if(!HasWorldContext())
+	if (!HasWorldContext())
 	{
 		CompilerContext.MessageLog.Error(*LOCTEXT("CreateActionNodeMissingClass_Error", "@@ node requires world context.").ToString(), this);
 		// we break exec links so this is the only error we get, don't want the CreateItemData node being considered and giving 'unexpected node' type warnings
@@ -199,7 +199,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	}
 
 	UClass* SpawnClass;
-	if(UsePrestatedClass())
+	if (UsePrestatedClass())
 	{
 		SpawnClass = PrestatedClass;
 	}
@@ -270,7 +270,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	{
 		UMulticastDelegateProperty* Property = *PropertyIt;
 
-		if (Property && Property->HasAllPropertyFlags(CPF_BlueprintAssignable))
+		if (Property && Property->HasAllPropertyFlags(CPF_BlueprintAssignable) && Property->SignatureFunction)
 		{
 			const UFunction* DelegateSignatureFunction = Property->SignatureFunction;
 			if (DelegateSignatureFunction->NumParms < 1)
@@ -376,83 +376,73 @@ void UK2Node_Action::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* O
 {
 	check(InClass != nullptr);
 
+	if(!ActionReflection::GetVisibleProperties(InClass, CurrentProperties))
+	{
+		return;
+	}
+
 	const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>();
 
-	const UObject* const ClassDefaultObject = InClass->GetDefaultObject(false);
-
-
-	for (TFieldIterator<UProperty> PropertyIt(InClass, EFieldIteratorFlags::IncludeSuper); PropertyIt; ++PropertyIt)
+	const UObject* const CDO = InClass->GetDefaultObject(false);
+	for(const auto& Property : CurrentProperties.Variables)
 	{
-		UProperty* Property = *PropertyIt;
-		const bool bIsDelegate = Property->IsA(UMulticastDelegateProperty::StaticClass());
-		const bool bIsExposedToSpawn = UEdGraphSchema_K2::IsPropertyExposedOnSpawn(Property);
-		const bool bIsSettableExternally = !Property->HasAnyPropertyFlags(CPF_DisableEditOnInstance);
+		UEdGraphPin* Pin = CreatePin(EGPD_Input, Property.GetType(), Property.GetFName());
+		if(!Pin) { continue; }
 
-		if (nullptr == FindPin(Property->GetName())) {
-			if (bIsExposedToSpawn &&
-				!Property->HasAnyPropertyFlags(CPF_Parm) &&
-				bIsSettableExternally &&
-				Property->HasAllPropertyFlags(CPF_BlueprintVisible) &&
-				!bIsDelegate)
-			{
-				UEdGraphPin* Pin = CreatePin(EGPD_Input, FName(), Property->GetFName());
-				const bool bPinGood = (Pin != nullptr) && K2Schema->ConvertPropertyToPinType(Property, Pin->PinType);
+		if (OutClassPins)
+		{
+			OutClassPins->Add(Pin);
+		}
 
-				if (OutClassPins && Pin)
-				{
-					OutClassPins->Add(Pin);
-				}
+		if (CDO && K2Schema->PinDefaultValueIsEditable(*Pin))
+		{
+			FString DefaultValueAsString;
+			const bool bDefaultValueSet = FBlueprintEditorUtils::PropertyValueToString(Property.GetProperty(), reinterpret_cast<const uint8*>(CDO), DefaultValueAsString);
+			check(bDefaultValueSet);
+			K2Schema->TrySetDefaultValue(*Pin, DefaultValueAsString);
+		}
 
-				if (ClassDefaultObject && Pin != nullptr && K2Schema->PinDefaultValueIsEditable(*Pin))
-				{
-					FString DefaultValueAsString;
-					const bool bDefaultValueSet = FBlueprintEditorUtils::PropertyValueToString(Property, reinterpret_cast<const uint8*>(ClassDefaultObject), DefaultValueAsString);
-					check(bDefaultValueSet);
-					K2Schema->TrySetDefaultValue(*Pin, DefaultValueAsString);
-				}
+		// Copy tooltip from the property.
+		K2Schema->ConstructBasicPinTooltip(*Pin, Property.GetProperty()->GetToolTipText(), Pin->PinToolTip);
+	}
 
-				// Copy tooltip from the property.
-				if (Pin != nullptr)
-				{
-					K2Schema->ConstructBasicPinTooltip(*Pin, Property->GetToolTipText(), Pin->PinToolTip);
-				}
-			}
-			else if (bIsDelegate && Property->HasAllPropertyFlags(CPF_BlueprintAssignable)) {
-				UMulticastDelegateProperty* const Delegate = Cast<UMulticastDelegateProperty>(*PropertyIt);
-				if (Delegate)
-				{
-					UFunction* DelegateSignatureFunction = Delegate->SignatureFunction;
-					if (DelegateSignatureFunction)
-					{
-						UEdGraphPin* Pin;
-						if (DelegateSignatureFunction->NumParms < 1)
-						{
-							Pin = CreatePin(EGPD_Output, K2Schema->PC_Exec, Delegate->GetFName());
-						}
-						else
-						{
-							UEdGraphNode::FCreatePinParams Params{};
-							Params.bIsConst = true;
-							Params.bIsReference = true;
+	for(const auto& Property : CurrentProperties.ComplexDelegates)
+	{
+		if (!Property.GetFunction())
+		{
+			UE_LOG(LogActionsEd, Error, TEXT("Delegate '%s' may be corrupted"), *Property.GetFName().ToString());
+		}
 
-							Pin = CreatePin(EGPD_Input, K2Schema->PC_Delegate, Delegate->GetFName(), Params);
-							Pin->PinFriendlyName = FText::Format(NSLOCTEXT("K2Node", "PinFriendlyDelegatetName", "{0} Event"), FText::FromName(Delegate->GetFName()));
+		UEdGraphNode::FCreatePinParams Params{};
+		Params.bIsConst = true;
+		Params.bIsReference = true;
+		UEdGraphPin* Pin = CreatePin(EGPD_Input, K2Schema->PC_Delegate, Property.GetFName(), Params);
+		if(!Pin) { continue; }
 
-							//Update PinType with the delegate's signature
-							FMemberReference::FillSimpleMemberReference<UFunction>(DelegateSignatureFunction, Pin->PinType.PinSubCategoryMemberReference);
-						}
+		Pin->PinFriendlyName = FText::Format(NSLOCTEXT("K2Node", "PinFriendlyDelegateName", "{0}"), FText::FromName(Property.GetFName()));
 
-						if (OutClassPins && Pin)
-						{
-							OutClassPins->Add(Pin);
-						}
-					}
-					else
-					{
-						UE_LOG(LogActionsEd, Error, TEXT("Delegate '%s' may be corrumped"), *Delegate->GetName());
-					}
-				}
-			}
+		//Update PinType with the delegate's signature
+		FMemberReference::FillSimpleMemberReference<UFunction>(Property.GetFunction(), Pin->PinType.PinSubCategoryMemberReference);
+
+		if (OutClassPins)
+		{
+			OutClassPins->Add(Pin);
+		}
+	}
+
+	for(const auto& Property : CurrentProperties.SimpleDelegates)
+	{
+		if (!Property.GetFunction())
+		{
+			UE_LOG(LogActionsEd, Error, TEXT("Delegate '%s' may be corrupted"), *Property.GetFName().ToString());
+		}
+
+		UEdGraphPin* Pin = CreatePin(EGPD_Output, K2Schema->PC_Exec, Property.GetFName());
+		if(!Pin) { continue; }
+
+		if (OutClassPins)
+		{
+			OutClassPins->Add(Pin);
 		}
 	}
 
@@ -484,9 +474,11 @@ UEdGraphPin* UK2Node_Action::GetThenPin()const
 UEdGraphPin* UK2Node_Action::GetClassPin(const TArray<UEdGraphPin*>* InPinsToSearch /*= nullptr*/) const
 {
 	if (UsePrestatedClass())
+	{
 		return nullptr;
+	}
 
-	const TArray<UEdGraphPin*>* PinsToSearch = InPinsToSearch ? InPinsToSearch : &Pins;
+	const TArray<UEdGraphPin*>* PinsToSearch = InPinsToSearch? InPinsToSearch : &Pins;
 
 	UEdGraphPin* Pin = nullptr;
 	for (auto PinIt = PinsToSearch->CreateConstIterator(); PinIt; ++PinIt)
@@ -498,7 +490,7 @@ UEdGraphPin* UK2Node_Action::GetClassPin(const TArray<UEdGraphPin*>* InPinsToSea
 			break;
 		}
 	}
-	check(Pin == nullptr || Pin->Direction == EGPD_Input);
+	check(!Pin || Pin->Direction == EGPD_Input);
 	return Pin;
 }
 
@@ -528,17 +520,17 @@ UClass* UK2Node_Action::GetActionClass(const TArray<UEdGraphPin*>* InPinsToSearc
 	}
 	else
 	{
-		const TArray<UEdGraphPin*>* PinsToSearch = InPinsToSearch ? InPinsToSearch : &Pins;
-
-		UEdGraphPin* ClassPin = GetClassPin(PinsToSearch);
-		if (ClassPin && ClassPin->DefaultObject != nullptr && ClassPin->LinkedTo.Num() == 0)
+		if(UEdGraphPin* ClassPin = GetClassPin(InPinsToSearch))
 		{
-			UseSpawnClass = CastChecked<UClass>(ClassPin->DefaultObject);
-		}
-		else if (ClassPin && ClassPin->LinkedTo.Num())
-		{
-			auto ClassSource = ClassPin->LinkedTo[0];
-			UseSpawnClass = ClassSource ? Cast<UClass>(ClassSource->PinType.PinSubCategoryObject.Get()) : nullptr;
+			if (ClassPin->DefaultObject && ClassPin->LinkedTo.Num() == 0)
+			{
+				UseSpawnClass = CastChecked<UClass>(ClassPin->DefaultObject);
+			}
+			else if (ClassPin->LinkedTo.Num())
+			{
+				auto ClassSource = ClassPin->LinkedTo[0];
+				UseSpawnClass = ClassSource? Cast<UClass>(ClassSource->PinType.PinSubCategoryObject.Get()) : nullptr;
+			}
 		}
 	}
 
@@ -593,8 +585,7 @@ void UK2Node_Action::SetPinToolTip(UEdGraphPin& MutatablePin, const FText& PinDe
 {
 	MutatablePin.PinToolTip = UEdGraphSchema_K2::TypeToText(MutatablePin.PinType).ToString();
 
-	UEdGraphSchema_K2 const* const K2Schema = Cast<const UEdGraphSchema_K2>(GetSchema());
-	if (K2Schema != nullptr)
+	if (const auto* K2Schema = Cast<const UEdGraphSchema_K2>(GetSchema()))
 	{
 		MutatablePin.PinToolTip += TEXT(" ");
 		MutatablePin.PinToolTip += K2Schema->GetPinDisplayName(&MutatablePin).ToString();
@@ -605,13 +596,17 @@ void UK2Node_Action::SetPinToolTip(UEdGraphPin& MutatablePin, const FText& PinDe
 
 void UK2Node_Action::OnClassPinChanged()
 {
-	const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>();
+	// Node will only refresh if the exposed variables and delegates changed
+	FActionProperties Properties;
+	const bool bFoundProperties = ActionReflection::GetVisibleProperties(GetActionClass(), Properties);
+	if(!bFoundProperties || Properties == CurrentProperties)
+	{
+		return;
+	}
 
 	// Remove all pins related to archetype variables
 	TArray<UEdGraphPin*> OldPins = Pins;
 	TArray<UEdGraphPin*> OldClassPins;
-
-
 	for (UEdGraphPin* OldPin : OldPins)
 	{
 		if (IsActionVarPin(OldPin))
@@ -640,6 +635,7 @@ void UK2Node_Action::OnClassPinChanged()
 	// Recreate any pin links to the Result pin that are still valid
 	for (UEdGraphPin* Connections : ResultPinConnectionList)
 	{
+		const auto* K2Schema = GetDefault<UEdGraphSchema_K2>();
 		K2Schema->TryCreateConnection(ResultPin, Connections);
 	}
 
@@ -655,7 +651,7 @@ void UK2Node_Action::OnClassPinChanged()
 
 void UK2Node_Action::OnBlueprintCompiled(UBlueprint* CompiledBP)
 {
-	if (BindedActionBlueprint == CompiledBP)
+	if (ActionBlueprint == CompiledBP)
 	{
 		OnClassPinChanged();
 	}
@@ -663,16 +659,16 @@ void UK2Node_Action::OnBlueprintCompiled(UBlueprint* CompiledBP)
 
 void UK2Node_Action::BindBlueprintCompile()
 {
-	if (BindedActionBlueprint)
+	if (ActionBlueprint)
 	{
-		BindedActionBlueprint->OnCompiled().RemoveAll(this);
-		BindedActionBlueprint = nullptr;
+		ActionBlueprint->OnCompiled().RemoveAll(this);
+		ActionBlueprint = nullptr;
 	}
 
 	if (UBlueprint* BPToSpawn = GetActionBlueprint())
 	{
 		BPToSpawn->OnCompiled().AddUObject(this, &UK2Node_Action::OnBlueprintCompiled);
-		BindedActionBlueprint = BPToSpawn;
+		ActionBlueprint = BPToSpawn;
 	}
 }
 

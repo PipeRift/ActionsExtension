@@ -2,6 +2,7 @@
 #pragma once
 
 #include <Modules/ModuleInterface.h>
+#include <Modules/ModuleManager.h>
 
 #if WITH_EDITOR
 #include "Developer/AssetTools/Public/IAssetTools.h"

@@ -1,6 +1,8 @@
 ﻿// Copyright 2015-2019 Piperift. All Rights Reserved.
 
 #include "ActionsSubsystem.h"
+#include <Gameframework/WorldSettings.h>
+
 #include "Action.h"
 
 #if WITH_GAMEPLAY_DEBUGGER
@@ -19,7 +21,9 @@ void FActionsTickGroup::Tick(float DeltaTime)
 	{
 		TickTimeElapsed += DeltaTime;
 		if (TickTimeElapsed < TickRate)
+		{
 			return;
+		}
 
 		// Delayed Tick
 		DelayedTick(TickTimeElapsed);
@@ -127,11 +131,12 @@ void UActionsSubsystem::Tick(float DeltaTime)
 	}
 
 	// Tick all tick groups
+	const float TimeDilation = GetWorld()->GetWorldSettings()->GetEffectiveTimeDilation();
 	for (int32 i = 0; i < TickGroups.Num(); ++i)
 	{
 		auto& TickGroup = TickGroups[i];
 
-		TickGroup.Tick(DeltaTime);
+		TickGroup.Tick(DeltaTime * TimeDilation);
 
 		if(TickGroup.Actions.Num() <= 0)
 		{

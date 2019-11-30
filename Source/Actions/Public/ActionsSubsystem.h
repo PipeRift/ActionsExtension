@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include <CoreMinimal.h>
+#include <Engine/GameInstance.h>
+#include <Engine/World.h>
 #include <Subsystems/GameInstanceSubsystem.h>
 #include <Tickable.h>
 
@@ -73,6 +76,7 @@ struct FRootAction
 
 	friend uint32 GetTypeHash(const FRootAction& InAction) { return GetTypeHash(InAction.Owner); }
 };
+
 
 /**
  * Actions Subsystem
