@@ -21,7 +21,7 @@
 
 #define LOCTEXT_NAMESPACE "ActionEditor"
 
-const FName UK2Node_Action::ClassPinName{ "Class" };
+const FName UK2Node_Action::ClassPinName{ "__Class" };
 const FName UK2Node_Action::OwnerPinName{ UEdGraphSchema_K2::PN_Self };
 
 
@@ -58,6 +58,7 @@ void UK2Node_Action::AllocateDefaultPins()
 	if (!UsePrestatedClass()) {
 		// Add blueprint pin
 		UEdGraphPin* ClassPin = CreatePin(EGPD_Input, K2Schema->PC_Class, GetClassPinBaseClass(), ClassPinName);
+		ClassPin->PinFriendlyName = LOCTEXT("PinClassName", "Class");
 	}
 
 	// Result pin
@@ -388,6 +389,8 @@ void UK2Node_Action::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* O
 	for(const auto& Property : Properties->Variables)
 	{
 		UEdGraphPin* Pin = CreatePin(EGPD_Input, FName(), Property.GetFName());
+		if(!Pin) { continue; }
+
 		K2Schema->ConvertPropertyToPinType(Property.GetProperty(), Pin->PinType);
 
 		if (OutClassPins)
@@ -418,6 +421,8 @@ void UK2Node_Action::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* O
 		Params.bIsConst = true;
 		Params.bIsReference = true;
 		UEdGraphPin* Pin = CreatePin(EGPD_Input, K2Schema->PC_Delegate, Property.GetFName(), Params);
+		if(!Pin) { continue; }
+
 		Pin->PinFriendlyName = FText::Format(NSLOCTEXT("K2Node", "PinFriendlyDelegatetName", "{0} Event"), FText::FromName(Property.GetFName()));
 
 		//Update PinType with the delegate's signature
@@ -437,6 +442,8 @@ void UK2Node_Action::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* O
 		}
 
 		UEdGraphPin* Pin = CreatePin(EGPD_Output, K2Schema->PC_Exec, Property.GetFName());
+		if(!Pin) { continue; }
+
 		if (OutClassPins)
 		{
 			OutClassPins->Add(Pin);
@@ -580,8 +587,7 @@ void UK2Node_Action::SetPinToolTip(UEdGraphPin& MutatablePin, const FText& PinDe
 {
 	MutatablePin.PinToolTip = UEdGraphSchema_K2::TypeToText(MutatablePin.PinType).ToString();
 
-	UEdGraphSchema_K2 const* const K2Schema = Cast<const UEdGraphSchema_K2>(GetSchema());
-	if (K2Schema != nullptr)
+	if (const auto* K2Schema = Cast<const UEdGraphSchema_K2>(GetSchema()))
 	{
 		MutatablePin.PinToolTip += TEXT(" ");
 		MutatablePin.PinToolTip += K2Schema->GetPinDisplayName(&MutatablePin).ToString();
