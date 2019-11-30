@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "UObject/ObjectMacros.h"
-#include "EdGraph/EdGraphNodeUtils.h"
-#include "EdGraphSchema_K2.h"
+#include <CoreMinimal.h>
+#include <UObject/ObjectMacros.h>
+#include <EdGraph/EdGraphNodeUtils.h>
+#include <EdGraphSchema_K2.h>
 
 #include "K2Node.h"
 #include "K2Node_AddDelegate.h"
@@ -20,10 +20,42 @@
 UCLASS(Blueprintable)
 class ACTIONSEDITOR_API UK2Node_Action : public UK2Node
 {
-	GENERATED_UCLASS_BODY()
+	GENERATED_BODY()
 
-	static FName ClassPinName;
-	static FName OwnerPinName;
+	static const FName ClassPinName;
+	static const FName OwnerPinName;
+
+public:
+
+	UPROPERTY()
+	UClass* PrestatedClass;
+
+	UPROPERTY()
+	bool bShowClass = true;
+
+protected:
+
+	/** Output pin visibility control */
+	UPROPERTY(EditAnywhere, Category = PinOptions, EditFixedSize)
+	TArray<FOptionalPinFromProperty> ShowPinForProperties;
+
+	/** Tooltip text for this node. */
+	FText NodeTooltip;
+
+private:
+	/** Blueprint that is binded OnCompile */
+	UPROPERTY()
+	UBlueprint* ActionBlueprint;
+
+	/** Constructing FText strings can be costly, so we cache the node's title */
+	FNodeTextCache CachedNodeTitle;
+
+
+public:
+
+	UK2Node_Action();
+
+protected:
 
 	virtual void PostLoad() override;
 
@@ -49,20 +81,15 @@ class ACTIONSEDITOR_API UK2Node_Action : public UK2Node
 	//~ End UK2Node Interface
 
 
-protected:
 	/** Create new pins to show properties on archetype */
 	void CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* OutClassPins = nullptr);
 
 	/** See if this is a spawn variable pin, or a 'default' pin */
 	virtual bool IsActionVarPin(UEdGraphPin* Pin);
 
-	/** Get the then output pin */
 	UEdGraphPin* GetThenPin() const;
-	/** Get the blueprint input pin */
 	UEdGraphPin* GetClassPin(const TArray<UEdGraphPin*>* InPinsToSearch = nullptr) const;
-	/** Get the result output pin */
 	UEdGraphPin* GetResultPin() const;
-	/** Get the result input pin */
 	UEdGraphPin* GetOwnerPin() const;
 
 	/** Get the class that we are going to spawn, if it's defined as default value */
@@ -102,33 +129,14 @@ protected:
 
 	void OnBlueprintCompiled(UBlueprint*);
 
-
-	/** Output pin visibility control */
-	UPROPERTY(EditAnywhere, Category = PinOptions, EditFixedSize)
-	TArray<FOptionalPinFromProperty> ShowPinForProperties;
-
-	/** Tooltip text for this node. */
-	FText NodeTooltip;
-
-public:
-	UPROPERTY()
-	UClass* PrestatedClass;
-
 private:
-	/** Blueprint that is binded OnCompile */
-	UPROPERTY()
-	UBlueprint* BindedActionBlueprint;
-
-	/** Constructing FText strings can be costly, so we cache the node's title */
-	FNodeTextCache CachedNodeTitle;
-
-
 
 	void BindBlueprintCompile();
+
 protected:
+
 	struct ACTIONSEDITOR_API FHelper
 	{
-
 		struct FOutputPinAndLocalVariable
 		{
 			UEdGraphPin* OutputPin;
