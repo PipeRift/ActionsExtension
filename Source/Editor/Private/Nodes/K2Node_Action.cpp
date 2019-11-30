@@ -411,7 +411,7 @@ void UK2Node_Action::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* O
 	{
 		if (!Property.GetFunction())
 		{
-			UE_LOG(LogActionsEd, Error, TEXT("Delegate '%s' may be corrumped"), *Property.GetFName().ToString());
+			UE_LOG(LogActionsEd, Error, TEXT("Delegate '%s' may be corrupted"), *Property.GetFName().ToString());
 		}
 
 		UEdGraphNode::FCreatePinParams Params{};
@@ -433,7 +433,7 @@ void UK2Node_Action::CreatePinsForClass(UClass* InClass, TArray<UEdGraphPin*>* O
 	{
 		if (!Property.GetFunction())
 		{
-			UE_LOG(LogActionsEd, Error, TEXT("Delegate '%s' may be corrumped"), *Property.GetFName().ToString());
+			UE_LOG(LogActionsEd, Error, TEXT("Delegate '%s' may be corrupted"), *Property.GetFName().ToString());
 		}
 
 		UEdGraphPin* Pin = CreatePin(EGPD_Output, K2Schema->PC_Exec, Property.GetFName());

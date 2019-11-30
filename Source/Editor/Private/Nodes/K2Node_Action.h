@@ -7,12 +7,12 @@
 #include <EdGraph/EdGraphNodeUtils.h>
 #include <EdGraphSchema_K2.h>
 
-#include "K2Node.h"
-#include "K2Node_AddDelegate.h"
-#include "K2Node_CreateDelegate.h"
-#include "K2Node_Self.h"
-#include "K2Node_CustomEvent.h"
-#include "K2Node_TemporaryVariable.h"
+#include <K2Node.h>
+#include <K2Node_AddDelegate.h>
+#include <K2Node_CreateDelegate.h>
+#include <K2Node_Self.h>
+#include <K2Node_CustomEvent.h>
+#include <K2Node_TemporaryVariable.h>
 
 #include "K2Node_Action.generated.h"
 
