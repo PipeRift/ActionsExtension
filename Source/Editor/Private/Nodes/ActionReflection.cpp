@@ -5,14 +5,25 @@
 #include "EdGraphSchema_K2.h"
 
 
-TOptional<FActionProperties> ActionReflection::GetVisibleProperties(UClass* Class)
+void FBaseActionProperty::RefreshProperty()
+{
+	if(Property)
+	{
+		Name = Property->GetFName();
+		const auto* K2Schema = GetDefault<UEdGraphSchema_K2>();
+		K2Schema->ConvertPropertyToPinType(Property, Type);
+	}
+}
+
+
+bool ActionReflection::GetVisibleProperties(UClass* Class, FActionProperties& OutProperties)
 {
 	if(!Class)
 	{
-		return {};
+		return false;
 	}
 
-	FActionProperties Properties {};
+	OutProperties = {};
 	for (TFieldIterator<UProperty> PropertyIt(Class, EFieldIteratorFlags::IncludeSuper); PropertyIt; ++PropertyIt)
 	{
 		UProperty* const Property = *PropertyIt;
@@ -25,11 +36,11 @@ TOptional<FActionProperties> ActionReflection::GetVisibleProperties(UClass* Clas
 				FDelegateActionProperty ActionProperty{ DelegateProperty };
 				if(ActionProperty.HasParams())
 				{
-					Properties.ComplexDelegates.Add(ActionProperty);
+					OutProperties.ComplexDelegates.Add(ActionProperty);
 				}
 				else
 				{
-					Properties.SimpleDelegates.Add(ActionProperty);
+					OutProperties.SimpleDelegates.Add(ActionProperty);
 				}
 			}
 		}
@@ -39,9 +50,9 @@ TOptional<FActionProperties> ActionReflection::GetVisibleProperties(UClass* Clas
 			!Property->HasAnyPropertyFlags(CPF_DisableEditOnInstance) &&
 			Property->HasAllPropertyFlags(CPF_BlueprintVisible))
 		{
-			Properties.Variables.Add({ Property });
+			OutProperties.Variables.Add({ Property });
 		}
 	}
-	return Properties;
+	return true;
 }
 

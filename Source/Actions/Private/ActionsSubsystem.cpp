@@ -2,6 +2,7 @@
 
 #include "ActionsSubsystem.h"
 #include <Engine/World.h>
+#include <Gameframework/WorldSettings.h>
 
 #include "Action.h"
 

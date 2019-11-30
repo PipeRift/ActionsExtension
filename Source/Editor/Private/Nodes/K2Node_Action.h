@@ -14,6 +14,7 @@
 #include <K2Node_CustomEvent.h>
 #include <K2Node_TemporaryVariable.h>
 
+#include "ActionReflection.h"
 #include "K2Node_Action.generated.h"
 
 
@@ -43,6 +44,10 @@ protected:
 	FText NodeTooltip;
 
 private:
+
+	UPROPERTY()
+	FActionProperties CurrentProperties;
+
 	/** Blueprint that is binded OnCompile */
 	UPROPERTY()
 	UBlueprint* ActionBlueprint;

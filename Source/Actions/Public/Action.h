@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <EngineMinimal.h>
+#include <CoreMinimal.h>
 #include <UObject/ObjectMacros.h>
 #include <UObject/ScriptInterface.h>
 #include <Tickable.h>
