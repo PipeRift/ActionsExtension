@@ -67,7 +67,8 @@ void FActionNodeHelpers::SetNodeFunc(UEdGraphNode* NewNode, bool /*bIsTemplateNo
 	UK2Node_Action* ActionNode = CastChecked<UK2Node_Action>(NewNode);
 	if (ClassPtr.IsValid())
 	{
-		ActionNode->PrestatedClass = ClassPtr.Get();
+		ActionNode->bShowClass = false;
+		ActionNode->ActionClass = ClassPtr.Get();
 	}
 }
 
