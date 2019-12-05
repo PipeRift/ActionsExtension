@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
-	"Version": 9,
-	"VersionName": "1.0a",
+	"Version": 10,
+	"VersionName": "1.1",
 	"FriendlyName": "Actions Extension",
 	"Description": "A plugin that adds asynchronous tasks called Actions to UE4",
 	"Category": "Piperift",

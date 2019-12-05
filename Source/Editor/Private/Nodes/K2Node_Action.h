@@ -29,7 +29,7 @@ class ACTIONSEDITOR_API UK2Node_Action : public UK2Node
 public:
 
 	UPROPERTY()
-	UClass* PrestatedClass;
+	UClass* ActionClass;
 
 	UPROPERTY()
 	bool bShowClass = true;
@@ -83,6 +83,7 @@ protected:
 	virtual void GetNodeAttributes(TArray<TKeyValuePair<FString, FString>>& OutNodeAttributes) const override;
 	virtual void GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const override;
 	virtual FText GetMenuCategory() const override;
+	virtual void GetContextMenuActions(const FGraphNodeContextMenuBuilder& Context) const override;
 	//~ End UK2Node Interface
 
 
@@ -98,7 +99,7 @@ protected:
 	UEdGraphPin* GetOwnerPin() const;
 
 	/** Get the class that we are going to spawn, if it's defined as default value */
-	UClass* GetActionClass(const TArray<UEdGraphPin*>* InPinsToSearch = nullptr) const;
+	UClass* GetActionClassFromPin() const;
 
 	/** Get the class that we are going to spawn, if it's defined as default value */
 	UBlueprint* GetActionBlueprint() const;
@@ -111,7 +112,7 @@ protected:
 
 	/** Returns if the node uses Owner input */
 	virtual bool UseOwner() const { return true; }
-	virtual bool UsePrestatedClass() const { return PrestatedClass != nullptr; }
+	virtual bool ShowClass() const { return bShowClass; }
 
 	/** Gets the default node title when no class is selected */
 	virtual FText GetBaseNodeTitle() const;
@@ -137,6 +138,10 @@ protected:
 private:
 
 	void BindBlueprintCompile();
+
+	void ToogleShowClass();
+
+	UEdGraphPin* CreateClassPin();
 
 protected:
 

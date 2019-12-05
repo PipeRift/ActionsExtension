@@ -110,19 +110,7 @@ struct FActionProperties
     TSet<FDelegateActionProperty> ComplexDelegates;
 
 
-    bool operator==(const FActionProperties& Other) const
-    {
-        if (Variables.Num() != Other.Variables.Num() ||
-            SimpleDelegates.Num() != Other.SimpleDelegates.Num() ||
-            ComplexDelegates.Num() != Other.ComplexDelegates.Num())
-        {
-            return false;
-        }
-
-        return Equals<FVariableActionProperty>(Variables, Other.Variables)
-            && Equals<FDelegateActionProperty>(SimpleDelegates, Other.SimpleDelegates)
-            && Equals<FDelegateActionProperty>(ComplexDelegates, Other.ComplexDelegates);
-    }
+    bool operator==(const FActionProperties& Other) const;
     bool operator!=(const FActionProperties& Other) const { return !operator==(Other); }
 
 private:
