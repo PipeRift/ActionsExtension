@@ -33,7 +33,6 @@ public class ActionsEditor : ModuleRules
 			"ContentBrowser",
 			"Settings",
 			"AIModule",
-			"ToolMenus",
 			"Actions"
 		});
 	}
