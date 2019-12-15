@@ -13,6 +13,7 @@
 #include <K2Node_Self.h>
 #include <K2Node_CustomEvent.h>
 #include <K2Node_TemporaryVariable.h>
+#include <ToolMenu.h>
 
 #include "ActionReflection.h"
 #include "K2Node_Action.generated.h"
@@ -83,7 +84,7 @@ protected:
 	virtual void GetNodeAttributes(TArray<TKeyValuePair<FString, FString>>& OutNodeAttributes) const override;
 	virtual void GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const override;
 	virtual FText GetMenuCategory() const override;
-	virtual void GetContextMenuActions(const FGraphNodeContextMenuBuilder& Context) const override;
+	virtual void GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const override;
 	//~ End UK2Node Interface
 
 

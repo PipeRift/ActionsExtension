@@ -358,13 +358,13 @@ FText UK2Node_Action::GetMenuCategory() const
 	return FText::FromString("Actions");
 }
 
-void UK2Node_Action::GetContextMenuActions(const FGraphNodeContextMenuBuilder& Context) const
+void UK2Node_Action::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const
 {
-	Super::GetContextMenuActions(Context);
+	Super::GetNodeContextMenuActions(Menu, Context);
 
-	if (!Context.bIsDebugging)
+	if (!Context->bIsDebugging)
 	{
-		if (!Context.Pin || Context.Pin == GetClassPin())
+		if (!Context->Pin || Context->Pin == GetClassPin())
 		{
 			FText Text;
 			if(ShowClass())
@@ -376,15 +376,15 @@ void UK2Node_Action::GetContextMenuActions(const FGraphNodeContextMenuBuilder& C
 				Text = LOCTEXT("ShowClass", "Show Class pin");
 			}
 
-			Context.MenuBuilder->BeginSection("ActionNode", LOCTEXT("ActionNodeMenuSection", "Action Node"));
-			Context.MenuBuilder->AddMenuEntry(Text,
+			auto& Section = Menu->AddSection("ActionNode", LOCTEXT("ActionNodeMenuSection", "Action Node"));
+			Section.AddMenuEntry("ClassPinVisibility",
+				Text,
 				LOCTEXT("HideClassTooltip", "Hides the Class input pin"),
 				FSlateIcon(),
 				FUIAction(
 					FExecuteAction::CreateUObject(const_cast<UK2Node_Action*>(this), &UK2Node_Action::ToogleShowClass)
 				)
 			);
-			Context.MenuBuilder->EndSection();
 		}
 	}
 }
@@ -819,7 +819,7 @@ bool UK2Node_Action::FHelper::HandleDelegateImplementation(
 		UBlueprint* Blueprint = FBlueprintEditorUtils::FindBlueprintForNodeChecked(CurrentNode);
 		bool const bIsSelfContext = Blueprint->SkeletonGeneratedClass->IsChildOf(CurrentProperty->GetOwnerClass());
 
-		AddDelegateNode->SetFromProperty(CurrentProperty, bIsSelfContext);
+		AddDelegateNode->SetFromProperty(CurrentProperty, bIsSelfContext, CurrentProperty->GetOwnerClass());
 		AddDelegateNode->AllocateDefaultPins();
 
 		bIsErrorFree &= Schema->TryCreateConnection(AddDelegateNode->FindPinChecked(Schema->PN_Self), ProxyObjectPin);
@@ -855,7 +855,7 @@ bool UK2Node_Action::FHelper::HandleDelegateBindImplementation(
 	check(AddDelegateNode);
 
 
-	AddDelegateNode->SetFromProperty(CurrentProperty, false);
+	AddDelegateNode->SetFromProperty(CurrentProperty, false, CurrentProperty->GetOwnerClass());
 	AddDelegateNode->AllocateDefaultPins();
 
 	bIsErrorFree &= Schema->TryCreateConnection(AddDelegateNode->FindPinChecked(Schema->PN_Self), ObjectPin);
