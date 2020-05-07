@@ -163,12 +163,12 @@ protected:
 		static bool CopyEventSignature(UK2Node_CustomEvent* CENode, UFunction* Function, const UEdGraphSchema_K2* Schema);
 
 		static bool HandleDelegateImplementation(
-			UMulticastDelegateProperty* CurrentProperty,
+			FMulticastDelegateProperty* CurrentProperty,
 			UEdGraphPin* ProxyObjectPin, UEdGraphPin*& InOutLastThenPin,
 			UK2Node* CurrentNode, UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext);
 
 		static bool HandleDelegateBindImplementation(
-			UMulticastDelegateProperty* CurrentProperty,
+			FMulticastDelegateProperty* CurrentProperty,
 			UEdGraphPin* ProxyObjectPin, UEdGraphPin*& InOutLastThenPin,
 			UK2Node* CurrentNode, UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext);
 	};

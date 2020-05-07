@@ -40,7 +40,7 @@ void FGameplayDebugger_Actions::CollectData(APlayerController* OwnerPC, AActor* 
 
 		if (const APawn* DebugPawn = Cast<APawn>(DebugActor))
 		{
-			const AController* DebugController = DebugPawn->GetController();
+			AController* DebugController = DebugPawn->GetController();
 			if (DebugController && OwnerPC != DebugController)
 			{
 				Subsystem->DescribeOwnerToGameplayDebugger(DebugController, TEXT("Controller"), *this);

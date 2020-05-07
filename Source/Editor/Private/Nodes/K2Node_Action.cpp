@@ -257,9 +257,9 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	UEdGraphPin* LastThenPin = FKismetCompilerUtilities::GenerateAssignmentNodes(CompilerContext, SourceGraph, CreateActionNode, this, CreateAction_Result, ActionClass);
 
 	// For each delegate, define an event, bind it to delegate and implement a chain of assignments
-	for (TFieldIterator<UMulticastDelegateProperty> PropertyIt(ActionClass, EFieldIteratorFlags::IncludeSuper); PropertyIt && bIsErrorFree; ++PropertyIt)
+	for (TFieldIterator<FMulticastDelegateProperty> PropertyIt(ActionClass, EFieldIteratorFlags::IncludeSuper); PropertyIt && bIsErrorFree; ++PropertyIt)
 	{
-		UMulticastDelegateProperty* Property = *PropertyIt;
+		FMulticastDelegateProperty* Property = *PropertyIt;
 
 		if (Property && Property->HasAllPropertyFlags(CPF_BlueprintAssignable) && Property->SignatureFunction)
 		{
@@ -782,9 +782,9 @@ bool UK2Node_Action::FHelper::CopyEventSignature(UK2Node_CustomEvent* CENode, UF
 	check(CENode && Function && Schema);
 
 	bool bResult = true;
-	for (TFieldIterator<UProperty> PropIt(Function); PropIt && (PropIt->PropertyFlags & CPF_Parm); ++PropIt)
+	for (TFieldIterator<FProperty> PropIt(Function); PropIt && (PropIt->PropertyFlags & CPF_Parm); ++PropIt)
 	{
-		const UProperty* Param = *PropIt;
+		const FProperty* Param = *PropIt;
 		if (!Param->HasAnyPropertyFlags(CPF_OutParm) || Param->HasAnyPropertyFlags(CPF_ReferenceParm))
 		{
 			FEdGraphPinType PinType;
@@ -796,7 +796,7 @@ bool UK2Node_Action::FHelper::CopyEventSignature(UK2Node_CustomEvent* CENode, UF
 }
 
 bool UK2Node_Action::FHelper::HandleDelegateImplementation(
-	UMulticastDelegateProperty* CurrentProperty,
+	FMulticastDelegateProperty* CurrentProperty,
 	UEdGraphPin* ProxyObjectPin, UEdGraphPin*& InOutLastThenPin,
 	UK2Node* CurrentNode, UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext)
 {
@@ -840,7 +840,7 @@ bool UK2Node_Action::FHelper::HandleDelegateImplementation(
 
 
 bool UK2Node_Action::FHelper::HandleDelegateBindImplementation(
-	UMulticastDelegateProperty* CurrentProperty,
+	FMulticastDelegateProperty* CurrentProperty,
 	UEdGraphPin* ObjectPin, UEdGraphPin*& InOutLastThenPin,
 	UK2Node* CurrentNode, UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext)
 {
