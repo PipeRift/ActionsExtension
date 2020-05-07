@@ -14,7 +14,7 @@ struct FBaseActionProperty
 protected:
 
     UPROPERTY()
-    TFieldPath<FProperty> Property;
+    UProperty* Property = nullptr;
 
     UPROPERTY()
     FName Name;
@@ -28,7 +28,7 @@ public:
 
     FName GetFName() const { return Name; }
     const FEdGraphPinType& GetType() const { return Type; }
-    FProperty* GetProperty() const { return Property.Get(); }
+    UProperty* GetProperty() const { return Property; }
 
     bool IsValid() const { return Property != nullptr; }
 
@@ -45,7 +45,7 @@ public:
 
 protected:
 
-    FBaseActionProperty(FProperty* Property)
+    FBaseActionProperty(UProperty* Property)
         : Property(Property)
     {
         RefreshProperty();
@@ -62,13 +62,13 @@ struct FDelegateActionProperty : public FBaseActionProperty
 {
     GENERATED_BODY()
 
-    FDelegateActionProperty(FMulticastDelegateProperty* Property = nullptr)
+    FDelegateActionProperty(UMulticastDelegateProperty* Property = nullptr)
         : FBaseActionProperty(Property)
     {}
 
-    FMulticastDelegateProperty* GetDelegate() const
+    UMulticastDelegateProperty* GetDelegate() const
     {
-        return CastFieldChecked<FMulticastDelegateProperty>(Property.Get());
+        return CastChecked<UMulticastDelegateProperty>(Property);
     }
 
     UFunction* GetFunction() const
@@ -89,7 +89,7 @@ struct FVariableActionProperty : public FBaseActionProperty
 {
     GENERATED_BODY()
 
-    FVariableActionProperty(FProperty* Property = nullptr)
+    FVariableActionProperty(UProperty* Property = nullptr)
         : FBaseActionProperty(Property)
     {}
 };

@@ -214,8 +214,8 @@ void UActionsSubsystem::AddActionToTickGroup(UAction* Child)
 	Group->Actions.Add(Child);
 }
 
-//#if WITH_GAMEPLAY_DEBUGGER
-void UActionsSubsystem::DescribeOwnerToGameplayDebugger(UObject* Owner, const FName& BaseName, FGameplayDebugger_Actions& Debugger) const
+#if WITH_GAMEPLAY_DEBUGGER
+void UActionsSubsystem::DescribeOwnerToGameplayDebugger(const UObject* Owner, const FName& BaseName, FGameplayDebugger_Actions& Debugger) const
 {
 	static const FString StateColorText = TEXT("{green}");
 
@@ -234,4 +234,4 @@ void UActionsSubsystem::DescribeOwnerToGameplayDebugger(UObject* Owner, const FN
 
 	Debugger.AddTextLine(TEXT(""));
 }
-//#endif // WITH_GAMEPLAY_DEBUGGER
+#endif // WITH_GAMEPLAY_DEBUGGER
