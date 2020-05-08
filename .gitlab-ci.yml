@@ -26,6 +26,11 @@ test:
   script:
     - cd Lib
     - py test_plugin.py
+  artifacts:
+    paths:
+      - Test/Report.xml
+    reports:
+      junit: Test/Report.xml
 
 upload:
   stage: package
