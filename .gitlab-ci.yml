@@ -16,7 +16,7 @@ before_script:
   - git clone https://github.com/PipeRift/CICDScripts Lib
 
 build:
-  stage: compile
+  stage: build
   script:
     - cmd.exe /c Lib/BuildPlugin.bat
 
