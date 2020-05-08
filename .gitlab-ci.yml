@@ -18,15 +18,15 @@ before_script:
 build:
   stage: build
   script:
-    - cmd.exe /c Lib/BuildPlugin.bat
+    - cmd.exe /c ./Lib/BuildPlugin.bat
 
 test:
   stage: test
   script:
-    - py Lib/test_plugin.py
+    - py ./Lib/test_plugin.py
 
 upload:
   stage: package
   script:
-    - cmd.exe /c Lib/CompressPlugin.bat
-    - py Lib/upload.py
+    - cmd.exe /c ./Lib/CompressPlugin.bat
+    - py ./Lib/upload.py
