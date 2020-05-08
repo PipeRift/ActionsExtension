@@ -63,7 +63,7 @@ struct FRootAction
 	TArray<UAction*> Actions;
 
 
-	FRootAction(const UObject* Owner = nullptr) : Owner(Owner) {}
+	FRootAction(UObject* Owner = nullptr) : Owner(Owner) {}
 
 	void CancelAll(bool bShouldShrink = true);
 	void CancelByPredicate(const TFunctionRef<bool(const UAction*)>& Predicate, bool bShouldShrink = true);
@@ -142,7 +142,7 @@ private:
 public:
 
 #if WITH_GAMEPLAY_DEBUGGER
-	void DescribeOwnerToGameplayDebugger(const UObject* Owner, const FName& BaseName, class FGameplayDebugger_Actions& Debugger) const;
+	void DescribeOwnerToGameplayDebugger(UObject* Owner, const FName& BaseName, class FGameplayDebugger_Actions& Debugger) const;
 #endif // WITH_GAMEPLAY_DEBUGGER
 
 

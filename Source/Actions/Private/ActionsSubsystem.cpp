@@ -1,7 +1,7 @@
 ﻿// Copyright 2015-2019 Piperift. All Rights Reserved.
 
 #include "ActionsSubsystem.h"
-#include <Gameframework/WorldSettings.h>
+#include <GameFramework/WorldSettings.h>
 
 #include "Action.h"
 
@@ -215,7 +215,7 @@ void UActionsSubsystem::AddActionToTickGroup(UAction* Child)
 }
 
 #if WITH_GAMEPLAY_DEBUGGER
-void UActionsSubsystem::DescribeOwnerToGameplayDebugger(const UObject* Owner, const FName& BaseName, FGameplayDebugger_Actions& Debugger) const
+void UActionsSubsystem::DescribeOwnerToGameplayDebugger(UObject* Owner, const FName& BaseName, FGameplayDebugger_Actions& Debugger) const
 {
 	static const FString StateColorText = TEXT("{green}");
 
