@@ -44,9 +44,20 @@
 			]
 		},
 		{
-			"Name" : "ActionsTest",
-			"Type" : "DeveloperTool",
-			"LoadingPhase" : "PreDefault",
+			"Name": "ActionsTest",
+			"Type": "DeveloperTool",
+			"LoadingPhase": "PreDefault",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Win32",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "ActionsAnalytics",
+			"Type": "DeveloperTool",
+			"LoadingPhase": "PreDefault",
 			"WhitelistPlatforms": [
 				"Win64",
 				"Win32",

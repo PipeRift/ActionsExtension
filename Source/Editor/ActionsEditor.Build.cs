@@ -1,4 +1,4 @@
-// Copyright 2015-2019 Piperift. All Rights Reserved.
+// Copyright 2015-2020 Piperift. All Rights Reserved.
 
 using UnrealBuildTool;
 
@@ -34,7 +34,8 @@ public class ActionsEditor : ModuleRules
 			"Settings",
 			"AIModule",
 			"ToolMenus",
-			"Actions"
+			"Actions",
+			"ActionsAnalytics"
 		});
 	}
 }
