@@ -2,6 +2,7 @@
 
 #pragma once
 #include <CoreMinimal.h>
+#include <UObject/Class.h>
 
 #include "ActionReflection.generated.h"
 
