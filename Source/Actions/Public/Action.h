@@ -32,7 +32,7 @@ enum class EActionState : uint8
 
 FORCEINLINE FString ToString(EActionState Value)
 {
-	const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EActionState"), true);
+	const UEnum* EnumPtr = FindObject<UEnum>(nullptr, TEXT("/Script/Actions.EActionState"), true);
 	return EnumPtr? EnumPtr->GetNameByValue((int64)Value).ToString() : TEXT("Invalid");
 }
 
@@ -163,17 +163,17 @@ public:
 
 	FORCEINLINE bool CanTick() const
 	{
-		return bWantsToTick && IsRunning() && !GetOuter()->IsPendingKill();
+		return bWantsToTick && IsRunning() && IsValid(GetOuter());
 	}
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE bool IsRunning() const { return !IsPendingKill() && State == EActionState::Running; }
+	FORCEINLINE bool IsRunning() const { return IsValid(this) && State == EActionState::Running; }
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE bool Succeeded() const { return !IsPendingKill() && State == EActionState::Success; }
+	FORCEINLINE bool Succeeded() const { return IsValid(this) && State == EActionState::Success; }
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE bool Failed()    const { return !IsPendingKill() && State == EActionState::Failure; }
+	FORCEINLINE bool Failed()    const { return IsValid(this) && State == EActionState::Failure; }
 
 	UFUNCTION(BlueprintPure, Category = Action)
 	FORCEINLINE EActionState GetState() const { return State; }

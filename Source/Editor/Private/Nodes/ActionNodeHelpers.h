@@ -22,5 +22,5 @@ struct FActionNodeHelpers {
 	static int32 RegistryActionClassAction(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass, UClass* Class);
 
 	template < typename TBase >
-	static void GetAllBlueprintSubclasses(TSet< TAssetSubclassOf< TBase > >& OutSubclasses, bool bAllowAbstract, FString const& Path);
+	static void GetAllBlueprintSubclasses(TSet<TSoftClassPtr<TBase>>& OutSubclasses, bool bAllowAbstract, FString const& Path);
 };

@@ -18,7 +18,7 @@ void UAction::Activate()
 {
 	UActionsSubsystem* Subsystem = GetSubsystem();
 
-	if (IsPendingKill() || !IsValid(GetOuter()) || State != EActionState::Preparing)
+	if (!IsValid(this) || !IsValid(GetOuter()) || State != EActionState::Preparing)
 	{
 		UE_LOG(ActionLog, Warning, TEXT("Action '%s' is already running or pending destruction."), *GetName());
 		Destroy();
@@ -50,7 +50,7 @@ void UAction::Activate()
 
 void UAction::Cancel()
 {
-	if (IsPendingKill())
+	if (!IsValid(this))
 		return;
 
 	if (!IsRunning())
@@ -83,7 +83,7 @@ void UAction::OnFinish(const EActionState Reason)
 }
 
 void UAction::Finish(bool bSuccess) {
-	if (!IsRunning() || IsPendingKill())
+	if (!IsRunning() || !IsValid(this))
 		return;
 
 	State = bSuccess ? EActionState::Success : EActionState::Failure;
@@ -100,7 +100,7 @@ void UAction::Finish(bool bSuccess) {
 
 void UAction::Destroy()
 {
-	if (IsPendingKill())
+	if (!IsValid(this))
 		return;
 
 	//Cancel and destroy all children tasks
@@ -113,7 +113,7 @@ void UAction::Destroy()
 	ChildrenActions.Reset();
 
 	//Mark for destruction
-	MarkPendingKill();
+	MarkAsGarbage();
 }
 
 void UAction::AddChildren(UAction* Child)

@@ -3,8 +3,8 @@
 #include "ActionNodeHelpers.h"
 
 #include "K2Node_Action.h"
-#include "ARFilter.h"
-#include "AssetRegistryModule.h"
+#include "AssetRegistry/ARFilter.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 
 
 void FActionNodeHelpers::RegisterActionClassActions(FBlueprintActionDatabaseRegistrar& InActionRegister, UClass* NodeClass)
@@ -73,7 +73,7 @@ void FActionNodeHelpers::SetNodeFunc(UEdGraphNode* NewNode, bool /*bIsTemplateNo
 }
 
 template<typename TBase>
-void FActionNodeHelpers::GetAllBlueprintSubclasses(TSet<TAssetSubclassOf<TBase>>& Subclasses, bool bAllowAbstract, FString const& Path)
+void FActionNodeHelpers::GetAllBlueprintSubclasses(TSet<TSoftClassPtr<TBase>>& Subclasses, bool bAllowAbstract, FString const& Path)
 {
 	static const FName GeneratedClassTag = TEXT("GeneratedClass");
 	static const FName ClassFlagsTag = TEXT("ClassFlags");
