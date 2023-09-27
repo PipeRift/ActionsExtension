@@ -2,15 +2,16 @@
 
 #pragma once
 
+#include "ActionsModule.h"
+#include "ActionsSubsystem.h"
+
 #include <CoreMinimal.h>
 #include <Engine/GameInstance.h>
 #include <Engine/World.h>
+#include <Tickable.h>
 #include <UObject/ObjectMacros.h>
 #include <UObject/ScriptInterface.h>
-#include <Tickable.h>
 
-#include "ActionsModule.h"
-#include "ActionsSubsystem.h"
 #include "Action.generated.h"
 
 
@@ -24,7 +25,7 @@ UENUM(Blueprintable)
 enum class EActionState : uint8
 {
 	Preparing UMETA(Hidden),
-	Running   UMETA(Hidden),
+	Running UMETA(Hidden),
 	Success,
 	Failure,
 	Cancelled
@@ -33,7 +34,7 @@ enum class EActionState : uint8
 FORCEINLINE FString ToString(EActionState Value)
 {
 	const UEnum* EnumPtr = FindObject<UEnum>(nullptr, TEXT("/Script/Actions.EActionState"), true);
-	return EnumPtr? EnumPtr->GetNameByValue((int64)Value).ToString() : TEXT("Invalid");
+	return EnumPtr ? EnumPtr->GetNameByValue((int64) Value).ToString() : TEXT("Invalid");
 }
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FActionActivatedDelegate);
@@ -52,18 +53,15 @@ class ACTIONS_API UAction : public UObject
 	/* PROPERTIES														    */
 	/************************************************************************/
 public:
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Action)
 	bool bWantsToTick = false;
 
 protected:
-
-	//Tick length in seconds. 0 is default tick rate
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Action, BlueprintGetter="GetTickRate")
+	// Tick length in seconds. 0 is default tick rate
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Action, BlueprintGetter = "GetTickRate")
 	float TickRate = 0.15f;
 
 private:
-
 	UPROPERTY(Transient)
 	EActionState State = EActionState::Preparing;
 
@@ -71,7 +69,6 @@ private:
 	TSet<UAction*> ChildrenActions;
 
 public:
-
 	/** Delegates */
 
 	// Notify when the action is activated
@@ -102,8 +99,10 @@ public:
 	}
 
 protected:
-
-	virtual bool CanActivate() { return ReceiveCanActivate(); }
+	virtual bool CanActivate()
+	{
+		return ReceiveCanActivate();
+	}
 
 	virtual void OnActivation()
 	{
@@ -116,7 +115,6 @@ protected:
 	virtual void OnFinish(const EActionState Reason);
 
 private:
-
 	void Finish(bool bSuccess = true);
 
 	void Destroy();
@@ -126,9 +124,11 @@ private:
 
 
 public:
-
 	UFUNCTION(BlueprintCallable, Category = Action, meta = (KeyWords = "Finish"))
-	void Succeed() { Finish(true); }
+	void Succeed()
+	{
+		Finish(true);
+	}
 
 	UFUNCTION(BlueprintCallable, Category = Action, meta = (KeyWords = "Finish"))
 	void Fail(FName Error = NAME_None)
@@ -140,7 +140,6 @@ public:
 
 	/** Events */
 protected:
-
 	/** Event called to check if an action can activate. */
 	UFUNCTION(BlueprintNativeEvent, meta = (DisplayName = "Can Activate"))
 	bool ReceiveCanActivate();
@@ -160,29 +159,46 @@ protected:
 
 	/** Helpers */
 public:
-
 	FORCEINLINE bool CanTick() const
 	{
 		return bWantsToTick && IsRunning() && IsValid(GetOuter());
 	}
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE bool IsRunning() const { return IsValid(this) && State == EActionState::Running; }
+	FORCEINLINE bool IsRunning() const
+	{
+		return IsValid(this) && State == EActionState::Running;
+	}
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE bool Succeeded() const { return IsValid(this) && State == EActionState::Success; }
+	FORCEINLINE bool Succeeded() const
+	{
+		return IsValid(this) && State == EActionState::Success;
+	}
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE bool Failed()    const { return IsValid(this) && State == EActionState::Failure; }
+	FORCEINLINE bool Failed() const
+	{
+		return IsValid(this) && State == EActionState::Failure;
+	}
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE EActionState GetState() const { return State; }
+	FORCEINLINE EActionState GetState() const
+	{
+		return State;
+	}
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE UObject* const GetParent() const { return GetOuter(); }
+	FORCEINLINE UObject* const GetParent() const
+	{
+		return GetOuter();
+	}
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE UAction* GetParentAction() const { return Cast<UAction>(GetOuter()); }
+	FORCEINLINE UAction* GetParentAction() const
+	{
+		return Cast<UAction>(GetOuter());
+	}
 
 	UFUNCTION(BlueprintGetter)
 	FORCEINLINE float GetTickRate() const
@@ -201,7 +217,10 @@ public:
 
 	/** @return the component if any that executes the root action */
 	UFUNCTION(BlueprintPure, Category = Action)
-	UActorComponent* GetOwnerComponent() const { return Cast<UActorComponent>(GetOwner()); }
+	UActorComponent* GetOwnerComponent() const
+	{
+		return Cast<UActorComponent>(GetOwner());
+	}
 
 	virtual UWorld* GetWorld() const override
 	{
@@ -215,10 +234,9 @@ public:
 
 #if WITH_GAMEPLAY_DEBUGGER
 	void DescribeSelfToGameplayDebugger(class FGameplayDebugger_Actions& Debugger, int8 Indent) const;
-#endif // WITH_GAMEPLAY_DEBUGGER
+#endif	  // WITH_GAMEPLAY_DEBUGGER
 
 private:
-
 	UActionsSubsystem* GetSubsystem() const
 	{
 		const UWorld* World = GetWorld();
@@ -227,7 +245,6 @@ private:
 	}
 
 public:
-
 	/** STATIC */
 
 	/**
@@ -236,10 +253,11 @@ public:
 	 * @param Owner of the action. If destroyed, the action will follow.
 	 * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
 	 */
-	template<typename ActionType>
+	template <typename ActionType>
 	static ActionType* Create(UObject* Owner, bool bAutoActivate = false)
 	{
-		static_assert(!TIsSame<ActionType, UAction>::Value, "Instantiating UAction is not allowed. Use a child class.");
+		static_assert(
+			!std::is_same_v<ActionType, UAction>, "Instantiating UAction is not allowed. Use a child class.");
 		static_assert(TIsDerivedFrom<ActionType, UAction>::IsDerived, "Provided class must inherit UAction.");
 		return Cast<ActionType>(Create(Owner, ActionType::StaticClass(), bAutoActivate));
 	}
