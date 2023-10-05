@@ -1,11 +1,12 @@
-// Copyright 2015-2020 Piperift. All Rights Reserved.
+// Copyright 2015-2023 Piperift. All Rights Reserved.
 
 #pragma once
+
+#include "Action.h"
 
 #include <CoreMinimal.h>
 #include <Kismet/BlueprintFunctionLibrary.h>
 
-#include "Action.h"
 #include "ActionLibrary.generated.h"
 
 
@@ -15,10 +16,10 @@ class ACTIONS_API UActionLibrary : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
-
-	UFUNCTION(BlueprintCallable, Category = Action, meta = (DisplayName = "Create Action", BlueprintInternalUseOnly = "true", DefaultToSelf = "Owner", WorldContext = "Owner"))
+	UFUNCTION(BlueprintCallable, Category = Action,
+		meta = (BlueprintInternalUseOnly = "true", DefaultToSelf = "Owner", WorldContext = "Owner"))
 	static UAction* CreateAction(UObject* Owner, const TSubclassOf<UAction> Type, bool bAutoActivate = false)
 	{
-		return UAction::Create(Owner, Type.Get(), bAutoActivate);
+		return ::CreateAction(Owner, Type.Get(), bAutoActivate);
 	}
 };

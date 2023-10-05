@@ -1,17 +1,59 @@
-// Copyright 2015-2020 Piperift. All Rights Reserved.
+// Copyright 2015-2023 Piperift. All Rights Reserved.
 
 #include "Action.h"
 
-#include "Engine/EngineTypes.h"
 #include "TimerManager.h"
-#include "Engine/World.h"
 
-#include "GameplayTaskOwnerInterface.h"
+#include <Components/ActorComponent.h>
+#include <Engine/EngineTypes.h>
+#include <Engine/World.h>
+#include <GameFramework/Actor.h>
+
+
 #if WITH_GAMEPLAY_DEBUGGER
-#include "GameplayDebugger_Actions.h"
-#endif // WITH_GAMEPLAY_DEBUGGER
+#	include "GameplayDebugger_Actions.h"
+#endif	  // WITH_GAMEPLAY_DEBUGGER
 
 DEFINE_LOG_CATEGORY(ActionLog);
+
+
+UAction* CreateAction(UObject* Owner, const TSubclassOf<class UAction> Type, bool bAutoActivate /*= false*/)
+{
+	if (!IsValid(Owner) || !Type.Get() || Type == UAction::StaticClass())
+	{
+		return nullptr;
+	}
+
+	UAction* Action = NewObject<UAction>(Owner, Type);
+	if (bAutoActivate)
+	{
+		Action->Activate();
+	}
+	return Action;
+}
+
+UAction* CreateAction(UObject* Owner, UAction* Template, bool bAutoActivate /*= false*/)
+{
+	if (!IsValid(Owner) || !Template)
+	{
+		return nullptr;
+	}
+
+	UClass* const Type = Template->GetClass();
+	check(Type);
+
+	if (Type == UAction::StaticClass())
+	{
+		return nullptr;
+	}
+
+	UAction* Action = NewObject<UAction>(Owner, Type, NAME_None, RF_NoFlags, Template);
+	if (bAutoActivate)
+	{
+		Action->Activate();
+	}
+	return Action;
+}
 
 
 void UAction::Activate()
@@ -20,12 +62,13 @@ void UAction::Activate()
 
 	if (!IsValid(this) || !IsValid(GetOuter()) || State != EActionState::Preparing)
 	{
-		UE_LOG(ActionLog, Warning, TEXT("Action '%s' is already running or pending destruction."), *GetName());
+		UE_LOG(
+			ActionLog, Warning, TEXT("Action '%s' is already running or pending destruction."), *GetName());
 		Destroy();
 		return;
 	}
 
-	if(!CanActivate())
+	if (!CanActivate())
 	{
 		UE_LOG(ActionLog, Log, TEXT("Could not activate. CanActivate() Failed."));
 		Destroy();
@@ -42,7 +85,10 @@ void UAction::Activate()
 		Subsystem->AddRootAction(this);
 	}
 
-	Subsystem->AddActionToTickGroup(this);
+	if (bWantsToTick)
+	{
+		Subsystem->AddActionToTickGroup(this);
+	}
 
 	State = EActionState::Running;
 	OnActivation();
@@ -66,7 +112,7 @@ void UAction::Cancel()
 void UAction::OnFinish(const EActionState Reason)
 {
 	// Stop any timers or latent actions for the action
-	if (UWorld * World = GetWorld())
+	if (UWorld* World = GetWorld())
 	{
 		World->GetLatentActionManager().RemoveActionsForObject(this);
 		World->GetTimerManager().ClearAllTimersForObject(this);
@@ -82,14 +128,15 @@ void UAction::OnFinish(const EActionState Reason)
 	}
 }
 
-void UAction::Finish(bool bSuccess) {
+void UAction::Finish(bool bSuccess)
+{
 	if (!IsRunning() || !IsValid(this))
 		return;
 
 	State = bSuccess ? EActionState::Success : EActionState::Failure;
 	OnFinish(State);
 
-	//Remove from parent action
+	// Remove from parent action
 	if (auto* ParentAction = GetParentAction())
 	{
 		ParentAction->RemoveChildren(this);
@@ -103,16 +150,16 @@ void UAction::Destroy()
 	if (!IsValid(this))
 		return;
 
-	//Cancel and destroy all children tasks
+	// Cancel and destroy all children tasks
 	for (auto* Children : ChildrenActions)
 	{
-		if (Children) {
+		if (Children)
+		{
 			Children->Cancel();
 		}
 	}
 	ChildrenActions.Reset();
 
-	//Mark for destruction
 	MarkAsGarbage();
 }
 
@@ -123,7 +170,7 @@ void UAction::AddChildren(UAction* Child)
 
 void UAction::RemoveChildren(UAction* Child)
 {
-	ChildrenActions.Remove(Child);
+	ChildrenActions.RemoveSwap(Child, false);
 }
 
 bool UAction::ReceiveCanActivate_Implementation()
@@ -131,28 +178,83 @@ bool UAction::ReceiveCanActivate_Implementation()
 	return true;
 }
 
+bool UAction::GetWantsToTick() const
+{
+	return bWantsToTick;
+}
+
+bool UAction::IsRunning() const
+{
+	return State == EActionState::Running;
+}
+
+bool UAction::Succeeded() const
+{
+	return State == EActionState::Success;
+}
+
+bool UAction::Failed() const
+{
+	return State == EActionState::Failure;
+}
+
+EActionState UAction::GetState() const
+{
+	return State;
+}
+
+UObject* const UAction::GetParent() const
+{
+	return GetOuter();
+}
+
+UAction* UAction::GetParentAction() const
+{
+	return Cast<UAction>(GetOuter());
+}
+
+float UAction::GetTickRate() const
+{
+	// Reduce TickRate Precision to 0.1ms
+	return FMath::FloorToFloat(TickRate * 10000.f) * 0.0001f;
+}
+
 UObject* UAction::GetOwner() const
 {
-	UObject* Outer = nullptr;
-	const UAction* Current = this;
-
-	// #TODO: Ensure this works
-	while (Current)
-	{
-		Outer = Current->GetOuter();
-		Current = Cast<UAction>(Outer);
-	}
-	return Outer;
+	return Owner.Get();
 }
 
 AActor* UAction::GetOwnerActor() const
 {
-	UObject* const Owner = GetOwner();
-	if (auto * Component = Cast<UActorComponent>(Owner))
+	UObject* Owner = GetOwner();
+	// With this function we can predict the owner is more likely to be an actor so we check it first
+	if (AActor* Actor = Cast<AActor>(Owner))
+	{
+		return Actor;
+	}
+	else if (auto* Component = Cast<UActorComponent>(Owner))
 	{
 		return Component->GetOwner();
 	}
-	return Cast<AActor>(Owner);
+	return nullptr;
+}
+
+UActorComponent* UAction::GetOwnerComponent() const
+{
+	return Cast<UActorComponent>(GetOwner());
+}
+
+UWorld* UAction::GetWorld() const
+{
+	// If we are a CDO, we must return nullptr to fool UObject::ImplementsGetWorld
+	if (HasAllFlags(RF_ClassDefaultObject))
+		return nullptr;
+
+	if (const UObject* InOwner = GetOwner())
+	{
+		InOwner->GetWorld();
+	}
+	return nullptr;
 }
 
 #if WITH_GAMEPLAY_DEBUGGER
@@ -161,14 +263,14 @@ void UAction::DescribeSelfToGameplayDebugger(FGameplayDebugger_Actions& Debugger
 	FString ColorText = TEXT("");
 	switch (State)
 	{
-	case EActionState::Running:
-		ColorText = TEXT("{cyan}");
-		break;
-	case EActionState::Success:
-		ColorText = TEXT("{green}");
-		break;
-	default:
-		ColorText = TEXT("{red}");
+		case EActionState::Running:
+			ColorText = TEXT("{cyan}");
+			break;
+		case EActionState::Success:
+			ColorText = TEXT("{green}");
+			break;
+		default:
+			ColorText = TEXT("{red}");
 	}
 
 	FString IndentString = "";
@@ -181,7 +283,8 @@ void UAction::DescribeSelfToGameplayDebugger(FGameplayDebugger_Actions& Debugger
 
 	if (IsRunning())
 	{
-		Debugger.AddTextLine(FString::Printf(TEXT("%s%s>%s %s"), *IndentString, *ColorText, *GetName(), *CanceledSuffix));
+		Debugger.AddTextLine(
+			FString::Printf(TEXT("%s%s>%s %s"), *IndentString, *ColorText, *GetName(), *CanceledSuffix));
 
 		for (const auto* ChildAction : ChildrenActions)
 		{
@@ -196,42 +299,43 @@ void UAction::DescribeSelfToGameplayDebugger(FGameplayDebugger_Actions& Debugger
 		}
 	}
 }
-#endif // WITH_GAMEPLAY_DEBUGGER
+#endif	  // WITH_GAMEPLAY_DEBUGGER
 
-UAction* UAction::Create(UObject* Owner, const TSubclassOf<class UAction> Type, bool bAutoActivate /*= false*/)
+void UAction::SetWantsToTick(bool bValue)
 {
-	if (!IsValid(Owner) || !Type.Get() || Type == UAction::StaticClass())
+	if (bValue != bWantsToTick)
 	{
-		return nullptr;
+		bWantsToTick = bValue;
+		UActionsSubsystem* Subsystem = GetSubsystem();
+		if (bValue)
+		{
+			Subsystem->AddActionToTickGroup(this);
+		}
+		else
+		{
+			Subsystem->RemoveActionFromTickGroup(this);
+		}
 	}
-
-	UAction* Action = NewObject<UAction>(Owner, Type);
-	if (bAutoActivate)
-	{
-		Action->Activate();
-	}
-	return Action;
 }
 
-UAction* UAction::Create(UObject* Owner, UAction* Template, bool bAutoActivate /*= false*/)
+void UAction::PostInitProperties()
 {
-	if (!IsValid(Owner) || !Template)
-	{
-		return nullptr;
-	}
+	Super::PostInitProperties();
 
-	UClass* const Type = Template->GetClass();
-	check(Type);
-
-	if (Type == UAction::StaticClass())
+	UObject* Outer = GetOuter();
+	if (UAction* Parent = Cast<UAction>(Outer))
 	{
-		return nullptr;
+		Owner = Parent->GetOwner();
 	}
-
-	UAction* Action = NewObject<UAction>(Owner, Type, NAME_None, RF_NoFlags, Template);
-	if (bAutoActivate)
+	else
 	{
-		Action->Activate();
+		Owner = Outer;
 	}
-	return Action;
+}
+
+UActionsSubsystem* UAction::GetSubsystem() const
+{
+	const UWorld* World = GetWorld();
+	const UGameInstance* GI = World ? World->GetGameInstance() : nullptr;
+	return UGameInstance::GetSubsystem<UActionsSubsystem>(GI);
 }

@@ -1,13 +1,15 @@
-﻿// Copyright 2015-2020 Piperift. All Rights Reserved.
+﻿// Copyright 2015-2023 Piperift. All Rights Reserved.
 
 #include "ActionsSubsystem.h"
-#include <GameFramework/WorldSettings.h>
 
 #include "Action.h"
 
+#include <GameFramework/WorldSettings.h>
+
+
 #if WITH_GAMEPLAY_DEBUGGER
-#include "GameplayDebugger_Actions.h"
-#endif // WITH_GAMEPLAY_DEBUGGER
+#	include "GameplayDebugger_Actions.h"
+#endif	  // WITH_GAMEPLAY_DEBUGGER
 
 
 void FActionsTickGroup::Tick(float DeltaTime)
@@ -32,7 +34,7 @@ void FActionsTickGroup::Tick(float DeltaTime)
 	}
 	else
 	{
-		//Normal Tick
+		// Normal Tick
 		DelayedTick(DeltaTime);
 	}
 }
@@ -41,9 +43,8 @@ void FActionsTickGroup::DelayedTick(float DeltaTime)
 {
 	for (int32 i = 0; i < Actions.Num(); ++i)
 	{
-		auto* Action = Actions[i];
-
-		if (!IsValid(Action))
+		auto* const Action = Actions[i];
+		if (!Action)
 		{
 			Actions.RemoveAtSwap(i, 1, false);
 			--i;
@@ -55,9 +56,9 @@ void FActionsTickGroup::DelayedTick(float DeltaTime)
 	}
 }
 
-void FRootAction::CancelAll(bool bShouldShrink)
+void FActionOwner::CancelAll(bool bShouldShrink)
 {
-	for (auto* Action : Actions)
+	for (auto& Action : Actions)
 	{
 		if (Action)
 		{
@@ -71,15 +72,14 @@ void FRootAction::CancelAll(bool bShouldShrink)
 		Actions.Reset();
 }
 
-void FRootAction::CancelByPredicate(const TFunctionRef<bool(const UAction*)>& Predicate, bool bShouldShrink)
+void FActionOwner::CancelByPredicate(const TFunctionRef<bool(const UAction*)>& Predicate, bool bShouldShrink)
 {
 	for (int32 i = 0; i < Actions.Num(); ++i)
 	{
-		auto* Action = Actions[i];
-
+		auto* Action = Actions[i].Get();
 		if (Action && Predicate(Action))
 		{
-			//Cancel action
+			// Cancel action
 			Action->Cancel();
 
 			// Remove action
@@ -108,8 +108,8 @@ void UActionsSubsystem::Deinitialize()
 
 void UActionsSubsystem::Tick(float DeltaTime)
 {
-	// Cancel destroyed object actions
-	for (auto RootIt = RootActions.CreateIterator(); RootIt; ++RootIt)
+	// Cancel destroyed object actions or of which the outer is invalid
+	for (auto RootIt = ActionOwners.CreateIterator(); RootIt; ++RootIt)
 	{
 		if (!RootIt->Owner.IsValid())
 		{
@@ -119,9 +119,11 @@ void UActionsSubsystem::Tick(float DeltaTime)
 		else
 		{
 			// Remove garbage collected actions
-			RootIt->Actions.RemoveAllSwap([](const UAction* Action) {
-				return !Action;
-			}, false);
+			RootIt->Actions.RemoveAllSwap(
+				[](const UAction* Action) {
+					return !IsValid(Action);
+				},
+				false);
 
 			if (RootIt->Actions.Num() <= 0)
 			{
@@ -138,7 +140,7 @@ void UActionsSubsystem::Tick(float DeltaTime)
 
 		TickGroup.Tick(DeltaTime * TimeDilation);
 
-		if(TickGroup.Actions.Num() <= 0)
+		if (TickGroup.Actions.Num() <= 0)
 		{
 			// Tick group is empty so we remove and ignore it
 			TickGroups.RemoveAtSwap(i, 1, false);
@@ -150,26 +152,26 @@ void UActionsSubsystem::Tick(float DeltaTime)
 
 void UActionsSubsystem::CancelAll()
 {
-	for (auto& RootAction : RootActions)
+	for (auto& RootAction : ActionOwners)
 	{
 		RootAction.CancelAll(false);
 	}
-	RootActions.Reset();
+	ActionOwners.Reset();
 }
 
 void UActionsSubsystem::CancelAllByOwner(UObject* Object)
 {
-	const FSetElementId RootId = RootActions.FindId(Object);
-	if (RootId.IsValidId())
+	const FSetElementId OwnerId = ActionOwners.FindId(Object);
+	if (OwnerId.IsValidId())
 	{
-		RootActions[RootId].CancelAll(false);
-		RootActions.Remove(RootId);
+		ActionOwners[OwnerId].CancelAll(false);
+		ActionOwners.Remove(OwnerId);
 	}
 }
 
 void UActionsSubsystem::CancelByPredicate(TFunctionRef<bool(const UAction*)> Predicate)
 {
-	for (auto& RootAction : RootActions)
+	for (auto& RootAction : ActionOwners)
 	{
 		RootAction.CancelByPredicate(Predicate);
 	}
@@ -177,9 +179,9 @@ void UActionsSubsystem::CancelByPredicate(TFunctionRef<bool(const UAction*)> Pre
 
 void UActionsSubsystem::CancelByOwnerPredicate(UObject* Object, TFunctionRef<bool(const UAction*)> Predicate)
 {
-	if(FRootAction* const RootAction = RootActions.Find(Object))
+	if (FActionOwner* const Owner = ActionOwners.Find(Object))
 	{
-		RootAction->CancelByPredicate(Predicate);
+		Owner->CancelByPredicate(Predicate);
 	}
 }
 
@@ -190,13 +192,12 @@ void UActionsSubsystem::AddRootAction(UAction* Child)
 	// Registry for GC Canceling
 	UObject* Owner = Child->GetOuter();
 
-	FSetElementId RootId = RootActions.FindId(Owner);
-	if (!RootId.IsValidId())
+	FSetElementId OwnerId = ActionOwners.FindId(Owner);
+	if (!OwnerId.IsValidId())
 	{
-		RootId = RootActions.Add({ Owner });
+		OwnerId = ActionOwners.Add({Owner});
 	}
-
-	RootActions[RootId].Actions.Add(Child);
+	ActionOwners[OwnerId].Actions.Add(Child);
 }
 
 void UActionsSubsystem::AddActionToTickGroup(UAction* Child)
@@ -207,23 +208,43 @@ void UActionsSubsystem::AddActionToTickGroup(UAction* Child)
 	FActionsTickGroup* Group = TickGroups.FindByKey(TickRate);
 	if (!Group)
 	{
-		TickGroups.Add({ TickRate });
+		TickGroups.Add({TickRate});
 		Group = &TickGroups.Last();
 	}
 
 	Group->Actions.Add(Child);
 }
 
+void UActionsSubsystem::RemoveActionFromTickGroup(UAction* Child)
+{
+	const float TickRate = Child->GetTickRate();
+	int32 Index = TickGroups.Find(TickRate);
+	if (Index != INDEX_NONE)
+	{
+		auto& Group = TickGroups[Index];
+		if (Group.Actions.Num() > 1)
+		{
+			Group.Actions.RemoveSwap(Child, false);
+		}
+		else
+		{
+			TickGroups.RemoveAtSwap(Index);
+		}
+	}
+}
+
 #if WITH_GAMEPLAY_DEBUGGER
-void UActionsSubsystem::DescribeOwnerToGameplayDebugger(UObject* Owner, const FName& BaseName, FGameplayDebugger_Actions& Debugger) const
+void UActionsSubsystem::DescribeOwnerToGameplayDebugger(
+	UObject* Owner, const FName& BaseName, FGameplayDebugger_Actions& Debugger) const
 {
 	static const FString StateColorText = TEXT("{green}");
 
-	Debugger.AddTextLine(FString::Printf(TEXT("%s%s: %s"), *StateColorText, *BaseName.ToString(), *Owner->GetName()));
+	Debugger.AddTextLine(
+		FString::Printf(TEXT("%s%s: %s"), *StateColorText, *BaseName.ToString(), *Owner->GetName()));
 
-	if (const FRootAction* const RootAction = RootActions.Find(Owner))
+	if (const FActionOwner* const RootAction = ActionOwners.Find(Owner))
 	{
-		for (const auto* Action : RootAction->Actions)
+		for (const UAction* Action : RootAction->Actions)
 		{
 			if (IsValid(Action))
 			{
@@ -234,4 +255,4 @@ void UActionsSubsystem::DescribeOwnerToGameplayDebugger(UObject* Owner, const FN
 
 	Debugger.AddTextLine(TEXT(""));
 }
-#endif // WITH_GAMEPLAY_DEBUGGER
+#endif	  // WITH_GAMEPLAY_DEBUGGER

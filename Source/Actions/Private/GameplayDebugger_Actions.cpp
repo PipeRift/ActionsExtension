@@ -1,19 +1,19 @@
-﻿// Copyright 2015-2020 Piperift. All Rights Reserved.
+﻿// Copyright 2015-2023 Piperift. All Rights Reserved.
 
 #include "GameplayDebugger_Actions.h"
+
+#include "ActionsSubsystem.h"
 
 #include <Engine/World.h>
 #include <GameFramework/Actor.h>
 #include <GameFramework/Pawn.h>
 #include <GameFramework/PlayerController.h>
 
-#include "ActionsSubsystem.h"
 
 
 #if WITH_GAMEPLAY_DEBUGGER
 
-FGameplayDebugger_Actions::FGameplayDebugger_Actions()
-{}
+FGameplayDebugger_Actions::FGameplayDebugger_Actions() {}
 
 TSharedRef<FGameplayDebuggerCategory> FGameplayDebugger_Actions::MakeInstance()
 {
@@ -24,7 +24,7 @@ void FGameplayDebugger_Actions::CollectData(APlayerController* OwnerPC, AActor* 
 {
 	UWorld* World = OwnerPC->GetWorld();
 
-	UGameInstance* GI = World? World->GetGameInstance() : nullptr;
+	UGameInstance* GI = World ? World->GetGameInstance() : nullptr;
 	if (!GI)
 	{
 		return;
@@ -49,4 +49,4 @@ void FGameplayDebugger_Actions::CollectData(APlayerController* OwnerPC, AActor* 
 		}
 	}
 }
-#endif // ENABLE_GAMEPLAY_DEBUGGER
+#endif	  // ENABLE_GAMEPLAY_DEBUGGER

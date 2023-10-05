@@ -1,26 +1,24 @@
-// Copyright 2015-2020 Piperift. All Rights Reserved.
+// Copyright 2015-2023 Piperift. All Rights Reserved.
 
 #pragma once
 
-#include <CoreMinimal.h>
-#include <UObject/ObjectMacros.h>
-#include <EdGraph/EdGraphNodeUtils.h>
-#include <EdGraphSchema_K2.h>
+#include "ActionReflection.h"
 
+#include <EdGraphSchema_K2.h>
 #include <K2Node.h>
 #include <K2Node_AddDelegate.h>
 #include <K2Node_CreateDelegate.h>
-#include <K2Node_Self.h>
 #include <K2Node_CustomEvent.h>
+#include <K2Node_Self.h>
 #include <K2Node_TemporaryVariable.h>
 #include <ToolMenu.h>
+#include <UObject/ObjectMacros.h>
 
-#include "ActionReflection.h"
 #include "K2Node_Action.generated.h"
 
 
 UCLASS(Blueprintable)
-class ACTIONSEDITOR_API UK2Node_Action : public UK2Node
+class ACTIONSGRAPH_API UK2Node_Action : public UK2Node
 {
 	GENERATED_BODY()
 
@@ -28,7 +26,6 @@ class ACTIONSEDITOR_API UK2Node_Action : public UK2Node
 	static const FName OwnerPinName;
 
 public:
-
 	UPROPERTY()
 	UClass* ActionClass;
 
@@ -36,7 +33,6 @@ public:
 	bool bShowClass = true;
 
 protected:
-
 	/** Output pin visibility control */
 	UPROPERTY(EditAnywhere, Category = PinOptions, EditFixedSize)
 	TArray<FOptionalPinFromProperty> ShowPinForProperties;
@@ -45,7 +41,6 @@ protected:
 	FText NodeTooltip;
 
 private:
-
 	UPROPERTY()
 	FActionProperties CurrentProperties;
 
@@ -58,11 +53,9 @@ private:
 
 
 public:
-
 	UK2Node_Action();
 
 protected:
-
 	virtual void PostLoad() override;
 
 	//~ Begin UEdGraphNode Interface.
@@ -79,12 +72,16 @@ protected:
 	// End UEdGraphNode interface.
 
 	//~ Begin UK2Node Interface
-	virtual bool IsNodeSafeToIgnore() const override { return true; }
+	virtual bool IsNodeSafeToIgnore() const override
+	{
+		return true;
+	}
 	virtual void ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& OldPins) override;
 	virtual void GetNodeAttributes(TArray<TKeyValuePair<FString, FString>>& OutNodeAttributes) const override;
 	virtual void GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const override;
 	virtual FText GetMenuCategory() const override;
-	virtual void GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const override;
+	virtual void GetNodeContextMenuActions(
+		UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const override;
 	//~ End UK2Node Interface
 
 
@@ -112,8 +109,14 @@ protected:
 	virtual bool HasWorldContext() const;
 
 	/** Returns if the node uses Owner input */
-	virtual bool UseOwner() const { return true; }
-	virtual bool ShowClass() const { return bShowClass; }
+	virtual bool UseOwner() const
+	{
+		return true;
+	}
+	virtual bool ShowClass() const
+	{
+		return bShowClass;
+	}
 
 	/** Gets the default node title when no class is selected */
 	virtual FText GetBaseNodeTitle() const;
@@ -123,12 +126,12 @@ protected:
 	virtual UClass* GetClassPinBaseClass() const;
 
 	/**
-	* Takes the specified "MutatablePin" and sets its 'PinToolTip' field (according
-	* to the specified description)
-	*
-	* @param   MutatablePin	The pin you want to set tool-tip text on
-	* @param   PinDescription	A string describing the pin's purpose
-	*/
+	 * Takes the specified "MutatablePin" and sets its 'PinToolTip' field (according
+	 * to the specified description)
+	 *
+	 * @param   MutatablePin	The pin you want to set tool-tip text on
+	 * @param   PinDescription	A string describing the pin's purpose
+	 */
 	void SetPinToolTip(UEdGraphPin& MutatablePin, const FText& PinDescription) const;
 
 	/** Refresh pins when class was changed */
@@ -137,7 +140,6 @@ protected:
 	void OnBlueprintCompiled(UBlueprint*);
 
 private:
-
 	void BindBlueprintCompile();
 
 	void ToogleShowClass();
@@ -145,31 +147,34 @@ private:
 	UEdGraphPin* CreateClassPin();
 
 protected:
-
-	struct ACTIONSEDITOR_API FHelper
+	struct ACTIONSGRAPH_API FHelper
 	{
 		struct FOutputPinAndLocalVariable
 		{
 			UEdGraphPin* OutputPin;
 			UK2Node_TemporaryVariable* TempVar;
 
-			FOutputPinAndLocalVariable(UEdGraphPin* Pin, UK2Node_TemporaryVariable* Var) : OutputPin(Pin), TempVar(Var) {}
+			FOutputPinAndLocalVariable(UEdGraphPin* Pin, UK2Node_TemporaryVariable* Var)
+				: OutputPin(Pin)
+				, TempVar(Var)
+			{}
 		};
 
-		static bool ValidDataPin(const UEdGraphPin* Pin, EEdGraphPinDirection Direction, const UEdGraphSchema_K2* Schema);
+		static bool ValidDataPin(
+			const UEdGraphPin* Pin, EEdGraphPinDirection Direction, const UEdGraphSchema_K2* Schema);
 
-		static bool CreateDelegateForNewFunction(UEdGraphPin* DelegateInputPin, FName FunctionName, UK2Node* CurrentNode, UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext);
-
-		static bool CopyEventSignature(UK2Node_CustomEvent* CENode, UFunction* Function, const UEdGraphSchema_K2* Schema);
-
-		static bool HandleDelegateImplementation(
-			FMulticastDelegateProperty* CurrentProperty,
-			UEdGraphPin* ProxyObjectPin, UEdGraphPin*& InOutLastThenPin,
+		static bool CreateDelegateForNewFunction(UEdGraphPin* DelegateInputPin, FName FunctionName,
 			UK2Node* CurrentNode, UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext);
 
-		static bool HandleDelegateBindImplementation(
-			FMulticastDelegateProperty* CurrentProperty,
-			UEdGraphPin* ProxyObjectPin, UEdGraphPin*& InOutLastThenPin,
-			UK2Node* CurrentNode, UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext);
+		static bool CopyEventSignature(
+			UK2Node_CustomEvent* CENode, UFunction* Function, const UEdGraphSchema_K2* Schema);
+
+		static bool HandleDelegateImplementation(FMulticastDelegateProperty* CurrentProperty,
+			UEdGraphPin* ProxyObjectPin, UEdGraphPin*& InOutLastThenPin, UK2Node* CurrentNode,
+			UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext);
+
+		static bool HandleDelegateBindImplementation(FMulticastDelegateProperty* CurrentProperty,
+			UEdGraphPin* ProxyObjectPin, UEdGraphPin*& InOutLastThenPin, UK2Node* CurrentNode,
+			UEdGraph* SourceGraph, FKismetCompilerContext& CompilerContext);
 	};
 };

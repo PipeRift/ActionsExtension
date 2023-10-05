@@ -1,11 +1,11 @@
-// Copyright 2015-2020 Piperift. All Rights Reserved.
+// Copyright 2015-2023 Piperift. All Rights Reserved.
 
 #include "ActionsModule.h"
 
 #if WITH_GAMEPLAY_DEBUGGER
-#include "GameplayDebugger.h"
-#include "GameplayDebugger_Actions.h"
-#endif // WITH_GAMEPLAY_DEBUGGER
+#	include "GameplayDebugger.h"
+#	include "GameplayDebugger_Actions.h"
+#endif	  // WITH_GAMEPLAY_DEBUGGER
 
 
 DEFINE_LOG_CATEGORY(LogActions)
@@ -19,7 +19,9 @@ void FActionsModule::StartupModule()
 	// Register Gameplay debugger
 #if WITH_GAMEPLAY_DEBUGGER
 	IGameplayDebugger& GameplayDebuggerModule = IGameplayDebugger::Get();
-	GameplayDebuggerModule.RegisterCategory("Actions", IGameplayDebugger::FOnGetCategory::CreateStatic(&FGameplayDebugger_Actions::MakeInstance), EGameplayDebuggerCategoryState::EnabledInGameAndSimulate);
+	GameplayDebuggerModule.RegisterCategory("Actions",
+		IGameplayDebugger::FOnGetCategory::CreateStatic(&FGameplayDebugger_Actions::MakeInstance),
+		EGameplayDebuggerCategoryState::EnabledInGameAndSimulate);
 	GameplayDebuggerModule.NotifyCategoriesChanged();
 #endif
 }

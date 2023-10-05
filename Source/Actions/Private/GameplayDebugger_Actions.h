@@ -1,10 +1,10 @@
-// Copyright 2015-2020 Piperift. All Rights Reserved.
+// Copyright 2015-2023 Piperift. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #if WITH_GAMEPLAY_DEBUGGER
-#include "GameplayDebuggerCategory.h"
+#	include "GameplayDebuggerCategory.h"
 #endif
 
 #if WITH_GAMEPLAY_DEBUGGER
@@ -19,4 +19,4 @@ public:
 	virtual void CollectData(APlayerController* OwnerPC, AActor* DebugActor) override;
 };
 
-#endif // WITH_GAMEPLAY_DEBUGGER
+#endif	  // WITH_GAMEPLAY_DEBUGGER

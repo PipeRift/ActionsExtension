@@ -1,4 +1,4 @@
-// Copyright 2015-2020 Piperift. All Rights Reserved.
+// Copyright 2015-2023 Piperift. All Rights Reserved.
 
 #pragma once
 
@@ -18,6 +18,44 @@
 DECLARE_LOG_CATEGORY_EXTERN(ActionLog, Log, All);
 
 
+class AActor;
+class UActorComponent;
+class UAction;
+
+
+/**
+ * Creates a new action. Templated version
+ * @param ActionType
+ * @param Owner of the action. If destroyed, the action will follow.
+ * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
+ */
+template <typename ActionType>
+ActionType* CreateAction(UObject* Owner, bool bAutoActivate = false)
+{
+	static_assert(
+		!std::is_same_v<ActionType, UAction>, "Instantiating UAction is not allowed. Use a child class.");
+	static_assert(TIsDerivedFrom<ActionType, UAction>::IsDerived, "Provided class must inherit UAction.");
+	return Cast<ActionType>(CreateAction(Owner, ActionType::StaticClass(), bAutoActivate));
+}
+
+/**
+ * Creates a new action
+ * @param Owner of the action. If destroyed, the action will follow.
+ * @param Type of the action to create
+ * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
+ */
+ACTIONS_API UAction* CreateAction(
+	UObject* Owner, const TSubclassOf<UAction> Type, bool bAutoActivate = false);
+
+/**
+ * Creates a new action
+ * @param Owner of the action. If destroyed, the action will follow.
+ * @param Template whose properties and class are used to create the action.
+ * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
+ */
+ACTIONS_API UAction* CreateAction(UObject* Owner, UAction* Template, bool bAutoActivate = false);
+
+
 /**
  * Result of a node execution
  */
@@ -31,7 +69,7 @@ enum class EActionState : uint8
 	Cancelled
 };
 
-FORCEINLINE FString ToString(EActionState Value)
+inline FString ToString(EActionState Value)
 {
 	const UEnum* EnumPtr = FindObject<UEnum>(nullptr, TEXT("/Script/Actions.EActionState"), true);
 	return EnumPtr ? EnumPtr->GetNameByValue((int64) Value).ToString() : TEXT("Invalid");
@@ -52,21 +90,26 @@ class ACTIONS_API UAction : public UObject
 	/************************************************************************/
 	/* PROPERTIES														    */
 	/************************************************************************/
-public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Action)
+private:
+	UPROPERTY()
+	TWeakObjectPtr<UObject> Owner;
+
+	UPROPERTY()
+	EActionState State = EActionState::Preparing;
+
+	UPROPERTY(SaveGame)
+	TArray<UAction*> ChildrenActions;
+
+
+	/** If true the action will tick. Tick can be enabled or disabled while running. */
+	UPROPERTY(EditAnywhere, Category = Action)
 	bool bWantsToTick = false;
 
 protected:
 	// Tick length in seconds. 0 is default tick rate
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Action, BlueprintGetter = "GetTickRate")
+	UPROPERTY(EditDefaultsOnly, Category = Action)
 	float TickRate = 0.15f;
 
-private:
-	UPROPERTY(Transient)
-	EActionState State = EActionState::Preparing;
-
-	UPROPERTY(SaveGame)
-	TSet<UAction*> ChildrenActions;
 
 public:
 	/** Delegates */
@@ -85,7 +128,7 @@ public:
 	/************************************************************************/
 
 	/** Called to active an action if not already. */
-	UFUNCTION(BlueprintCallable, Category = "Action", BlueprintInternalUseOnly)
+	UFUNCTION(BlueprintCallable, Category = Action, BlueprintInternalUseOnly)
 	void Activate();
 
 	/** Internal Use Only. Called when the action is stopped from running by its owner */
@@ -157,55 +200,38 @@ protected:
 	void ReceiveFinished(const EActionState Reason);
 
 
-	/** Helpers */
 public:
-	FORCEINLINE bool CanTick() const
+	bool CanTick() const
 	{
-		return bWantsToTick && IsRunning() && IsValid(GetOuter());
+		return bWantsToTick && IsRunning();
 	}
+
+	UFUNCTION(BlueprintCallable, Category = Action)
+	void SetWantsToTick(bool bValue);
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE bool IsRunning() const
-	{
-		return IsValid(this) && State == EActionState::Running;
-	}
+	bool GetWantsToTick() const;
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE bool Succeeded() const
-	{
-		return IsValid(this) && State == EActionState::Success;
-	}
+	float GetTickRate() const;
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE bool Failed() const
-	{
-		return IsValid(this) && State == EActionState::Failure;
-	}
+	bool IsRunning() const;
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE EActionState GetState() const
-	{
-		return State;
-	}
+	bool Succeeded() const;
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE UObject* const GetParent() const
-	{
-		return GetOuter();
-	}
+	bool Failed() const;
 
 	UFUNCTION(BlueprintPure, Category = Action)
-	FORCEINLINE UAction* GetParentAction() const
-	{
-		return Cast<UAction>(GetOuter());
-	}
+	EActionState GetState() const;
 
-	UFUNCTION(BlueprintGetter)
-	FORCEINLINE float GetTickRate() const
-	{
-		// Reduce TickRate Precision to 0.1ms
-		return FMath::FloorToFloat(TickRate * 10000.f) * 0.0001f;
-	}
+	UFUNCTION(BlueprintPure, Category = Action)
+	UObject* const GetParent() const;
+
+	UFUNCTION(BlueprintPure, Category = Action)
+	UAction* GetParentAction() const;
 
 	/** @return the object that executes the root action */
 	UFUNCTION(BlueprintPure, Category = Action)
@@ -217,64 +243,18 @@ public:
 
 	/** @return the component if any that executes the root action */
 	UFUNCTION(BlueprintPure, Category = Action)
-	UActorComponent* GetOwnerComponent() const
-	{
-		return Cast<UActorComponent>(GetOwner());
-	}
+	UActorComponent* GetOwnerComponent() const;
 
-	virtual UWorld* GetWorld() const override
-	{
-		// If we are a CDO, we must return nullptr to fool UObject::ImplementsGetWorld.
-		if (HasAllFlags(RF_ClassDefaultObject))
-			return nullptr;
-
-		const UObject* const InOwner = GetOwner();
-		return InOwner ? InOwner->GetWorld() : nullptr;
-	}
+	UWorld* GetWorld() const override;
 
 #if WITH_GAMEPLAY_DEBUGGER
 	void DescribeSelfToGameplayDebugger(class FGameplayDebugger_Actions& Debugger, int8 Indent) const;
 #endif	  // WITH_GAMEPLAY_DEBUGGER
 
-private:
-	UActionsSubsystem* GetSubsystem() const
-	{
-		const UWorld* World = GetWorld();
-		const UGameInstance* GI = World ? World->GetGameInstance() : nullptr;
-		return UGameInstance::GetSubsystem<UActionsSubsystem>(GI);
-	}
+	//~ Begin UObject Interface
+	void PostInitProperties() override;
+	//~ End UObject Interface
 
-public:
-	/** STATIC */
-
-	/**
-	 * Creates a new action. Templated version
-	 * @param ActionType
-	 * @param Owner of the action. If destroyed, the action will follow.
-	 * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
-	 */
-	template <typename ActionType>
-	static ActionType* Create(UObject* Owner, bool bAutoActivate = false)
-	{
-		static_assert(
-			!std::is_same_v<ActionType, UAction>, "Instantiating UAction is not allowed. Use a child class.");
-		static_assert(TIsDerivedFrom<ActionType, UAction>::IsDerived, "Provided class must inherit UAction.");
-		return Cast<ActionType>(Create(Owner, ActionType::StaticClass(), bAutoActivate));
-	}
-
-	/**
-	 * Creates a new action
-	 * @param Owner of the action. If destroyed, the action will follow.
-	 * @param Type of the action to create
-	 * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
-	 */
-	static UAction* Create(UObject* Owner, const TSubclassOf<class UAction> Type, bool bAutoActivate = false);
-
-	/**
-	 * Creates a new action
-	 * @param Owner of the action. If destroyed, the action will follow.
-	 * @param Template whose properties and class are used to create the action.
-	 * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
-	 */
-	static UAction* Create(UObject* Owner, class UAction* Template, bool bAutoActivate = false);
+protected:
+	UActionsSubsystem* GetSubsystem() const;
 };

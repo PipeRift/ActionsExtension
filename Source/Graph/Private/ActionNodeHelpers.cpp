@@ -1,13 +1,16 @@
-// Copyright 2015-2020 Piperift. All Rights Reserved.
+// Copyright 2015-2023 Piperift. All Rights Reserved.
 
 #include "ActionNodeHelpers.h"
 
-#include "K2Node_Action.h"
 #include "AssetRegistry/ARFilter.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "K2Node_Action.h"
+
+#include <Action.h>
 
 
-void FActionNodeHelpers::RegisterActionClassActions(FBlueprintActionDatabaseRegistrar& InActionRegister, UClass* NodeClass)
+void FActionNodeHelpers::RegisterActionClassActions(
+	FBlueprintActionDatabaseRegistrar& InActionRegister, UClass* NodeClass)
 {
 	UClass* TaskType = UAction::StaticClass();
 
@@ -22,11 +25,12 @@ void FActionNodeHelpers::RegisterActionClassActions(FBlueprintActionDatabaseRegi
 				check(NewAction != nullptr);
 
 				TWeakObjectPtr<UClass> TargetClassPtr = const_cast<UClass*>(TargetClass);
-				NewAction->CustomizeNodeDelegate = UBlueprintNodeSpawner::FCustomizeNodeDelegate::CreateStatic(SetNodeFunc, TargetClassPtr);
+				NewAction->CustomizeNodeDelegate =
+					UBlueprintNodeSpawner::FCustomizeNodeDelegate::CreateStatic(SetNodeFunc, TargetClassPtr);
 
 				if (NewAction)
 				{
-					RegisteredCount += (int32)InActionRegister.AddBlueprintAction(TargetClass, NewAction);
+					RegisteredCount += (int32) InActionRegister.AddBlueprintAction(TargetClass, NewAction);
 				}
 			}
 		}
@@ -44,7 +48,7 @@ void FActionNodeHelpers::RegisterActionClassActions(FBlueprintActionDatabaseRegi
 			RegisteredCount += RegistryActionClassAction(InActionRegister, NodeClass, Class);
 		}
 
-		//Registry blueprint classes
+		// Registry blueprint classes
 		/*TSet<TAssetSubclassOf<UAction>> BPClasses;
 		GetAllBlueprintSubclasses<UAction>(BPClasses, false, "");
 		for (auto& BPClass : BPClasses)
@@ -62,7 +66,8 @@ void FActionNodeHelpers::RegisterActionClassActions(FBlueprintActionDatabaseRegi
 	return;
 }
 
-void FActionNodeHelpers::SetNodeFunc(UEdGraphNode* NewNode, bool /*bIsTemplateNode*/, TWeakObjectPtr<UClass> ClassPtr)
+void FActionNodeHelpers::SetNodeFunc(
+	UEdGraphNode* NewNode, bool /*bIsTemplateNode*/, TWeakObjectPtr<UClass> ClassPtr)
 {
 	UK2Node_Action* ActionNode = CastChecked<UK2Node_Action>(NewNode);
 	if (ClassPtr.IsValid())
@@ -72,8 +77,9 @@ void FActionNodeHelpers::SetNodeFunc(UEdGraphNode* NewNode, bool /*bIsTemplateNo
 	}
 }
 
-template<typename TBase>
-void FActionNodeHelpers::GetAllBlueprintSubclasses(TSet<TSoftClassPtr<TBase>>& Subclasses, bool bAllowAbstract, FString const& Path)
+template <typename TBase>
+void FActionNodeHelpers::GetAllBlueprintSubclasses(
+	TSet<TSoftClassPtr<TBase>>& Subclasses, bool bAllowAbstract, FString const& Path)
 {
 	static const FName GeneratedClassTag = TEXT("GeneratedClass");
 	static const FName ClassFlagsTag = TEXT("ClassFlags");
@@ -82,24 +88,25 @@ void FActionNodeHelpers::GetAllBlueprintSubclasses(TSet<TSoftClassPtr<TBase>>& S
 	check(Base);
 
 	// Load the asset registry module
-	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked< FAssetRegistryModule >(FName("AssetRegistry"));
+	FAssetRegistryModule& AssetRegistryModule =
+		FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
 	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
 
 	FName BaseClassName = Base->GetFName();
 
 	// Use the asset registry to get the set of all class names deriving from Base
-	TSet< FName > DerivedNames;
+	TSet<FName> DerivedNames;
 	{
-		TArray< FName > BaseNames;
+		TArray<FName> BaseNames;
 		BaseNames.Add(BaseClassName);
 
-		TSet< FName > Excluded;
+		TSet<FName> Excluded;
 		AssetRegistry.GetDerivedClassNames(BaseNames, Excluded, DerivedNames);
 	}
 
-	// Set up a filter and then pull asset data for all blueprints in the specified path from the asset registry.
-	// Note that this works in packaged builds too. Even though the blueprint itself cannot be loaded, its asset data
-	// still exists and is tied to the UBlueprint type.
+	// Set up a filter and then pull asset data for all blueprints in the specified path from the asset
+	// registry. Note that this works in packaged builds too. Even though the blueprint itself cannot be
+	// loaded, its asset data still exists and is tied to the UBlueprint type.
 	FARFilter Filter;
 	Filter.ClassNames.Add(UBlueprint::StaticClass()->GetFName());
 	Filter.bRecursiveClasses = true;
@@ -109,7 +116,7 @@ void FActionNodeHelpers::GetAllBlueprintSubclasses(TSet<TSoftClassPtr<TBase>>& S
 	}
 	Filter.bRecursivePaths = true;
 
-	TArray< FAssetData > AssetList;
+	TArray<FAssetData> AssetList;
 	AssetRegistry.GetAssets(Filter, AssetList);
 
 	// Iterate over retrieved blueprint assets
@@ -120,7 +127,8 @@ void FActionNodeHelpers::GetAllBlueprintSubclasses(TSet<TSoftClassPtr<TBase>>& S
 		if (GeneratedClassPath.IsSet())
 		{
 			// Convert path to just the name part
-			const FString ClassObjectPath = FPackageName::ExportTextPathToObjectPath(GeneratedClassPath.GetValue());
+			const FString ClassObjectPath =
+				FPackageName::ExportTextPathToObjectPath(GeneratedClassPath.GetValue());
 			const FString ClassName = FPackageName::ObjectPathToObjectName(ClassObjectPath);
 
 			// Check if this class is in the derived set
@@ -130,21 +138,23 @@ void FActionNodeHelpers::GetAllBlueprintSubclasses(TSet<TSoftClassPtr<TBase>>& S
 			}
 
 			// Store using the path to the generated class
-			Subclasses.Add(TAssetSubclassOf<TBase>{ FStringAssetReference(ClassObjectPath) });
+			Subclasses.Add(TAssetSubclassOf<TBase>{FStringAssetReference(ClassObjectPath)});
 		}
 	}
 }
 
-int32 FActionNodeHelpers::RegistryActionClassAction(FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass, UClass* Class)
+int32 FActionNodeHelpers::RegistryActionClassAction(
+	FBlueprintActionDatabaseRegistrar& InActionRegistar, UClass* NodeClass, UClass* Class)
 {
 	UBlueprintNodeSpawner* NewAction = UBlueprintNodeSpawner::Create(NodeClass);
 	check(NewAction != nullptr);
 
-	NewAction->CustomizeNodeDelegate = UBlueprintNodeSpawner::FCustomizeNodeDelegate::CreateStatic(SetNodeFunc, TWeakObjectPtr<UClass>{ Class });
+	NewAction->CustomizeNodeDelegate = UBlueprintNodeSpawner::FCustomizeNodeDelegate::CreateStatic(
+		SetNodeFunc, TWeakObjectPtr<UClass>{Class});
 
 	if (NewAction)
 	{
-		return (int32)InActionRegistar.AddBlueprintAction(Class, NewAction);
+		return (int32) InActionRegistar.AddBlueprintAction(Class, NewAction);
 	}
 
 	return 0;

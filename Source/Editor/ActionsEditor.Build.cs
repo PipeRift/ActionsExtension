@@ -9,31 +9,11 @@ public class ActionsEditor : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(new string[] {
-			"Core",
-			"InputCore"
 		});
 
-		PrivateDependencyModuleNames.AddRange( new string[] {
+		PrivateDependencyModuleNames.AddRange(new string[] {
 			"Core",
-			"CoreUObject",
-			"Engine",
 			"UnrealEd",
-			"Blutility",
-			"Slate",
-			"SlateCore",
-			"AssetTools",
-			"EditorStyle",
-			"KismetWidgets",
-			"KismetCompiler",
-			"BlueprintGraph",
-			"GraphEditor",
-			"Kismet",
-			"PropertyEditor",
-			"DetailCustomizations",
-			"ContentBrowser",
-			"Settings",
-			"AIModule",
-			"ToolMenus",
 			"Actions"
 		});
 	}

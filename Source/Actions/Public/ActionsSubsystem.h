@@ -1,4 +1,4 @@
-// Copyright 2015-2020 Piperift. All Rights Reserved.
+// Copyright 2015-2023 Piperift. All Rights Reserved.
 
 #pragma once
 
@@ -36,15 +36,22 @@ struct FActionsTickGroup
 	inline void Tick(float DeltaTime);
 
 private:
-
 	inline void DelayedTick(float DeltaTime);
 
 public:
+	bool operator==(const FActionsTickGroup& Other) const
+	{
+		return FMath::IsNearlyEqual(TickRate, Other.TickRate);
+	}
+	bool operator!=(const FActionsTickGroup& Other) const
+	{
+		return !(*this == Other);
+	}
 
-	FORCEINLINE bool operator==(const FActionsTickGroup& Other) const { return FMath::IsNearlyEqual(TickRate, Other.TickRate); }
-	FORCEINLINE bool operator!=(const FActionsTickGroup& Other) const { return !(*this == Other); }
-
-	friend const uint32 GetTypeHash(const FActionsTickGroup& InGroup) { return GetTypeHash(InGroup.TickRate); }
+	friend const uint32 GetTypeHash(const FActionsTickGroup& InGroup)
+	{
+		return GetTypeHash(InGroup.TickRate);
+	}
 };
 
 /**
@@ -52,7 +59,7 @@ public:
  * Used to cancel actions whose owner is destroyed
  */
 USTRUCT()
-struct FRootAction
+struct FActionOwner
 {
 	GENERATED_BODY()
 
@@ -60,10 +67,10 @@ struct FRootAction
 	TWeakObjectPtr<UObject> Owner;
 
 	UPROPERTY()
-	TArray<UAction*> Actions;
+	TArray<TObjectPtr<UAction>> Actions;
 
 
-	FRootAction(UObject* Owner = nullptr) : Owner(Owner) {}
+	FActionOwner(UObject* Owner = nullptr) : Owner(Owner) {}
 
 	void CancelAll(bool bShouldShrink = true);
 	void CancelByPredicate(const TFunctionRef<bool(const UAction*)>& Predicate, bool bShouldShrink = true);
@@ -71,10 +78,18 @@ struct FRootAction
 	/**
 	 * Operator overloading & Hashes
 	 */
-	FORCEINLINE bool operator==(const FRootAction& Other) const { return Owner == Other.Owner; }
-	FORCEINLINE bool operator!=(const FRootAction& Other) const { return !(*this == Other); }
-
-	friend uint32 GetTypeHash(const FRootAction& InAction) { return GetTypeHash(InAction.Owner); }
+	bool operator==(const FActionOwner& Other) const
+	{
+		return Owner == Other.Owner;
+	}
+	bool operator!=(const FActionOwner& Other) const
+	{
+		return !(*this == Other);
+	}
+	friend uint32 GetTypeHash(const FActionOwner& InAction)
+	{
+		return GetTypeHash(InAction.Owner);
+	}
 };
 
 
@@ -91,35 +106,34 @@ class ACTIONS_API UActionsSubsystem : public UGameInstanceSubsystem, public FTic
 	friend UAction;
 
 private:
-
 	UPROPERTY(SaveGame)
-	TSet<FRootAction> RootActions;
+	TSet<FActionOwner> ActionOwners;
 
 	UPROPERTY(Transient)
 	TArray<FActionsTickGroup> TickGroups;
 
 
 protected:
-
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
 public:
-
 	//~ Begin Tickable GameObject Interface
 	virtual void Tick(float DeltaTime) override;
 
-	virtual bool IsTickable() const override {
-		return RootActions.Num() > 0 || TickGroups.Num() > 0;
+	virtual bool IsTickable() const override
+	{
+		return ActionOwners.Num() > 0 || TickGroups.Num() > 0;
 	}
 
-	virtual TStatId GetStatId() const override {
+	virtual TStatId GetStatId() const override
+	{
 		RETURN_QUICK_DECLARE_CYCLE_STAT(UActionsSubsystem, STATGROUP_Tickables);
 	}
 	//~ End Tickable GameObject Interface
 
 
-	/** Cancel ALL current actions of the game. Use with care! */
+	/** Cancel all current actions of the game. Use with care! */
 	void CancelAll();
 
 	/** Cancel all actions executing inside an object
@@ -135,15 +149,15 @@ public:
 	void CancelByOwnerPredicate(UObject* Object, TFunctionRef<bool(const UAction*)> Predicate);
 
 private:
-
 	void AddRootAction(UAction* Child);
 	void AddActionToTickGroup(UAction* Child);
+	void RemoveActionFromTickGroup(UAction* Child);
 
 public:
-
 #if WITH_GAMEPLAY_DEBUGGER
-	void DescribeOwnerToGameplayDebugger(UObject* Owner, const FName& BaseName, class FGameplayDebugger_Actions& Debugger) const;
-#endif // WITH_GAMEPLAY_DEBUGGER
+	void DescribeOwnerToGameplayDebugger(
+		UObject* Owner, const FName& BaseName, class FGameplayDebugger_Actions& Debugger) const;
+#endif	  // WITH_GAMEPLAY_DEBUGGER
 
 
 	FORCEINLINE static UActionsSubsystem* Get(UWorld* World)

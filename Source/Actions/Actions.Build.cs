@@ -12,20 +12,10 @@ public class Actions : ModuleRules
 			"Core",
 			"CoreUObject",
 			"Engine",
-			"GameplayTasks",
 			"AIModule"
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[]{});
-
-
-		if (TargetRules.bBuildEditor == true)
-		{
-			PrivateDependencyModuleNames.AddRange( new string[]	{
-				"SlateCore",
-				"Slate"
-			});
-		}
+		PrivateDependencyModuleNames.AddRange(new string[] { });
 
 		if (TargetRules.bBuildDeveloperTools || (Target.Configuration != UnrealTargetConfiguration.Shipping && Target.Configuration != UnrealTargetConfiguration.Test))
 		{

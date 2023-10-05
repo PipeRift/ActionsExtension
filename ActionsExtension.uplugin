@@ -18,13 +18,23 @@
 			"Type": "Runtime",
 			"LoadingPhase": "PreDefault",
 			"WhitelistPlatforms": [
-				"Win64",
-				"Win32",
-				"Linux",
-				"PS5",
-				"XboxOne",
-				"Switch",
-				"Mac"
+                "Win64",
+                "Mac",
+                "IOS",
+                "Android",
+                "Linux"
+			]
+		},
+		{
+			"Name": "ActionsGraph",
+			"Type": "UncookedOnly",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+                "Win64",
+                "Mac",
+                "IOS",
+                "Android",
+                "Linux"
 			]
 		},
 		{
@@ -32,13 +42,11 @@
 			"Type": "Editor",
 			"LoadingPhase": "PostEngineInit",
 			"WhitelistPlatforms": [
-				"Win64",
-				"Win32",
-				"Linux",
-				"PS5",
-				"XboxOne",
-				"Switch",
-				"Mac"
+                "Win64",
+                "Mac",
+                "IOS",
+                "Android",
+                "Linux"
 			]
 		},
 		{
@@ -47,7 +55,6 @@
 			"LoadingPhase" : "PreDefault",
 			"WhitelistPlatforms": [
 				"Win64",
-				"Win32",
 				"Linux",
 				"Mac"
 			]
