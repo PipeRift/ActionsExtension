@@ -226,7 +226,6 @@ UObject* UAction::GetOwner() const
 
 AActor* UAction::GetOwnerActor() const
 {
-	UObject* Owner = GetOwner();
 	// With this function we can predict the owner is more likely to be an actor so we check it first
 	if (AActor* Actor = Cast<AActor>(Owner))
 	{
@@ -241,7 +240,7 @@ AActor* UAction::GetOwnerActor() const
 
 UActorComponent* UAction::GetOwnerComponent() const
 {
-	return Cast<UActorComponent>(GetOwner());
+	return Cast<UActorComponent>(Owner);
 }
 
 UWorld* UAction::GetWorld() const
