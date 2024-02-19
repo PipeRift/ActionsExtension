@@ -251,7 +251,7 @@ UWorld* UAction::GetWorld() const
 
 	if (const UObject* InOwner = GetOwner())
 	{
-		InOwner->GetWorld();
+		return InOwner->GetWorld();
 	}
 	return nullptr;
 }
