@@ -59,6 +59,12 @@ UAction* CreateAction(UObject* Owner, UAction* Template, bool bAutoActivate /*= 
 void UAction::Activate()
 {
 	UActionsSubsystem* Subsystem = GetSubsystem();
+	if (!IsValid(Subsystem)) [[unlikely]]
+	{
+		UE_LOG(ActionLog, Error, TEXT("Action subsystem not found for '%s'!"), *GetName());
+		Destroy();
+		return;
+	}
 
 	if (!IsValid(this) || !IsValid(GetOuter()) || State != EActionState::Preparing)
 	{
