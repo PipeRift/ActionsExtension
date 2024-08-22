@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <EdGraph/EdGraphPin.h>
 #include <UObject/Class.h>
 
 #include "ActionReflection.generated.h"

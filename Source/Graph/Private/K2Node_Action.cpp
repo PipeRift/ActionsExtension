@@ -14,6 +14,7 @@
 #include <K2Node_CallFunction.h>
 #include <Kismet2/BlueprintEditorUtils.h>
 #include <KismetCompiler.h>
+#include <ScopedTransaction.h>
 
 
 #define LOCTEXT_NAMESPACE "ActionEditor"
