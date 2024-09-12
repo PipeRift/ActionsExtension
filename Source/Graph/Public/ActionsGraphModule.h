@@ -1,7 +1,7 @@
 // Copyright 2015-2023 Piperift. All Rights Reserved.
 #pragma once
 
-#include "PropertyEditorModule.h"
+#include <Modules/ModuleManager.h>
 
 
 DECLARE_LOG_CATEGORY_EXTERN(LogActionsGraph, All, All)
