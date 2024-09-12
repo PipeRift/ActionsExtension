@@ -53,4 +53,4 @@ void FActionsEditorModule::RegisterCustomPropertyTypeLayout(
 
 #undef LOCTEXT_NAMESPACE
 
-IMPLEMENT_GAME_MODULE(FActionsEditorModule, ActionsEditor);
+IMPLEMENT_MODULE(FActionsEditorModule, ActionsEditor);

@@ -3,6 +3,7 @@
 #include "K2Node_Action.h"
 
 #include "ActionNodeHelpers.h"
+#include "ActionsGraphModule.h"
 
 #include <Action.h>
 #include <ActionLibrary.h>

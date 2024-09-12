@@ -7,4 +7,4 @@
 
 DEFINE_LOG_CATEGORY(LogActionsGraph)
 
-IMPLEMENT_GAME_MODULE(FActionsGraphModule, ActionsGraph);
+IMPLEMENT_MODULE(FActionsGraphModule, ActionsGraph);
