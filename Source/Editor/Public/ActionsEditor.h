@@ -3,6 +3,7 @@
 
 #include <IAssetTools.h>
 #include <Modules/ModuleManager.h>
+#include <PropertyEditorModule.h>
 
 
 DECLARE_LOG_CATEGORY_EXTERN(LogActionsEd, All, All)

@@ -800,7 +800,7 @@ bool UK2Node_Action::FHelper::CreateDelegateForNewFunction(UEdGraphPin* Delegate
 
 	// WORKAROUND, so we can create delegate from nonexistent function by avoiding check at expanding step
 	// instead simply: Schema->TryCreateConnection(AddDelegateNode->GetDelegatePin(),
-	// CurrentCENode->FindPinChecked(UK2Node_CustomEvent::DelegateOutputName));
+	// CustomEvent->FindPinChecked(UK2Node_CustomEvent::DelegateOutputName));
 	UK2Node_Self* SelfNode = CompilerContext.SpawnIntermediateNode<UK2Node_Self>(CurrentNode, SourceGraph);
 	SelfNode->AllocateDefaultPins();
 
@@ -854,8 +854,9 @@ bool UK2Node_Action::FHelper::HandleDelegateImplementation(FMulticastDelegatePro
 		return false;
 	}
 
-	UK2Node_CustomEvent* CurrentCENode = CompilerContext.SpawnIntermediateEventNode<UK2Node_CustomEvent>(
-		CurrentNode, PinForCurrentDelegateProperty, SourceGraph);
+	UK2Node_CustomEvent* CustomEvent =
+		CompilerContext.SpawnIntermediateNode<UK2Node_CustomEvent>(CurrentNode, SourceGraph);
+	CustomEvent->bInternalEvent = true;
 	{
 		UK2Node_AddDelegate* AddDelegateNode =
 			CompilerContext.SpawnIntermediateNode<UK2Node_AddDelegate>(CurrentNode, SourceGraph);
@@ -872,17 +873,17 @@ bool UK2Node_Action::FHelper::HandleDelegateImplementation(FMulticastDelegatePro
 		bIsErrorFree &= Schema->TryCreateConnection(
 			InOutLastThenPin, AddDelegateNode->FindPinChecked(Schema->PN_Execute));
 		InOutLastThenPin = AddDelegateNode->FindPinChecked(Schema->PN_Then);
-		CurrentCENode->CustomFunctionName = *FString::Printf(
+		CustomEvent->CustomFunctionName = *FString::Printf(
 			TEXT("%s_%s"), *CurrentProperty->GetName(), *CompilerContext.GetGuid(CurrentNode));
-		CurrentCENode->AllocateDefaultPins();
+		CustomEvent->AllocateDefaultPins();
 
 		bIsErrorFree &= FHelper::CreateDelegateForNewFunction(AddDelegateNode->GetDelegatePin(),
-			CurrentCENode->GetFunctionName(), CurrentNode, SourceGraph, CompilerContext);
+			CustomEvent->GetFunctionName(), CurrentNode, SourceGraph, CompilerContext);
 		bIsErrorFree &=
-			FHelper::CopyEventSignature(CurrentCENode, AddDelegateNode->GetDelegateSignature(), Schema);
+			FHelper::CopyEventSignature(CustomEvent, AddDelegateNode->GetDelegateSignature(), Schema);
 	}
 
-	UEdGraphPin* LastActivatedNodeThen = CurrentCENode->FindPinChecked(Schema->PN_Then);
+	UEdGraphPin* LastActivatedNodeThen = CustomEvent->FindPinChecked(Schema->PN_Then);
 
 	bIsErrorFree &=
 		CompilerContext.MovePinLinksToIntermediate(*PinForCurrentDelegateProperty, *LastActivatedNodeThen)
