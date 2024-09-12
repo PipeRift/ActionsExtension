@@ -10,7 +10,7 @@
 	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/2924990b22c1452aa20a21af60c4aa12",
 	"DocsURL": "https://piperift.com/ActionsExtension",
 	"SupportURL": "info@piperift.com",
-	"EngineVersion": "5.1",
+	"EngineVersion": "5.4",
 	"CanContainContent": false,
 	"Modules": [
 		{
