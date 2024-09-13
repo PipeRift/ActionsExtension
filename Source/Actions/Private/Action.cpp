@@ -16,6 +16,8 @@
 
 DEFINE_LOG_CATEGORY(ActionLog);
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(Action)
+
 
 UAction* CreateAction(UObject* Owner, const TSubclassOf<class UAction> Type, bool bAutoActivate /*= false*/)
 {
@@ -32,7 +34,7 @@ UAction* CreateAction(UObject* Owner, const TSubclassOf<class UAction> Type, boo
 	return Action;
 }
 
-UAction* CreateAction(UObject* Owner, UAction* Template, bool bAutoActivate /*= false*/)
+UAction* CreateAction(UObject* Owner, const UAction* Template, bool bAutoActivate /*= false*/)
 {
 	if (!IsValid(Owner) || !Template)
 	{
@@ -47,7 +49,7 @@ UAction* CreateAction(UObject* Owner, UAction* Template, bool bAutoActivate /*= 
 		return nullptr;
 	}
 
-	UAction* Action = NewObject<UAction>(Owner, Type, NAME_None, RF_NoFlags, Template);
+	UAction* Action = NewObject<UAction>(Owner, Type, NAME_None, RF_NoFlags, const_cast<UAction*>(Template));
 	if (bAutoActivate)
 	{
 		Action->Activate();
@@ -56,14 +58,14 @@ UAction* CreateAction(UObject* Owner, UAction* Template, bool bAutoActivate /*= 
 }
 
 
-void UAction::Activate()
+bool UAction::Activate()
 {
 	UActionsSubsystem* Subsystem = GetSubsystem();
 	if (!IsValid(Subsystem)) [[unlikely]]
 	{
 		UE_LOG(ActionLog, Error, TEXT("Action subsystem not found for '%s'!"), *GetName());
 		Destroy();
-		return;
+		return false;
 	}
 
 	if (!IsValid(this) || !IsValid(GetOuter()) || State != EActionState::Preparing)
@@ -71,14 +73,14 @@ void UAction::Activate()
 		UE_LOG(
 			ActionLog, Warning, TEXT("Action '%s' is already running or pending destruction."), *GetName());
 		Destroy();
-		return;
+		return false;
 	}
 
 	if (!CanActivate())
 	{
 		UE_LOG(ActionLog, Log, TEXT("Could not activate. CanActivate() Failed."));
 		Destroy();
-		return;
+		return false;
 	}
 
 	// Add this action to its parent
@@ -98,12 +100,15 @@ void UAction::Activate()
 
 	State = EActionState::Running;
 	OnActivation();
+	return IsRunning() || Succeeded();
 }
 
 void UAction::Cancel()
 {
 	if (!IsValid(this))
+	{
 		return;
+	}
 
 	if (!IsRunning())
 	{
@@ -137,7 +142,9 @@ void UAction::OnFinish(const EActionState Reason)
 void UAction::Finish(bool bSuccess)
 {
 	if (!IsRunning() || !IsValid(this))
+	{
 		return;
+	}
 
 	State = bSuccess ? EActionState::Success : EActionState::Failure;
 	OnFinish(State);
@@ -154,7 +161,9 @@ void UAction::Finish(bool bSuccess)
 void UAction::Destroy()
 {
 	if (!IsValid(this))
+	{
 		return;
+	}
 
 	// Cancel and destroy all children tasks
 	for (auto* Children : ChildrenActions)
@@ -253,7 +262,9 @@ UWorld* UAction::GetWorld() const
 {
 	// If we are a CDO, we must return nullptr to fool UObject::ImplementsGetWorld
 	if (HasAllFlags(RF_ClassDefaultObject))
+	{
 		return nullptr;
+	}
 
 	if (const UObject* InOwner = GetOwner())
 	{
