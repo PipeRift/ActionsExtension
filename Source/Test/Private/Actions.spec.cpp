@@ -4,13 +4,11 @@
 #include "TestHelpers.h"
 
 
-namespace
-{
-	constexpr uint32 Flags_Product =
-		EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter;
-	constexpr uint32 Flags_Smoke =
-		EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter;
-}	 // namespace
+constexpr const EAutomationTestFlags Flags_Product =
+	EAutomationTestFlags::ProductFilter | EAutomationTestFlags_ApplicationContextMask;
+constexpr const EAutomationTestFlags Flags_Smoke =
+	EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter;
+
 
 #define BASE_SPEC FACESpec
 
