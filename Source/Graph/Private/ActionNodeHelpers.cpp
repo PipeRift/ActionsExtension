@@ -138,7 +138,7 @@ void FActionNodeHelpers::GetAllBlueprintSubclasses(
 			}
 
 			// Store using the path to the generated class
-			Subclasses.Add(TAssetSubclassOf<TBase>{FStringAssetReference(ClassObjectPath)});
+			Subclasses.Add(TAssetSubclassOf<TBase>(FStringAssetReference(ClassObjectPath)));
 		}
 	}
 }

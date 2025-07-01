@@ -185,7 +185,7 @@ void UAction::AddChildren(UAction* Child)
 
 void UAction::RemoveChildren(UAction* Child)
 {
-	ChildrenActions.RemoveSwap(Child, false);
+	ChildrenActions.RemoveSwap(Child, EAllowShrinking::No);
 }
 
 bool UAction::ReceiveCanActivate_Implementation()

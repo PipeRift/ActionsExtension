@@ -46,7 +46,7 @@ void FActionsTickGroup::DelayedTick(float DeltaTime)
 		auto* const Action = Actions[i];
 		if (!Action)
 		{
-			Actions.RemoveAtSwap(i, 1, false);
+			Actions.RemoveAtSwap(i, 1, EAllowShrinking::No);
 			--i;
 		}
 		else if (Action->CanTick())
@@ -67,9 +67,13 @@ void FActionOwner::CancelAll(bool bShouldShrink)
 	}
 
 	if (bShouldShrink)
+	{
 		Actions.Empty();
+	}
 	else
+	{
 		Actions.Reset();
+	}
 }
 
 void FActionOwner::CancelByPredicate(const TFunctionRef<bool(const UAction*)>& Predicate, bool bShouldShrink)
@@ -83,7 +87,7 @@ void FActionOwner::CancelByPredicate(const TFunctionRef<bool(const UAction*)>& P
 			Action->Cancel();
 
 			// Remove action
-			Actions.RemoveAtSwap(i, 1, false);
+			Actions.RemoveAtSwap(i, 1, EAllowShrinking::No);
 			--i;
 		}
 	}
@@ -123,7 +127,7 @@ void UActionsSubsystem::Tick(float DeltaTime)
 				[](const UAction* Action) {
 					return !IsValid(Action);
 				},
-				false);
+				EAllowShrinking::No);
 
 			if (RootIt->Actions.Num() <= 0)
 			{
@@ -143,7 +147,7 @@ void UActionsSubsystem::Tick(float DeltaTime)
 		if (TickGroup.Actions.Num() <= 0)
 		{
 			// Tick group is empty so we remove and ignore it
-			TickGroups.RemoveAtSwap(i, 1, false);
+			TickGroups.RemoveAtSwap(i, 1, EAllowShrinking::No);
 			--i;
 		}
 	}
@@ -224,7 +228,7 @@ void UActionsSubsystem::RemoveActionFromTickGroup(UAction* Child)
 		auto& Group = TickGroups[Index];
 		if (Group.Actions.Num() > 1)
 		{
-			Group.Actions.RemoveSwap(Child, false);
+			Group.Actions.RemoveSwap(Child, EAllowShrinking::No);
 		}
 		else
 		{
