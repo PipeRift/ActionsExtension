@@ -85,7 +85,8 @@ enum class EActionState : uint8
 
 inline FString ToString(EActionState Value)
 {
-	const UEnum* EnumPtr = FindObject<UEnum>(nullptr, TEXT("/Script/Actions.EActionState"), true);
+	const UEnum* EnumPtr =
+		FindObject<UEnum>(nullptr, TEXT("/Script/Actions.EActionState"), EFindObjectFlags::ExactClass);
 	return EnumPtr ? EnumPtr->GetNameByValue((int64) Value).ToString() : TEXT("Invalid");
 }
 
