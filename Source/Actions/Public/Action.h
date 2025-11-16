@@ -24,6 +24,23 @@ class UAction;
 
 
 /**
+ * Creates a new action
+ * @param Owner of the action. If destroyed, the action will follow.
+ * @param Type of the action to create
+ * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
+ */
+ACTIONS_API UAction* CreateAction(
+	UObject* Owner, const TSubclassOf<UAction> Type, bool bAutoActivate = false);
+
+/**
+ * Creates a new action
+ * @param Owner of the action. If destroyed, the action will follow.
+ * @param Template whose properties and class are used to create the action.
+ * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
+ */
+ACTIONS_API UAction* CreateAction(UObject* Owner, const UAction* Template, bool bAutoActivate = false);
+
+/**
  * Creates a new action. Templated version
  * @param ActionType
  * @param Owner of the action. If destroyed, the action will follow.
@@ -49,26 +66,8 @@ template <typename ActionType>
 ActionType* CreateAction(UObject* Owner, const ActionType* Template, bool bAutoActivate = false)
 	requires(!std::is_same_v<ActionType, UAction> && TIsDerivedFrom<ActionType, UAction>::IsDerived)
 {
-	return Cast<ActionType>(CreateAction(Owner, (const UAction*) Template, bAutoActivate));
+	return Cast<ActionType>(CreateAction(Owner, static_cast<const UAction*>(Template), bAutoActivate));
 }
-
-/**
- * Creates a new action
- * @param Owner of the action. If destroyed, the action will follow.
- * @param Type of the action to create
- * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
- */
-ACTIONS_API UAction* CreateAction(
-	UObject* Owner, const TSubclassOf<UAction> Type, bool bAutoActivate = false);
-
-/**
- * Creates a new action
- * @param Owner of the action. If destroyed, the action will follow.
- * @param Template whose properties and class are used to create the action.
- * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
- */
-ACTIONS_API UAction* CreateAction(UObject* Owner, const UAction* Template, bool bAutoActivate = false);
-
 
 /**
  * Result of a node execution
