@@ -84,31 +84,22 @@ void FActionNodeHelpers::GetAllBlueprintSubclasses(
 	static const FName GeneratedClassTag = TEXT("GeneratedClass");
 	static const FName ClassFlagsTag = TEXT("ClassFlags");
 
-	UClass* Base = TBase::StaticClass();
-	check(Base);
-
 	// Load the asset registry module
 	FAssetRegistryModule& AssetRegistryModule =
 		FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
 	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
 
-	FName BaseClassName = Base->GetFName();
-
 	// Use the asset registry to get the set of all class names deriving from Base
-	TSet<FName> DerivedNames;
-	{
-		TArray<FName> BaseNames;
-		BaseNames.Add(BaseClassName);
+	TSet<FTopLevelAssetPath> DerivedActorClassNames;
+	AssetRegistry.GetDerivedClassNames(
+		{TBase::StaticClass()->GetClassPathName()}, {}, DerivedActorClassNames);
 
-		TSet<FName> Excluded;
-		AssetRegistry.GetDerivedClassNames(BaseNames, Excluded, DerivedNames);
-	}
 
 	// Set up a filter and then pull asset data for all blueprints in the specified path from the asset
 	// registry. Note that this works in packaged builds too. Even though the blueprint itself cannot be
 	// loaded, its asset data still exists and is tied to the UBlueprint type.
 	FARFilter Filter;
-	Filter.ClassNames.Add(UBlueprint::StaticClass()->GetFName());
+	Filter.ClassPaths.Add(UBlueprint::StaticClass()->GetClassPathName());
 	Filter.bRecursiveClasses = true;
 	if (!Path.IsEmpty())
 	{
@@ -126,19 +117,17 @@ void FActionNodeHelpers::GetAllBlueprintSubclasses(
 		auto GeneratedClassPath = Asset.TagsAndValues.FindTag(GeneratedClassTag);
 		if (GeneratedClassPath.IsSet())
 		{
-			// Convert path to just the name part
-			const FString ClassObjectPath =
-				FPackageName::ExportTextPathToObjectPath(GeneratedClassPath.GetValue());
-			const FString ClassName = FPackageName::ObjectPathToObjectName(ClassObjectPath);
+			const FTopLevelAssetPath ClassPathName(
+				FPackageName::ExportTextPathToObjectPath(*GeneratedClassPath.AsString()));
 
 			// Check if this class is in the derived set
-			if (!DerivedNames.Contains(*ClassName))
+			if (!DerivedActorClassNames.Contains(ClassPathName))
 			{
 				continue;
 			}
 
 			// Store using the path to the generated class
-			Subclasses.Add(TAssetSubclassOf<TBase>(FStringAssetReference(ClassObjectPath)));
+			Subclasses.Add(TSoftClassPtr<TBase>(Asset.ToSoftObjectPath()));
 		}
 	}
 }
