@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2023 Piperift. All Rights Reserved.
+﻿// Copyright 2015-2026 Piperift. All Rights Reserved.
 
 #include "GameplayDebugger_Actions.h"
 
@@ -8,7 +8,6 @@
 #include <GameFramework/Actor.h>
 #include <GameFramework/Pawn.h>
 #include <GameFramework/PlayerController.h>
-
 
 
 #if WITH_GAMEPLAY_DEBUGGER

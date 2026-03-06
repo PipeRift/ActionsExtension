@@ -1,4 +1,4 @@
-// Copyright 2015-2023 Piperift. All Rights Reserved.
+// Copyright 2015-2026 Piperift. All Rights Reserved.
 
 #include "TestHelpers.h"
 
@@ -8,7 +8,6 @@
 #include <GameFramework/Actor.h>
 #include <GameFramework/PlayerController.h>
 #include <GameFramework/WorldSettings.h>
-
 
 
 UWorld* FACESpec::GetTestWorld() const
