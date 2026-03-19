@@ -2,6 +2,7 @@
 
 #include "Action.h"
 
+#include "ActionsModule.h"
 #include "TimerManager.h"
 
 #include <Components/ActorComponent.h>
@@ -13,8 +14,6 @@
 #if WITH_GAMEPLAY_DEBUGGER
 #	include "GameplayDebugger_Actions.h"
 #endif	  // WITH_GAMEPLAY_DEBUGGER
-
-DEFINE_LOG_CATEGORY(ActionLog);
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(Action)
 
@@ -63,7 +62,7 @@ bool UAction::Activate()
 	UActionsSubsystem* Subsystem = GetSubsystem();
 	if (!IsValid(Subsystem)) [[unlikely]]
 	{
-		UE_LOG(ActionLog, Error, TEXT("Action subsystem not found for '%s'!"), *GetName());
+		UE_LOG(LogActions, Error, TEXT("Action subsystem not found for '%s'!"), *GetName());
 		Destroy();
 		return false;
 	}
@@ -71,14 +70,14 @@ bool UAction::Activate()
 	if (!IsValid(this) || !IsValid(GetOuter()) || State != EActionState::Preparing)
 	{
 		UE_LOG(
-			ActionLog, Warning, TEXT("Action '%s' is already running or pending destruction."), *GetName());
+			LogActions, Warning, TEXT("Action '%s' is already running or pending destruction."), *GetName());
 		Destroy();
 		return false;
 	}
 
 	if (!CanActivate())
 	{
-		UE_LOG(ActionLog, Log, TEXT("Could not activate. CanActivate() Failed."));
+		UE_LOG(LogActions, Log, TEXT("Could not activate. CanActivate() Failed."));
 		Destroy();
 		return false;
 	}

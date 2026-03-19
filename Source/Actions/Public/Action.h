@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "ActionsModule.h"
 #include "ActionsSubsystem.h"
 
 #include <CoreMinimal.h>
@@ -13,9 +12,6 @@
 #include <UObject/ScriptInterface.h>
 
 #include "Action.generated.h"
-
-
-DECLARE_LOG_CATEGORY_EXTERN(ActionLog, Log, All);
 
 
 class AActor;
@@ -191,7 +187,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Action, meta = (KeyWords = "Finish"))
 	void Fail(FName Error = NAME_None)
 	{
-		UE_LOG(LogActions, Log, TEXT("Action '%s' failed: %s"), *GetName(), *Error.ToString());
 		Finish(false);
 	}
 

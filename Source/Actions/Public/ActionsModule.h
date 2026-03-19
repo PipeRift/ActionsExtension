@@ -35,6 +35,6 @@ public:
 
 	FORCEINLINE static FActionsModule& Get()
 	{
-		return FModuleManager::LoadModuleChecked<FActionsModule>("StateTreeExtension");
+		return FModuleManager::LoadModuleChecked<FActionsModule>("ActionsExtension");
 	}
 };
