@@ -20,6 +20,7 @@ public class ActionsGraph : ModuleRules
 			"SlateCore",
 			"ToolMenus",
 			"UnrealEd",
+			"Kismet",
 			"KismetCompiler",
 			"BlueprintGraph"
 		});

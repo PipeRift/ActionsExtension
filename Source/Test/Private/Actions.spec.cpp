@@ -11,7 +11,6 @@ class FActionsSpec : public Automatron::FTestSpec
 
 	FActionsSpec() : Automatron::FTestSpec()
 	{
-		bReuseWorldForAllTests = false;
 		bCanUsePIEWorld = true;
 	}
 };

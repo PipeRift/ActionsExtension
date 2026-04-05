@@ -18,14 +18,14 @@
 #include UE_INLINE_GENERATED_CPP_BY_NAME(Action)
 
 
-UAction* CreateAction(UObject* Owner, const TSubclassOf<class UAction> Type, bool bAutoActivate /*= false*/)
+UAction* CreateAction(UObject* Owner, const TSubclassOf<class UAction> Class, bool bAutoActivate /*= false*/)
 {
-	if (!IsValid(Owner) || !Type.Get() || Type == UAction::StaticClass())
+	if (!Class.Get() || !IsValid(Owner) || !IsValid(Owner->GetWorld()))
 	{
 		return nullptr;
 	}
 
-	UAction* Action = NewObject<UAction>(Owner, Type);
+	UAction* Action = NewObject<UAction>(Owner, Class);
 	if (bAutoActivate)
 	{
 		Action->Activate();
@@ -35,20 +35,15 @@ UAction* CreateAction(UObject* Owner, const TSubclassOf<class UAction> Type, boo
 
 UAction* CreateAction(UObject* Owner, const UAction* Template, bool bAutoActivate /*= false*/)
 {
-	if (!IsValid(Owner) || !Template)
+	if (!Template || !IsValid(Owner) || !IsValid(Owner->GetWorld()))
 	{
 		return nullptr;
 	}
 
-	UClass* const Type = Template->GetClass();
-	check(Type);
+	UClass* const Class = Template->GetClass();
+	check(Class);
 
-	if (Type == UAction::StaticClass())
-	{
-		return nullptr;
-	}
-
-	UAction* Action = NewObject<UAction>(Owner, Type, NAME_None, RF_NoFlags, const_cast<UAction*>(Template));
+	UAction* Action = NewObject<UAction>(Owner, Class, NAME_None, RF_NoFlags, const_cast<UAction*>(Template));
 	if (bAutoActivate)
 	{
 		Action->Activate();
@@ -59,7 +54,14 @@ UAction* CreateAction(UObject* Owner, const UAction* Template, bool bAutoActivat
 
 bool UAction::Activate()
 {
-	UActionsSubsystem* Subsystem = GetSubsystem();
+	auto* World = GetWorld();
+	if (!IsValid(World))	// World has been destroyed?
+	{
+		Destroy();
+		return false;
+	}
+
+	UActionsSubsystem* Subsystem = UActionsSubsystem::Get(World);
 	if (!IsValid(Subsystem)) [[unlikely]]
 	{
 		UE_LOG(LogActions, Error, TEXT("Action subsystem not found for '%s'!"), *GetName());

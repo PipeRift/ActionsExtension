@@ -25,4 +25,10 @@ struct FActionNodeHelpers
 	template <typename TBase>
 	static void GetAllBlueprintSubclasses(
 		TSet<TSoftClassPtr<TBase>>& OutSubclasses, bool bAllowAbstract, FString const& Path);
+
+	// Modified FKismetCompilerUtilities::GenerateAssignmentNodes
+	static UEdGraphPin* GenerateAssignmentNodes(class FKismetCompilerContext& CompilerContext,
+		UEdGraph* SourceGraph, UEdGraphPin* LastThenPin, UK2Node* CallBeginSpawnNode, UEdGraphNode* SpawnNode,
+		UEdGraphPin* CallBeginResult, const UClass* ForClass,
+		const UEdGraphPin* CallBeginClassInput = nullptr);
 };

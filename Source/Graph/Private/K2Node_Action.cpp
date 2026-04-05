@@ -13,6 +13,8 @@
 #include <EditorCategoryUtils.h>
 #include <K2Node_AssignmentStatement.h>
 #include <K2Node_CallFunction.h>
+#include <K2Node_IfThenElse.h>
+#include <Kismet/KismetSystemLibrary.h>
 #include <Kismet2/BlueprintEditorUtils.h>
 #include <KismetCompiler.h>
 #include <ScopedTransaction.h>
@@ -177,16 +179,10 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	static FName Activate_FunctionName = GET_FUNCTION_NAME_CHECKED(UAction, Activate);
 
 	// Set function parameter names
-	static FString ParamName_Type = FString(TEXT("Type"));
+	static FString ParamName_Class = FString(TEXT("Class"));
 
 
 	/* Retrieve Pins */
-	// Exec
-	UEdGraphPin* ExecPin =
-		GetExecPin();	 // Exec pins are those big arrows, connected with thick white lines.
-	UEdGraphPin* ThenPin =
-		GetThenPin();	 // Then pin is the same as exec pin, just on the other side (the out arrow).
-
 	// Inputs
 	UEdGraphPin* OwnerPin = GetOwnerPin();
 	UEdGraphPin* ClassPin =
@@ -198,7 +194,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	if (!HasWorldContext())
 	{
 		CompilerContext.MessageLog.Error(
-			*LOCTEXT("CreateActionNodeMissingClass_Error", "@@ node requires world context.").ToString(),
+			*LOCTEXT("CreateActionNodeNoWorldContext_Error", "@@ node requires world context.").ToString(),
 			this);
 		// we break exec links so this is the only error we get, don't want the CreateItemData node being
 		// considered and giving 'unexpected node' type warnings
@@ -224,18 +220,17 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	// create 'UActionFunctionLibrary::CreateAction' call node
 	UK2Node_CallFunction* CreateActionNode =
 		CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
-	// Attach function
 	CreateActionNode->FunctionReference.SetExternalMember(Create_FunctionName, UActionLibrary::StaticClass());
 	CreateActionNode->AllocateDefaultPins();
 
 	// allocate nodes for created widget.
 	UEdGraphPin* CreateAction_Exec = CreateActionNode->GetExecPin();
 	UEdGraphPin* CreateAction_Owner = CreateActionNode->FindPinChecked(TEXT("Owner"));
-	UEdGraphPin* CreateAction_Type = CreateActionNode->FindPinChecked(ParamName_Type);
+	UEdGraphPin* CreateAction_Class = CreateActionNode->FindPinChecked(ParamName_Class);
 	UEdGraphPin* CreateAction_Result = CreateActionNode->GetReturnValuePin();
 
 	// Move 'exec' pin to 'UActionFunctionLibrary::CreateAction'
-	CompilerContext.MovePinLinksToIntermediate(*ExecPin, *CreateAction_Exec);
+	CompilerContext.MovePinLinksToIntermediate(*GetExecPin(), *CreateAction_Exec);
 
 	// TODO: Create local variable for PrestatedClass
 
@@ -243,12 +238,12 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	if (ShowClass() && ClassPin->LinkedTo.Num() > 0)
 	{
 		// Copy the 'blueprint' connection from the spawn node to 'UActionLibrary::CreateAction'
-		CompilerContext.MovePinLinksToIntermediate(*ClassPin, *CreateAction_Type);
+		CompilerContext.MovePinLinksToIntermediate(*ClassPin, *CreateAction_Class);
 	}
 	else
 	{
 		// Copy blueprint literal onto 'UActionLibrary::CreateAction' call
-		CreateAction_Type->DefaultObject = ActionClass;
+		CreateAction_Class->DefaultObject = ActionClass;
 	}
 
 	// Copy Owner pin to 'UActionFunctionLibrary::CreateAction' if necessary
@@ -261,13 +256,51 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	CreateAction_Result->PinType = ResultPin->PinType;	  // Copy type so it uses the right actor subclass
 	CompilerContext.MovePinLinksToIntermediate(*ResultPin, *CreateAction_Result);
 
+	UEdGraphPin* LastThenPin = CreateActionNode->GetThenPin();
+
+
+	//////////////////////////////////////////////////////////////////////////
+	// If action is valid continue binding
+	//        -> IsValid -> IfThenElse  T -> bind properties & events...
+	// Action -> Object                 F -> leave node
+
+	// IsValid(Action)
+	auto* IsValidNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
+	IsValidNode->FunctionReference.SetExternalMember(
+		GET_FUNCTION_NAME_CHECKED(UKismetSystemLibrary, IsValid), UKismetSystemLibrary::StaticClass());
+	IsValidNode->AllocateDefaultPins();
+	UEdGraphPin* IsValidInputPin = IsValidNode->FindPinChecked(TEXT("Object"));
+	bIsErrorFree &= Schema->TryCreateConnection(CreateAction_Result, IsValidInputPin);
+
+	// If(IsValid(Action))
+	auto* BranchNode = CompilerContext.SpawnIntermediateNode<UK2Node_IfThenElse>(this, SourceGraph);
+	BranchNode->AllocateDefaultPins();
+	bIsErrorFree &= Schema->TryCreateConnection(LastThenPin, BranchNode->GetExecPin());
+	bIsErrorFree &=
+		Schema->TryCreateConnection(IsValidNode->GetReturnValuePin(), BranchNode->GetConditionPin());
+
+	LastThenPin = BranchNode->GetThenPin();
+	auto* BranchElsePin = BranchNode->GetElsePin();
+
+	if (!bIsErrorFree)
+	{
+		CompilerContext.MessageLog.Error(*LOCTEXT("CreateActionNodeCheck_Error",
+											 "There was a compile error while checking action validity.")
+											  .ToString(),
+			this);
+		// we break exec links so this is the only error we get, don't want the CreateAction node being
+		// considered and giving 'unexpected node' type warnings
+		BreakAllNodeLinks();
+		return;
+	}
+
 
 	//////////////////////////////////////////////////////////////////////////
 	// create 'set var' nodes
 
 	// Set all properties of the object
-	UEdGraphPin* LastThenPin = FKismetCompilerUtilities::GenerateAssignmentNodes(
-		CompilerContext, SourceGraph, CreateActionNode, this, CreateAction_Result, ActionClass);
+	LastThenPin = FActionNodeHelpers::GenerateAssignmentNodes(
+		CompilerContext, SourceGraph, LastThenPin, CreateActionNode, this, CreateAction_Result, ActionClass);
 
 	// For each delegate, define an event, bind it to delegate and implement a chain of assignments
 	for (TFieldIterator<FMulticastDelegateProperty> PropertyIt(
@@ -294,9 +327,10 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 
 	if (!bIsErrorFree)
 	{
-		CompilerContext.MessageLog.Error(*LOCTEXT("CreateActionNodeMissingClass_Error",
-											 "There was a compile error while binding delegates.")
-											  .ToString(),
+		CompilerContext.MessageLog.Error(
+			*LOCTEXT("CreateActionNodeDelegates_Error",
+				"There was a compile error while binding delegates and properties.")
+				 .ToString(),
 			this);
 		// we break exec links so this is the only error we get, don't want the CreateAction node being
 		// considered and giving 'unexpected node' type warnings
@@ -317,18 +351,31 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	UEdGraphPin* ActivateAction_Exec = ActivateActionNode->GetExecPin();
 	UEdGraphPin* ActivateAction_Self = ActivateActionNode->FindPinChecked(Schema->PN_Self);
 	UEdGraphPin* ActivateAction_Then = ActivateActionNode->GetThenPin();
-
 	bIsErrorFree &= Schema->TryCreateConnection(LastThenPin, ActivateAction_Exec);
 	bIsErrorFree &= Schema->TryCreateConnection(CreateAction_Result, ActivateAction_Self);
-
-	CompilerContext.MovePinLinksToIntermediate(*ThenPin, *ActivateAction_Then);
-
+	LastThenPin = ActivateAction_Then;
 
 	if (!bIsErrorFree)
 	{
-		CompilerContext.MessageLog.Error(*LOCTEXT("CreateActionNodeMissingClass_Error",
+		CompilerContext.MessageLog.Error(*LOCTEXT("CreateActionNodeActivating_Error",
 											 "There was a compile error while activating the action.")
 											  .ToString(),
+			this);
+		// we break exec links so this is the only error we get, don't want the CreateAction node being
+		// considered and giving 'unexpected node' type warnings
+		BreakAllNodeLinks();
+		return;
+	}
+
+	// Join all remaining then pins
+	bIsErrorFree &= CompilerContext.MovePinLinksToIntermediate(*GetThenPin(), *LastThenPin).CanSafeConnect();
+	bIsErrorFree &= CompilerContext.CopyPinLinksToIntermediate(*LastThenPin, *BranchElsePin).CanSafeConnect();
+
+	if (!bIsErrorFree)
+	{
+		CompilerContext.MessageLog.Error(
+			*LOCTEXT("CreateActionNodeLinkThen_Error", "There was a compile error with the then pin.")
+				 .ToString(),
 			this);
 		// we break exec links so this is the only error we get, don't want the CreateAction node being
 		// considered and giving 'unexpected node' type warnings
@@ -515,15 +562,6 @@ bool UK2Node_Action::IsActionVarPin(UEdGraphPin* Pin)
 	return (Pin->PinName != K2Schema->PN_Execute && Pin->PinName != K2Schema->PN_Then &&
 			Pin->PinName != K2Schema->PN_ReturnValue && Pin->PinName != ClassPinName &&
 			Pin->PinName != OwnerPinName);
-}
-
-UEdGraphPin* UK2Node_Action::GetThenPin() const
-{
-	const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>();
-
-	UEdGraphPin* Pin = FindPinChecked(K2Schema->PN_Then);
-	check(Pin->Direction == EGPD_Output);
-	return Pin;
 }
 
 UEdGraphPin* UK2Node_Action::GetClassPin(const TArray<UEdGraphPin*>* InPinsToSearch /*= nullptr*/) const

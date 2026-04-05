@@ -91,7 +91,6 @@ protected:
 	/** See if this is a spawn variable pin, or a 'default' pin */
 	virtual bool IsActionVarPin(UEdGraphPin* Pin);
 
-	UEdGraphPin* GetThenPin() const;
 	UEdGraphPin* GetClassPin(const TArray<UEdGraphPin*>* InPinsToSearch = nullptr) const;
 	UEdGraphPin* GetResultPin() const;
 	UEdGraphPin* GetOwnerPin() const;

@@ -18,8 +18,8 @@ class ACTIONS_API UActionLibrary : public UBlueprintFunctionLibrary
 public:
 	UFUNCTION(BlueprintCallable, Category = Action,
 		meta = (BlueprintInternalUseOnly = "true", DefaultToSelf = "Owner", WorldContext = "Owner"))
-	static UAction* CreateAction(UObject* Owner, const TSubclassOf<UAction> Type, bool bAutoActivate = false)
+	static UAction* CreateAction(UObject* Owner, const TSubclassOf<UAction> Class, bool bAutoActivate = false)
 	{
-		return ::CreateAction(Owner, Type.Get(), bAutoActivate);
+		return ::CreateAction(Owner, Class.Get(), bAutoActivate);
 	}
 };

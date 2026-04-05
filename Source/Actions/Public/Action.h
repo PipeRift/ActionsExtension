@@ -22,11 +22,11 @@ class UAction;
 /**
  * Creates a new action
  * @param Owner of the action. If destroyed, the action will follow.
- * @param Type of the action to create
+ * @param Class of the action to create
  * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
  */
 ACTIONS_API UAction* CreateAction(
-	UObject* Owner, const TSubclassOf<UAction> Type, bool bAutoActivate = false);
+	UObject* Owner, const TSubclassOf<UAction> Class, bool bAutoActivate = false);
 
 /**
  * Creates a new action
@@ -92,7 +92,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FActionFinishedDelegate, const EActi
 /**
  *
  */
-UCLASS(Blueprintable, EditInlineNew, meta = (ExposedAsyncProxy))
+UCLASS(Abstract, Blueprintable, EditInlineNew, meta = (ExposedAsyncProxy))
 class ACTIONS_API UAction : public UObject
 {
 	GENERATED_BODY()
