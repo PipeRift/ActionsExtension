@@ -22,14 +22,12 @@ TSharedRef<FGameplayDebuggerCategory> FGameplayDebugger_Actions::MakeInstance()
 void FGameplayDebugger_Actions::CollectData(APlayerController* OwnerPC, AActor* DebugActor)
 {
 	UWorld* World = OwnerPC->GetWorld();
-
-	UGameInstance* GI = World ? World->GetGameInstance() : nullptr;
-	if (!GI)
+	if (!World)
 	{
 		return;
 	}
 
-	auto* Subsystem = GI->GetSubsystem<UActionsSubsystem>();
+	auto* Subsystem = World->GetSubsystem<UActionsSubsystem>();
 	check(Subsystem);
 
 	Subsystem->DescribeOwnerToGameplayDebugger(OwnerPC, TEXT("Player Controller"), *this);

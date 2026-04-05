@@ -110,6 +110,22 @@ void UActionsSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
+bool UActionsSubsystem::DoesSupportWorldType(const EWorldType::Type WorldType) const
+{
+	switch (WorldType)
+	{
+		case EWorldType::Game:
+		case EWorldType::Editor:
+		case EWorldType::PIE:
+		case EWorldType::EditorPreview:
+		case EWorldType::GamePreview:
+		case EWorldType::GameRPC:
+		case EWorldType::Inactive:
+			return true;
+	}
+	return false;
+}
+
 void UActionsSubsystem::Tick(float DeltaTime)
 {
 	// Cancel destroyed object actions or of which the outer is invalid
@@ -152,6 +168,11 @@ void UActionsSubsystem::Tick(float DeltaTime)
 		}
 	}
 	TickGroups.Shrink();
+}
+
+TStatId UActionsSubsystem::GetStatId() const
+{
+	RETURN_QUICK_DECLARE_CYCLE_STAT(UActionsSubsystem, STATGROUP_Tickables);
 }
 
 void UActionsSubsystem::CancelAll()

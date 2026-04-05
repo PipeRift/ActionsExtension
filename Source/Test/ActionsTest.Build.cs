@@ -10,19 +10,25 @@ namespace UnrealBuildTool.Rules
 		public ActionsTest(ReadOnlyTargetRules Target) : base(Target)
 		{
 			PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-			IWYUSupport = IWYUSupport.Full;
+			IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
 
 			PublicDependencyModuleNames.AddRange(new string[]
 			{
-				"Core",
-				"Engine",
-				"CoreUObject",
-				"Actions"
+				"Core"
 			});
 
 			PrivateDependencyModuleNames.AddRange(new string[]
 			{
+				"Actions",
+				"CoreUObject",
+				"Engine",
+				"EngineSettings"
 			});
+
+			if (Target.bBuildEditor)
+			{
+				PrivateDependencyModuleNames.Add("UnrealEd");
+			}
 		}
 	}
 }

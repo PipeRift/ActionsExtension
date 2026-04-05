@@ -350,7 +350,5 @@ void UAction::PostInitProperties()
 
 UActionsSubsystem* UAction::GetSubsystem() const
 {
-	const UWorld* World = GetWorld();
-	const UGameInstance* GI = World ? World->GetGameInstance() : nullptr;
-	return UGameInstance::GetSubsystem<UActionsSubsystem>(GI);
+	return UActionsSubsystem::Get(GetWorld());
 }

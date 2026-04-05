@@ -3,9 +3,8 @@
 #pragma once
 
 #include <CoreMinimal.h>
-#include <Engine/GameInstance.h>
 #include <Engine/World.h>
-#include <Subsystems/GameInstanceSubsystem.h>
+#include <Subsystems/WorldSubsystem.h>
 #include <Tickable.h>
 
 #include "ActionsSubsystem.generated.h"
@@ -99,7 +98,7 @@ struct FActionOwner
  * It also does a global tick based on tick rate for all actions.
  */
 UCLASS()
-class ACTIONS_API UActionsSubsystem : public UGameInstanceSubsystem, public FTickableGameObject
+class ACTIONS_API UActionsSubsystem : public UTickableWorldSubsystem
 {
 	GENERATED_BODY()
 
@@ -114,23 +113,14 @@ private:
 
 
 protected:
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	virtual void Deinitialize() override;
+	void Initialize(FSubsystemCollectionBase& Collection) override;
+	void Deinitialize() override;
+	bool DoesSupportWorldType(const EWorldType::Type WorldType) const override;
 
 public:
-	//~ Begin Tickable GameObject Interface
-	virtual void Tick(float DeltaTime) override;
+	void Tick(float DeltaTime) override;
 
-	virtual bool IsTickable() const override
-	{
-		return ActionOwners.Num() > 0 || TickGroups.Num() > 0;
-	}
-
-	virtual TStatId GetStatId() const override
-	{
-		RETURN_QUICK_DECLARE_CYCLE_STAT(UActionsSubsystem, STATGROUP_Tickables);
-	}
-	//~ End Tickable GameObject Interface
+	TStatId GetStatId() const override;
 
 
 	/** Cancel all current actions of the game. Use with care! */
@@ -162,7 +152,6 @@ public:
 
 	FORCEINLINE static UActionsSubsystem* Get(UWorld* World)
 	{
-		UGameInstance* GI = World ? World->GetGameInstance() : nullptr;
-		return UGameInstance::GetSubsystem<UActionsSubsystem>(GI);
+		return World ? World->GetSubsystem<UActionsSubsystem>() : nullptr;
 	}
 };
