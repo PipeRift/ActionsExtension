@@ -9,7 +9,7 @@ class FActionsSpec : public Automatron::FTestSpec
 	GENERATE_SPEC(FActionsSpec, "ActionsExtension",
 		EAutomationTestFlags::ProductFilter | EAutomationTestFlags_ApplicationContextMask);
 
-	FActionsSpec() : Automatron::FTestSpec()
+	FActionsSpec()
 	{
 		bCanUsePIEWorld = true;
 	}
