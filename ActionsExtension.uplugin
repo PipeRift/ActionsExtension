@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 10,
-	"VersionName": "1.1",
+	"VersionName": "1.2",
 	"FriendlyName": "Actions Extension",
 	"Description": "A plugin that adds asynchronous tasks called Actions",
 	"Category": "Piperift",
