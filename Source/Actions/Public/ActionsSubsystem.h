@@ -98,7 +98,7 @@ struct FActionOwner
  * It also does a global tick based on tick rate for all actions.
  */
 UCLASS()
-class ACTIONS_API UActionsSubsystem : public UTickableWorldSubsystem
+class ACTIONSEXTENSION_API UActionsSubsystem : public UTickableWorldSubsystem
 {
 	GENERATED_BODY()
 

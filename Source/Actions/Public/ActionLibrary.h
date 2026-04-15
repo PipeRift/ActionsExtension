@@ -11,7 +11,7 @@
 
 
 UCLASS()
-class ACTIONS_API UActionLibrary : public UBlueprintFunctionLibrary
+class ACTIONSEXTENSION_API UActionLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

@@ -14,7 +14,7 @@ public class ActionsEditor : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new string[] {
 			"Core",
 			"UnrealEd",
-			"Actions"
+			"ActionsExtension"
 		});
 	}
 }

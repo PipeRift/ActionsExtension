@@ -9,7 +9,7 @@
 
 #if WITH_GAMEPLAY_DEBUGGER
 
-class ACTIONS_API FGameplayDebugger_Actions : public FGameplayDebuggerCategory
+class ACTIONSEXTENSION_API FGameplayDebugger_Actions : public FGameplayDebuggerCategory
 {
 public:
 	FGameplayDebugger_Actions();

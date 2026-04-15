@@ -2,7 +2,7 @@
 
 #include "Action.h"
 
-#include "ActionsModule.h"
+#include "ActionsExtensionModule.h"
 #include "TimerManager.h"
 
 #include <Components/ActorComponent.h>

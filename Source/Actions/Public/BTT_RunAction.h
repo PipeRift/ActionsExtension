@@ -13,7 +13,7 @@
  *
  */
 UCLASS()
-class ACTIONS_API UBTT_RunAction : public UBTTaskNode
+class ACTIONSEXTENSION_API UBTT_RunAction : public UBTTaskNode
 {
 	GENERATED_BODY()
 
