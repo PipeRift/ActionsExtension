@@ -25,7 +25,7 @@ class UAction;
  * @param Class of the action to create
  * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
  */
-ACTIONS_API UAction* CreateAction(
+ACTIONSEXTENSION_API UAction* CreateAction(
 	UObject* Owner, const TSubclassOf<UAction> Class, bool bAutoActivate = false);
 
 /**
@@ -34,7 +34,8 @@ ACTIONS_API UAction* CreateAction(
  * @param Template whose properties and class are used to create the action.
  * @param bAutoActivate if true activates the action. If false, Action->Activate() can be called later.
  */
-ACTIONS_API UAction* CreateAction(UObject* Owner, const UAction* Template, bool bAutoActivate = false);
+ACTIONSEXTENSION_API UAction* CreateAction(
+	UObject* Owner, const UAction* Template, bool bAutoActivate = false);
 
 /**
  * Creates a new action. Templated version
@@ -93,7 +94,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FActionFinishedDelegate, const EActi
  *
  */
 UCLASS(Abstract, Blueprintable, EditInlineNew, meta = (ExposedAsyncProxy))
-class ACTIONS_API UAction : public UObject
+class ACTIONSEXTENSION_API UAction : public UObject
 {
 	GENERATED_BODY()
 

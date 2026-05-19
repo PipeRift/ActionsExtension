@@ -14,7 +14,7 @@
 	"CanContainContent": false,
 	"Modules": [
 		{
-			"Name": "Actions",
+			"Name": "ActionsExtension",
 			"Type": "Runtime",
 			"LoadingPhase": "PreDefault",
 			"WhitelistPlatforms": [

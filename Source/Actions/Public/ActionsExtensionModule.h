@@ -13,7 +13,7 @@
 DECLARE_LOG_CATEGORY_EXTERN(LogActions, All, All);
 
 
-class FActionsModule : public IModuleInterface
+class FActionsExtensionModule : public IModuleInterface
 {
 public:
 	/** IModuleInterface implementation */
@@ -33,8 +33,8 @@ public:
 #endif
 
 
-	FORCEINLINE static FActionsModule& Get()
+	FORCEINLINE static FActionsExtensionModule& Get()
 	{
-		return FModuleManager::LoadModuleChecked<FActionsModule>("ActionsExtension");
+		return FModuleManager::LoadModuleChecked<FActionsExtensionModule>("ActionsExtension");
 	}
 };

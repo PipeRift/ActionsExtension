@@ -19,7 +19,7 @@ namespace UnrealBuildTool.Rules
 
 			PrivateDependencyModuleNames.AddRange(new string[]
 			{
-				"Actions",
+				"ActionsExtension",
 				"CoreUObject",
 				"Engine",
 				"EngineSettings"

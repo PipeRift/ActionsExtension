@@ -1,6 +1,6 @@
 // Copyright 2015-2026 Piperift. All Rights Reserved.
 
-#include "ActionsModule.h"
+#include "ActionsExtensionModule.h"
 
 #if WITH_GAMEPLAY_DEBUGGER
 #	include "GameplayDebugger.h"
@@ -12,10 +12,8 @@ DEFINE_LOG_CATEGORY(LogActions)
 
 #define LOCTEXT_NAMESPACE "ActionsModule"
 
-void FActionsModule::StartupModule()
+void FActionsExtensionModule::StartupModule()
 {
-	UE_LOG(LogActions, Log, TEXT("ActionsExtension: Log Started"));
-
 	// Register Gameplay debugger
 #if WITH_GAMEPLAY_DEBUGGER
 	IGameplayDebugger& GameplayDebuggerModule = IGameplayDebugger::Get();
@@ -26,11 +24,8 @@ void FActionsModule::StartupModule()
 #endif
 }
 
-void FActionsModule::ShutdownModule()
-{
-	UE_LOG(LogActions, Log, TEXT("ActionsExtension: Log Ended"));
-}
+void FActionsExtensionModule::ShutdownModule() {}
 
 #undef LOCTEXT_NAMESPACE
 
-IMPLEMENT_MODULE(FActionsModule, Actions)
+IMPLEMENT_MODULE(FActionsExtensionModule, ActionsExtension)

@@ -12,7 +12,7 @@ public class ActionsGraph : ModuleRules
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {
-			"Actions",
+			"ActionsExtension",
 			"Core",
 			"CoreUObject",
 			"Engine",
