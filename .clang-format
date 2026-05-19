@@ -1,4 +1,5 @@
 ---
+StatementMacros: ['UPROPERTY', 'UFUNCTION', 'UCLASS', 'USTRUCT', 'UENUM', 'UINTERFACE', 'GENERATED_BODY']
 Language:        Cpp
 AccessModifierOffset: -4
 AlignAfterOpenBracket: DontAlign
