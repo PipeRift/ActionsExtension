@@ -25,7 +25,7 @@ bool ActionReflection::GetVisibleProperties(UClass* Class, FActionProperties& Ou
 
 	OutProperties = {};
 	for (TFieldIterator<FProperty> PropertyIt(Class, EFieldIteratorFlags::IncludeSuper); PropertyIt;
-		 ++PropertyIt)
+		++PropertyIt)
 	{
 		FProperty* Property = *PropertyIt;
 

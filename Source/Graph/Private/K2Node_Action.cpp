@@ -206,7 +206,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	{
 		CompilerContext.MessageLog.Error(*LOCTEXT("CreateActionNodeMissingClass_Error",
 											 "Create Action node @@ must have a class specified.")
-											  .ToString(),
+											 .ToString(),
 			this);
 		// we break exec links so this is the only error we get, don't want the CreateItemData node being
 		// considered and giving 'unexpected node' type warnings
@@ -286,7 +286,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	{
 		CompilerContext.MessageLog.Error(*LOCTEXT("CreateActionNodeCheck_Error",
 											 "There was a compile error while checking action validity.")
-											  .ToString(),
+											 .ToString(),
 			this);
 		// we break exec links so this is the only error we get, don't want the CreateAction node being
 		// considered and giving 'unexpected node' type warnings
@@ -305,7 +305,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	// For each delegate, define an event, bind it to delegate and implement a chain of assignments
 	for (TFieldIterator<FMulticastDelegateProperty> PropertyIt(
 			 ActionClass, EFieldIteratorFlags::IncludeSuper);
-		 PropertyIt && bIsErrorFree; ++PropertyIt)
+		PropertyIt && bIsErrorFree; ++PropertyIt)
 	{
 		FMulticastDelegateProperty* Property = *PropertyIt;
 
@@ -330,7 +330,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 		CompilerContext.MessageLog.Error(
 			*LOCTEXT("CreateActionNodeDelegates_Error",
 				"There was a compile error while binding delegates and properties.")
-				 .ToString(),
+				.ToString(),
 			this);
 		// we break exec links so this is the only error we get, don't want the CreateAction node being
 		// considered and giving 'unexpected node' type warnings
@@ -359,7 +359,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	{
 		CompilerContext.MessageLog.Error(*LOCTEXT("CreateActionNodeActivating_Error",
 											 "There was a compile error while activating the action.")
-											  .ToString(),
+											 .ToString(),
 			this);
 		// we break exec links so this is the only error we get, don't want the CreateAction node being
 		// considered and giving 'unexpected node' type warnings
@@ -375,7 +375,7 @@ void UK2Node_Action::ExpandNode(class FKismetCompilerContext& CompilerContext, U
 	{
 		CompilerContext.MessageLog.Error(
 			*LOCTEXT("CreateActionNodeLinkThen_Error", "There was a compile error with the then pin.")
-				 .ToString(),
+				.ToString(),
 			this);
 		// we break exec links so this is the only error we get, don't want the CreateAction node being
 		// considered and giving 'unexpected node' type warnings
