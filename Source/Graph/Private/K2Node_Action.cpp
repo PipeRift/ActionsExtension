@@ -639,8 +639,8 @@ bool UK2Node_Action::UseWorldContext() const
 	auto BP = GetBlueprint();
 	const UClass* ParentClass = BP ? BP->ParentClass : nullptr;
 	return ParentClass
-			   ? ParentClass->HasMetaDataHierarchical(FBlueprintMetadata::MD_ShowWorldContextPin) != nullptr
-			   : false;
+			 ? ParentClass->HasMetaDataHierarchical(FBlueprintMetadata::MD_ShowWorldContextPin) != nullptr
+			 : false;
 }
 
 bool UK2Node_Action::HasWorldContext() const
