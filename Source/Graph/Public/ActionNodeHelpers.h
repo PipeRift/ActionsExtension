@@ -2,11 +2,10 @@
 
 #pragma once
 
-#include "BlueprintActionDatabaseRegistrar.h"
-#include "BlueprintFunctionNodeSpawner.h"
-#include "BlueprintNodeSpawner.h"
-#include "CoreMinimal.h"
-#include "UObject/ObjectMacros.h"
+#include <BlueprintActionDatabaseRegistrar.h>
+#include <BlueprintFunctionNodeSpawner.h>
+#include <BlueprintNodeSpawner.h>
+#include <UObject/ObjectMacros.h>
 
 
 class UK2Node_Action;

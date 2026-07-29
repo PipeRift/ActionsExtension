@@ -5,8 +5,8 @@
 #include <Modules/ModuleManager.h>
 
 #if WITH_EDITOR
-#	include "Developer/AssetTools/Public/AssetToolsModule.h"
-#	include "Developer/AssetTools/Public/IAssetTools.h"
+#	include <Developer/AssetTools/Public/AssetToolsModule.h>
+#	include <Developer/AssetTools/Public/IAssetTools.h>
 
 #endif	  // WITH_EDITOR
 

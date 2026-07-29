@@ -4,7 +4,6 @@
 
 #include "ActionsSubsystem.h"
 
-#include <CoreMinimal.h>
 #include <Engine/GameInstance.h>
 #include <Engine/World.h>
 #include <Tickable.h>

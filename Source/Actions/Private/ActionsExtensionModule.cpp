@@ -3,8 +3,9 @@
 #include "ActionsExtensionModule.h"
 
 #if WITH_GAMEPLAY_DEBUGGER
-#	include "GameplayDebugger.h"
 #	include "GameplayDebugger_Actions.h"
+
+#	include <GameplayDebugger.h>
 #endif	  // WITH_GAMEPLAY_DEBUGGER
 
 

@@ -2,9 +2,7 @@
 
 #pragma once
 
-#include "Action.h"
-#include "BehaviorTree/BTTaskNode.h"
-#include "CoreMinimal.h"
+#include <BehaviorTree/BTTaskNode.h>
 
 #include "BTT_RunAction.generated.h"
 
@@ -22,7 +20,7 @@ public:
 	UAction* ActionType;
 
 	UPROPERTY()
-	UAction* Action;
+	TObjectPtr<class UAction> Action;
 
 	UPROPERTY(Transient)
 	UBehaviorTreeComponent* OwnerComp;

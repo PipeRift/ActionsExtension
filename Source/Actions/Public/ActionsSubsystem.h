@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <CoreMinimal.h>
 #include <Engine/World.h>
 #include <Subsystems/WorldSubsystem.h>
 #include <Tickable.h>
