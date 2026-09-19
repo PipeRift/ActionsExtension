@@ -894,7 +894,6 @@ bool UK2Node_Action::FHelper::HandleDelegateImplementation(FMulticastDelegatePro
 
 	UK2Node_CustomEvent* CustomEvent =
 		CompilerContext.SpawnIntermediateNode<UK2Node_CustomEvent>(CurrentNode, SourceGraph);
-	CustomEvent->bInternalEvent = true;
 	{
 		UK2Node_AddDelegate* AddDelegateNode =
 			CompilerContext.SpawnIntermediateNode<UK2Node_AddDelegate>(CurrentNode, SourceGraph);
